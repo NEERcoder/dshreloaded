@@ -12,8 +12,9 @@ const categoryStyles: Record<OpportunityCardData["category"], string> = {
 
 export default function OpportunityCard({ category, title, organization, location, deadline, accent }: OpportunityCardProps) {
   const ctaColor = accent === "red" ? "text-brand-red hover:text-brand-red-dark" : "text-brand-blue hover:text-brand-blue-dark";
+  const accentBorder = accent === "red" ? "hover:border-brand-red/30" : "hover:border-brand-blue/30";
   return (
-    <div className="card card-hover p-5 flex flex-col gap-3 group">
+    <div className={`card ${accentBorder} hover:shadow-lift p-5 flex flex-col gap-3 group`}>
       <div className="flex items-center justify-between">
         <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${categoryStyles[category]}`}>
           {category}

@@ -63,6 +63,11 @@
     opacity: 1;
     transform: translateY(0);
   }
+
+  /* Subtle accent line separator */
+  .accent-line {
+    @apply mx-auto h-px w-16 bg-gradient-to-r from-transparent via-brand-blue/30 to-transparent;
+  }
 }
 
 @layer utilities {
@@ -75,6 +80,25 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  /* Faint elephant watermark using the brand mark */
+  .elephant-watermark {
+    position: relative;
+  }
+  .elephant-watermark::after {
+    content: "";
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    width: 180px;
+    height: 180px;
+    background-image: url("/DSH_FAVICON.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
   }
 }
 

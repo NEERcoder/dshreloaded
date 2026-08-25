@@ -5,7 +5,7 @@ type ReviewCardProps = ReviewCardData;
 
 export default function ReviewCard({ initials, college, course, rating, review }: ReviewCardProps) {
   return (
-    <div className="card card-hover p-6 flex flex-col gap-4">
+    <div className="card hover:border-brand-blue/30 hover:shadow-lift p-6 flex flex-col gap-4 group">
       <div className="flex items-center gap-3">
         <div className="h-11 w-11 rounded-full bg-brand-blue-soft text-brand-blue font-bold flex items-center justify-center text-sm">
           {initials}

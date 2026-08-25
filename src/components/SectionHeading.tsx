@@ -38,6 +38,7 @@ export default function SectionHeading({
           {description}
         </p>
       )}
+      <div className="accent-line mt-6" />
     </div>
   );
 }

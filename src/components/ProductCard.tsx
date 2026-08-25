@@ -5,8 +5,9 @@ type ProductCardProps = ProductCardData;
 
 export default function ProductCard({ title, description, icon, accent }: ProductCardProps) {
   const accentBg = accent === "red" ? "bg-brand-red-soft text-brand-red" : "bg-brand-blue-soft text-brand-blue";
+  const accentBorder = accent === "red" ? "hover:border-brand-red/30" : "hover:border-brand-blue/30";
   return (
-    <div className="card card-hover p-6 flex flex-col gap-4 group">
+    <div className={`card ${accentBorder} hover:shadow-lift p-6 flex flex-col gap-4 group`}>
       <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${accentBg} transition-transform group-hover:scale-110`}>
         <Icon name={icon} className="h-6 w-6" />
       </div>

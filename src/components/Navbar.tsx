@@ -41,16 +41,16 @@ export default function Navbar() {
         }`}
       >
         <nav
-          className="container-px flex items-center justify-between h-16 sm:h-18"
+          className="container-px flex items-center justify-between h-16 sm:h-20"
           aria-label="Primary"
         >
           <a href="#top" className="flex items-center gap-2 shrink-0" aria-label="DU Science Hub home">
             <img
               src="/DSH_NEW_LOGO_..png"
               alt="DU Science Hub"
-              className="h-9 sm:h-10 w-auto"
-              width={140}
-              height={40}
+              className="h-12 sm:h-16 w-auto"
+              width={200}
+              height={56}
             />
           </a>
 

@@ -4,10 +4,11 @@ import type { VideoCardData } from "../data/videos";
 type VideoCardProps = VideoCardData;
 
 export default function VideoCard({ category, title, duration, accent }: VideoCardProps) {
-  const accentBg = accent === "red" ? "from-brand-red-soft to-brand-red-soft/30" : "from-brand-blue-soft to-brand-blue-soft/30";
+  const accentBg = accent === "red" ? "from-brand-red-soft to-brand-red-soft/20" : "from-brand-blue-soft to-brand-blue-soft/20";
   const accentRing = accent === "red" ? "text-brand-red" : "text-brand-blue";
+  const accentBorder = accent === "red" ? "hover:border-brand-red/30" : "hover:border-brand-blue/30";
   return (
-    <div className="card card-hover overflow-hidden group flex flex-col">
+    <div className={`card ${accentBorder} hover:shadow-lift overflow-hidden group flex flex-col`}>
       <div className={`relative aspect-video bg-gradient-to-br ${accentBg} flex items-center justify-center`}>
         <div className={`h-14 w-14 rounded-full bg-white shadow-card flex items-center justify-center ${accentRing} transition-transform group-hover:scale-110`}>
           <Icon name="play" className="h-7 w-7" />

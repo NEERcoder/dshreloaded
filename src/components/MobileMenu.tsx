@@ -50,7 +50,7 @@ export default function MobileMenu({ open, onClose, navLinks, socialLinks }: Mob
           <img
             src="/DSH_NEW_LOGO_..png"
             alt="DU Science Hub"
-            className="h-8 w-auto"
+            className="h-10 w-auto"
           />
           <button
             onClick={onClose}

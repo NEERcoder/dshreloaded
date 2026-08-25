@@ -4,7 +4,7 @@ type MentorCardProps = MentorCardData;
 
 export default function MentorCard({ initials, course, college, year, expertise }: MentorCardProps) {
   return (
-    <div className="card card-hover p-6 flex flex-col items-center text-center gap-3 group">
+    <div className="card hover:border-brand-blue/30 hover:shadow-lift p-6 flex flex-col items-center text-center gap-3 group">
       <div className="h-16 w-16 rounded-full bg-gradient-to-br from-brand-blue-soft to-brand-red-soft text-brand-blue font-extrabold flex items-center justify-center text-lg shadow-soft transition-transform group-hover:scale-105">
         {initials}
       </div>
