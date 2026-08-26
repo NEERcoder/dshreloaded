@@ -9,7 +9,7 @@
   }
 
   body {
-    @apply bg-surface text-ink-900 font-sans antialiased;
+    @apply bg-surface text-ink-900 font-sans antialiased overflow-x-hidden;
     text-rendering: optimizeLegibility;
   }
 
@@ -104,14 +104,14 @@
 
 /* Phrase animation for hero */
 .phrase-track {
-  display: inline-flex;
-  flex-direction: column;
-  height: 1em;
+  display: inline-grid;
+  line-height: 1.2;
   overflow: hidden;
   vertical-align: bottom;
 }
 .phrase-item {
-  animation: phrase-in 3s ease-in-out infinite;
+  grid-area: 1 / 1;
+  animation: phrase-in 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

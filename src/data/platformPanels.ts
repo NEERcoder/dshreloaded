@@ -15,7 +15,7 @@ export const platformPanels: PlatformPanelData[] = [
       { label: "Seniors & Mentors", icon: "users" },
     ],
     cta: "Explore DU",
-    ctaHref: "#student-content",
+    ctaHref: "#explore-du",
     accent: "blue",
     personality: "editorial",
   },

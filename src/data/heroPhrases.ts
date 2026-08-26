@@ -1,11 +1,10 @@
 export const heroPhrases = [
   "Delhi University",
-  "Colleges",
-  "Campus Life",
-  "Internships",
   "Competitions",
+  "Internships",
   "Certifications",
   "Jobs",
-  "Research Opportunities",
+  "Research",
   "Scholarships",
+  "Campus Life",
 ];

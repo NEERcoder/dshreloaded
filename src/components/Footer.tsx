@@ -7,7 +7,13 @@ export default function Footer() {
       <div className="container-px py-12 sm:py-16 relative z-10">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2 max-w-sm">
-            <img src="/DSH_NEW_LOGO_..png" alt="DU Science Hub" className="h-12 w-auto mb-4" />
+            <img
+              src="/DSH_OFFICIAL_LOGO.png"
+              alt="DU Science Hub"
+              className="h-10 w-auto max-w-[11rem] object-contain mb-4"
+              width={506}
+              height={229}
+            />
             <p className="text-sm text-ink-500 leading-relaxed">
               A student-powered platform for discovering Delhi University, learning from seniors
               and finding opportunities that help you move forward.

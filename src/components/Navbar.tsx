@@ -46,11 +46,11 @@ export default function Navbar() {
         >
           <a href="#top" className="flex items-center gap-2 shrink-0" aria-label="DU Science Hub home">
             <img
-              src="/DSH_NEW_LOGO_..png"
+              src="/DSH_OFFICIAL_LOGO.png"
               alt="DU Science Hub"
-              className="h-12 sm:h-16 w-auto"
-              width={200}
-              height={56}
+              className="h-10 sm:h-12 w-auto max-w-[11rem] object-contain"
+              width={506}
+              height={229}
             />
           </a>
 

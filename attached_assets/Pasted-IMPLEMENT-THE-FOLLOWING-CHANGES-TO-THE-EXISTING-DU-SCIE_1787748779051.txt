@@ -1,0 +1,424 @@
+IMPLEMENT THE FOLLOWING CHANGES TO THE EXISTING DU SCIENCE HUB PROJECT.
+
+IMPORTANT:
+You have already inspected the existing codebase.
+
+DO NOT rebuild the application.
+DO NOT replace the existing architecture.
+DO NOT delete existing data or working functionality.
+
+This is a focused UI/product refinement.
+
+==================================================
+1. OFFICIAL LOGO
+==================================================
+
+The existing navbar must use the actual uploaded DU Science Hub logo asset.
+
+If the navbar currently displays "DU Science Hub" as plain text, replace that text with the actual logo image.
+
+Requirements:
+
+- use the existing uploaded official logo
+- preserve aspect ratio
+- do not recreate it
+- do not redesign it
+- do not recolor it
+- do not distort it
+- make it clearly visible
+- keep it appropriately sized for desktop and mobile
+- clicking the logo returns to the homepage
+
+Do not use a text-only logo.
+
+==================================================
+2. HERO EXPLORE ANIMATION
+==================================================
+
+Update the main hero animation.
+
+The visual format must be:
+
+Explore Delhi University
+
+then:
+
+Explore Competitions
+
+then:
+
+Explore Internships
+
+then:
+
+Explore Certifications
+
+then:
+
+Explore Jobs
+
+then optionally:
+
+Explore Research
+Explore Scholarships
+Explore Campus Life
+
+IMPORTANT:
+
+"Explore" must be written exactly:
+
+Explore
+
+Capital E, lowercase remaining letters.
+
+The changing phrase must appear BESIDE "Explore" on the same line whenever the viewport allows it.
+
+Correct:
+
+Explore Delhi University
+
+Incorrect:
+
+Explore
+Delhi University
+
+The changing phrase should animate independently while "Explore" remains fixed.
+
+Use a smooth horizontal/fade/slide transition.
+
+Make the animation faster than the current implementation.
+
+Target approximately 1–1.5 seconds between phrase transitions.
+
+The animation should feel:
+
+- smooth
+- premium
+- energetic
+- modern
+
+Do NOT use:
+
+- typewriter effect
+- bouncing
+- spinning
+- excessive scaling
+- flashy effects
+
+On narrow mobile screens, allow natural wrapping if necessary, but never create horizontal overflow.
+
+Respect prefers-reduced-motion.
+
+==================================================
+3. REMOVE HERO DESCRIPTION
+==================================================
+
+Remove the descriptive paragraph currently positioned directly underneath the animated Explore headline.
+
+Do NOT replace it with another paragraph.
+
+The hero should be cleaner.
+
+Keep the existing CTA buttons and supporting visual elements unless they conflict with this change.
+
+==================================================
+4. THREE CORE PRODUCTS
+==================================================
+
+The website's primary navigation/product structure must remain:
+
+Explore DU
+Join Our Team
+Opportunities
+
+Do NOT make Student Media a fourth primary product.
+
+The navbar should contain:
+
+Explore DU
+Join Our Team
+Opportunities
+
+plus the existing social links and primary CTA where appropriate.
+
+==================================================
+5. EXPLORE DU
+==================================================
+
+Explore DU should be the broad DU discovery experience.
+
+It should eventually contain:
+
+- All DU colleges
+- College profiles
+- Courses
+- Campus information
+- Student reviews
+- Student experiences
+- Videos
+- Podcasts
+- Seniors / Mentors
+
+Keep the existing Explore DU structure but make the hierarchy clearer.
+
+==================================================
+6. RENAME STUDENT MEDIA
+==================================================
+
+Do not use "Student Media" as the visible section/product name.
+
+Rename it:
+
+DU Unfiltered
+
+Position it clearly as a subsection of Explore DU.
+
+Suggested heading:
+
+DU Unfiltered
+
+Suggested supporting line:
+
+"Real student experiences, honest college reviews and conversations from the DU community."
+
+Keep this concise.
+
+==================================================
+7. DU UNFILTERED CONTENT
+==================================================
+
+DU Unfiltered should contain/support:
+
+- College Review Videos
+- Campus Tours
+- Student Interviews
+- Podcasts
+- Campus Stories
+- Real Student Experiences
+
+If existing real YouTube content/data already exists in the repository, preserve and use it.
+
+Do NOT invent:
+
+- YouTube URLs
+- view counts
+- student names
+- college experiences
+- statistics
+
+If content is not yet connected, use a clean coming-soon/empty state rather than fabricated data.
+
+==================================================
+8. STUDENT MEDIA LOCATION
+==================================================
+
+Student media must visually belong to Explore DU.
+
+The hierarchy should be:
+
+EXPLORE DU
+
+College Guides
+Student Reviews
+Seniors & Mentors
+DU Unfiltered
+
+Do not make DU Unfiltered appear to be a separate fourth pillar.
+
+==================================================
+9. COMMENTS — REMOVE AUTHENTICATION BARRIER
+==================================================
+
+For college comments/reviews, remove the requirement for:
+
+- login
+- signup
+- email verification
+- college ID
+- account creation
+
+For now anyone should be able to open a college page and submit a comment.
+
+Flow:
+
+College page
+↓
+Read reviews
+↓
+Share your experience
+↓
+Name
+↓
+Comment
+↓
+Post Comment
+
+Optionally allow:
+
+1–5 star rating
+
+Do not ask for:
+
+email
+phone
+password
+college ID
+
+==================================================
+10. COMMENT SECURITY
+==================================================
+
+If Supabase is already connected:
+
+DO NOT expose the service-role key.
+
+Use the existing public/publishable client appropriately.
+
+Anonymous users should have only the minimum permission required to submit a new comment.
+
+They must NOT be able to:
+
+- edit other comments
+- delete other comments
+- modify college information
+- modify opportunities
+- modify mentors
+- access admin information
+
+If the existing review system supports statuses:
+
+pending
+approved
+rejected
+
+keep that system.
+
+Prefer new anonymous comments to enter:
+
+pending
+
+Only approved comments should be publicly displayed.
+
+Do not build a large moderation system in this task.
+
+==================================================
+11. COMMENT UI
+==================================================
+
+The college page should show:
+
+"Share your experience"
+
+Textarea placeholder:
+
+"Tell other students what you really think about this college..."
+
+Fields:
+
+Name
+Comment
+
+Optional:
+
+Rating
+
+Button:
+
+Post Comment
+
+The UI should feel similar to a modern community/comment section.
+
+Keep it visually consistent with the existing DU Science Hub design.
+
+==================================================
+12. DO NOT CHANGE
+==================================================
+
+Do not change:
+
+- official logo design
+- brand colors
+- white-first theme
+- existing typography
+- existing three-product structure
+- existing college data
+- existing real videos
+- existing opportunity data
+- existing team roles
+- Cloudflare compatibility
+- existing working integrations
+
+Do not delete working functionality.
+
+==================================================
+13. NO FAKE CONTENT
+==================================================
+
+Remove or clearly mark any existing fictional/demo content that is currently presented as real.
+
+Do NOT display fabricated:
+
+- opportunity companies
+- deadlines
+- YouTube views
+- student testimonials
+- ratings
+- statistics
+
+If the system needs placeholder content for layout purposes, clearly label it as:
+
+Demo
+Preview
+Coming Soon
+
+==================================================
+14. RESPONSIVE CHECK
+==================================================
+
+After implementation, test:
+
+320px
+375px
+390px
+430px
+768px
+1024px
+1440px+
+
+Pay particular attention to:
+
+- Explore headline
+- logo
+- navbar
+- comment form
+- college cards
+- DU Unfiltered cards
+
+There must be no horizontal scrolling.
+
+==================================================
+15. FINAL VALIDATION
+==================================================
+
+Before finishing, verify:
+
+✓ Official logo is visible
+✓ No text-only navbar logo
+✓ Explore uses "Explore", not "EXPLORE"
+✓ Changing phrase appears beside Explore
+✓ Animation is faster
+✓ Hero description is removed
+✓ Student Media is renamed DU Unfiltered
+✓ DU Unfiltered is inside Explore DU
+✓ Navbar = Explore DU / Join Our Team / Opportunities
+✓ Comments require no login
+✓ Comments require no college ID
+✓ No privileged database credentials are exposed
+✓ Existing data remains intact
+✓ No fake data is presented as real
+✓ Mobile layout works
+✓ No TypeScript errors
+✓ No console errors
+✓ Existing homepage still works
+
+Make these changes now and nothing unrelated.

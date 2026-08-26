@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Icon from "./Icon";
 import { heroPhrases } from "../data/heroPhrases";
 
-const PHRASE_DURATION = 2800;
+const PHRASE_DURATION = 1400;
 
 const journeySteps = [
   { label: "Discover", icon: "search" },
@@ -40,34 +40,31 @@ export default function Hero() {
             Student-powered · Delhi University
           </span>
 
-          <h1 className="mt-5 text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-balance">
-            DU SCIENCE HUB
-          </h1>
+           <h1 className="sr-only">DU Science Hub</h1>
+           <img
+             src="/DSH_OFFICIAL_LOGO.png"
+             alt="DU Science Hub"
+             className="mt-5 mx-auto w-[min(100%,24rem)] h-auto animate-fade-in"
+             width={506}
+             height={229}
+           />
 
-          <div className="mt-4 sm:mt-5 flex flex-col items-center gap-0.5 sm:gap-1">
-            <span className="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-blue-dark">
-              EXPLORE
-            </span>
+           <div className="mt-5 sm:mt-6 flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-blue-dark">
+             <span>Explore</span>
             <div
-              className="relative h-[1.3em] overflow-hidden w-full"
-              style={{ minHeight: "1.3em" }}
+               className="phrase-track min-w-0 max-w-full text-brand-red"
             >
               <span
                 key={index}
-                className="phrase-item absolute inset-0 flex items-center justify-center text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-red"
+                 className="phrase-item min-w-0 max-w-full break-words"
               >
                 {heroPhrases[index]}
               </span>
             </div>
           </div>
 
-          <p className="mt-6 text-base sm:text-lg text-ink-500 leading-relaxed max-w-xl mx-auto text-balance">
-            A student-powered platform for discovering DU, learning from seniors and finding
-            opportunities that help you move forward.
-          </p>
-
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href="#platform" className="btn-primary w-full sm:w-auto">
+             <a href="#explore-du" className="btn-primary w-full sm:w-auto">
               Explore DU
               <Icon name="arrow" className="h-4 w-4" />
             </a>

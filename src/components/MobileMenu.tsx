@@ -48,9 +48,11 @@ export default function MobileMenu({ open, onClose, navLinks, socialLinks }: Mob
       >
         <div className="flex items-center justify-between h-16 px-5 border-b border-surface-border">
           <img
-            src="/DSH_NEW_LOGO_..png"
+            src="/DSH_OFFICIAL_LOGO.png"
             alt="DU Science Hub"
-            className="h-10 w-auto"
+            className="h-9 w-auto max-w-[10rem] object-contain"
+            width={506}
+            height={229}
           />
           <button
             onClick={onClose}

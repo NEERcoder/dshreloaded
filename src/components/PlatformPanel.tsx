@@ -56,7 +56,7 @@ export default function PlatformPanel({
         {/* Panel number badge */}
         <div className="flex items-center justify-between">
           <span className={`text-xs font-extrabold uppercase tracking-[0.15em] ${accentText}`}>
-            {personality === "editorial" ? "Student Media" : personality === "community" ? "Community" : "Discovery"}
+             {personality === "editorial" ? "Explore DU" : personality === "community" ? "Join Our Team" : "Opportunities"}
           </span>
           <span className={`flex items-center justify-center h-7 w-7 rounded-lg ${accentSoftBg} ${accentSoftText} text-xs font-extrabold`}>
             {panelNumber}
