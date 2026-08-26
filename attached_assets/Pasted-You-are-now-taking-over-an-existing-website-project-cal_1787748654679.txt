@@ -1,0 +1,623 @@
+You are now taking over an existing website project called:
+
+DU Science Hub
+
+This is an existing project imported from GitHub. DO NOT rebuild the website from scratch.
+
+Your job is to continue improving the existing codebase while preserving all working functionality, existing data, assets, components, and integrations.
+
+==================================================
+1. BRAND IDENTITY — DO NOT CHANGE
+==================================================
+
+Brand name:
+DU Science Hub
+
+The existing DU Science Hub logo assets are already in the project.
+
+IMPORTANT:
+USE THE ACTUAL LOGO IMAGE AS THE WEBSITE BRAND MARK.
+
+Do NOT replace the logo with plain text.
+
+The visual identity should remain:
+
+- Bright
+- Clean
+- Educational
+- Modern
+- Student-focused
+- Professional
+- Friendly
+
+Primary brand colors:
+
+Red:
+#E60023 / close existing brand red
+
+Blue:
+#1F4F91 / close existing brand blue
+
+Use white/light backgrounds as the dominant UI.
+
+Avoid a dark-theme aesthetic.
+
+==================================================
+2. MAIN WEBSITE STRUCTURE
+==================================================
+
+The website has THREE major pillars.
+
+They should remain the core structure of the platform:
+
+1. EXPLORE DU
+2. JOIN DU SCIENCE HUB
+3. OPPORTUNITIES
+
+These should be immediately understandable to a first-time visitor.
+
+Do not remove existing sections or data unless explicitly instructed.
+
+==================================================
+3. HERO SECTION
+==================================================
+
+The main hero should prominently display:
+
+DU SCIENCE HUB
+
+Use the actual uploaded/project logo.
+
+Below the brand name, create an animated headline.
+
+The word:
+
+EXPLORE
+
+must remain constant.
+
+The second phrase should animate/change.
+
+Examples:
+
+EXPLORE DU
+
+EXPLORE COMPETITIONS
+
+EXPLORE INTERNSHIPS
+
+EXPLORE CERTIFICATIONS
+
+EXPLORE JOBS
+
+Potential additional phrases can include:
+
+EXPLORE CAMPUS LIFE
+EXPLORE COLLEGE REVIEWS
+EXPLORE RESEARCH
+EXPLORE OPPORTUNITIES
+
+IMPORTANT ANIMATION RULES:
+
+- "EXPLORE" must be capital E followed by lowercase letters:
+  Explore
+
+- The changing phrase must appear BESIDE "Explore", not underneath it.
+
+Correct visual concept:
+
+Explore DU
+
+Explore Competitions
+
+Explore Internships
+
+NOT:
+
+EXPLORE
+DU
+
+The animation should be noticeably faster and feel smooth.
+
+Use a subtle professional transition such as:
+- fade
+- horizontal slide
+- slight upward motion
+
+Do NOT use excessive bouncing, spinning or gimmicky animations.
+
+==================================================
+4. REMOVE HERO DESCRIPTION
+==================================================
+
+Remove the large descriptive paragraph currently displayed directly underneath the animated Explore headline.
+
+The hero should feel cleaner and more premium.
+
+Keep the primary CTAs.
+
+==================================================
+5. EXPLORE DU SECTION
+==================================================
+
+The Explore DU section should become the main student discovery area.
+
+Title:
+
+Explore DU
+
+Subtitle:
+
+A Complete DU Guide, By the Seniors.
+
+Description/content should communicate that students can discover:
+
+- DU colleges
+- College guides
+- Courses
+- Campus life
+- Student experiences
+- College reviews
+- Seniors and mentors
+- Student media
+- Interviews
+- Campus videos
+
+==================================================
+6. STUDENT MEDIA SHOULD LIVE INSIDE EXPLORE DU
+==================================================
+
+Do NOT treat Student Media as a completely separate primary pillar anymore.
+
+Instead, integrate it into the Explore DU ecosystem.
+
+Use a more interesting name than:
+
+"Student Media"
+
+Possible direction:
+
+"Inside DU"
+
+or
+
+"DU Unfiltered"
+
+or
+
+"Life at DU"
+
+Choose the option that fits the existing design best.
+
+This area should include:
+
+- College review videos
+- Campus tours
+- Student interviews
+- Podcast/video content
+- Real student experiences
+
+Use the existing YouTube/video data if already present.
+
+DO NOT invent real YouTube links.
+
+==================================================
+7. EXPLORE DU CONTENT CARDS
+==================================================
+
+The Explore DU area should visually communicate these major features:
+
+College Guides
+Videos / DU Unfiltered
+Student Reviews
+Seniors & Mentors
+
+Keep the existing clean card design, but make it more visually polished.
+
+Do not overcrowd the cards.
+
+==================================================
+8. COLLEGE DIRECTORY
+==================================================
+
+The platform should eventually contain ALL DELHI UNIVERSITY COLLEGES.
+
+Preserve the existing college architecture/data.
+
+Do not replace existing college data with fake demo data.
+
+The college directory should support:
+
+- College name
+- College profile
+- Courses
+- Campus information
+- Student reviews
+- Relevant media
+- Other existing college information
+
+==================================================
+9. COLLEGE COMMENTS / REVIEWS
+==================================================
+
+IMPORTANT CHANGE:
+
+REMOVE THE LOGIN/AUTHENTICATION REQUIREMENT FOR COMMENTS.
+
+For now, anyone should be able to submit a comment.
+
+NO:
+
+- Login
+- Signup
+- Email verification
+- College ID verification
+- Account creation
+- Authentication modal
+
+The user flow should simply be:
+
+Open college
+↓
+Read reviews
+↓
+Write comment
+↓
+Post comment
+
+The comment form should ask only for:
+
+Name
+Comment
+
+Optionally:
+
+Rating: 1–5 stars
+
+Do NOT ask for email, phone number, password or college ID.
+
+==================================================
+10. COMMENT SECURITY
+==================================================
+
+Although authentication is removed, DO NOT expose privileged database credentials.
+
+If Supabase is already being used:
+
+- Keep the publishable/anon key on the client where appropriate.
+- Never expose the Supabase service-role key.
+- Configure RLS correctly.
+- Allow anonymous users only the minimum INSERT permission required for comments.
+- Do not allow anonymous users to edit/delete other comments.
+- Do not allow anonymous users to modify college data.
+- Do not allow anonymous users to modify opportunities or admin data.
+
+If the existing review architecture has:
+
+pending
+approved
+rejected
+
+keep it.
+
+Prefer new anonymous comments to enter "pending".
+
+Only approved comments should appear publicly.
+
+Do not build a complicated admin system unless one already exists.
+
+==================================================
+11. JOIN DU SCIENCE HUB
+==================================================
+
+Keep the existing Join Our Team section.
+
+Heading:
+
+Join DU Science Hub
+
+Supporting message:
+
+Build Something Students Actually Use.
+
+This section is for student team members/interns.
+
+Current roles:
+
+1. Campus Correspondent
+2. Canva Editor
+3. Content Writer
+4. Founder's Office Intern
+
+Each role should have its own card.
+
+When a user selects/opens a role, show the relevant role description.
+
+==================================================
+12. APPLICATION FORM
+==================================================
+
+The team application should collect:
+
+- Name
+- Age
+- College
+- Phone Number
+- CV/Resume
+- Selected Role
+
+The selected role should determine which role description the applicant sees.
+
+Keep the form simple.
+
+Do not add unnecessary fields.
+
+If an existing Google Form integration is already present, preserve it.
+
+Do not replace working integrations without reason.
+
+==================================================
+13. OPPORTUNITIES
+==================================================
+
+The third major pillar is:
+
+Opportunities
+
+This is for BSc and science students initially.
+
+The platform should eventually list:
+
+- Internships
+- Jobs
+- Competitions
+- Certifications
+- Research Opportunities
+- Scholarships
+
+The architecture should be scalable so more opportunity categories can be added later.
+
+==================================================
+14. OPPORTUNITY CARDS
+==================================================
+
+Each opportunity should eventually support information such as:
+
+- Title
+- Organization
+- Type
+- Location
+- Remote/onsite
+- Deadline
+- Eligibility
+- Description
+- Application link
+- Relevant field/discipline
+- Status
+
+Do not invent real opportunities.
+
+Existing demo data should remain clearly identifiable as demo/preview content until real data is connected.
+
+==================================================
+15. THREE-PILLAR VISUAL PRESENTATION
+==================================================
+
+The website should make the three major directions obvious:
+
+EXPLORE DU
+JOIN OUR TEAM
+OPPORTUNITIES
+
+On desktop, wherever appropriate, use a three-column layout so the three pillars can be understood visually without excessive scrolling.
+
+Do NOT force everything into one cramped row.
+
+Maintain responsive behavior.
+
+On mobile:
+
+- Stack sections naturally.
+- Keep cards readable.
+- Do not make text tiny.
+- Do not hide important information.
+
+==================================================
+16. NAVIGATION
+==================================================
+
+Keep the navigation simple.
+
+Use the actual DU Science Hub logo on the left.
+
+Navigation should include:
+
+Explore DU
+Join Our Team
+Opportunities
+
+Social links:
+
+YouTube
+Instagram
+
+Primary CTA:
+
+Find Opportunities
+
+The logo should be clickable and return to the homepage.
+
+==================================================
+17. VISUAL DESIGN
+==================================================
+
+Overall design direction:
+
+Bright educational platform.
+
+Use:
+
+- White backgrounds
+- Very light blue/gray section backgrounds
+- Navy/dark blue typography
+- Existing DU Science Hub red for important accents
+- Existing blue for secondary actions
+- Soft borders
+- Subtle shadows
+- Rounded cards
+- Clean spacing
+- Professional typography
+
+Avoid:
+
+- Dark mode
+- Excessive gradients
+- Neon colors
+- Huge empty spaces
+- Excessive glassmorphism
+- Overly rounded childish UI
+- Excessive animations
+
+==================================================
+18. ANIMATIONS
+==================================================
+
+Upgrade the visual quality without making the website heavy.
+
+Use subtle:
+
+- Fade-in
+- Slide-up
+- Hover elevation
+- Card reveal
+- Smooth scrolling
+- Section transitions
+- Animated Explore headline
+
+Animations should be:
+
+- Fast
+- Smooth
+- Professional
+- Mobile-friendly
+
+Respect prefers-reduced-motion.
+
+Do NOT introduce animation libraries unless they are actually necessary.
+
+==================================================
+19. PERFORMANCE
+==================================================
+
+This website must remain lightweight and deployable.
+
+Important:
+
+- Do not introduce unnecessary dependencies.
+- Avoid huge client-side bundles.
+- Lazy-load heavy media where appropriate.
+- Optimize images.
+- Do not autoplay large videos.
+- Keep animations CSS-based where possible.
+- Preserve compatibility with Cloudflare deployment.
+- Avoid server-specific APIs that would break Cloudflare deployment.
+- Do not introduce Node-only functionality into code that runs on Cloudflare.
+
+==================================================
+20. RESPONSIVE DESIGN
+==================================================
+
+The website must work extremely well on:
+
+- Desktop
+- Laptop
+- Tablet
+- Mobile
+
+Pay particular attention to mobile.
+
+Do not simply shrink the desktop layout.
+
+On mobile:
+
+- Navigation should become a clean mobile menu.
+- Cards should become single-column.
+- Buttons should remain easy to tap.
+- Text should remain visible.
+- Animated Explore text must not overflow.
+- Comments must be easy to post.
+- No horizontal scrolling.
+
+==================================================
+21. EXISTING DATA IS SACRED
+==================================================
+
+VERY IMPORTANT:
+
+Do not delete existing:
+
+- College data
+- Reviews
+- Video data
+- Opportunity data
+- Team role data
+- Assets
+- YouTube links
+- Instagram links
+- Existing integrations
+
+Do not replace real existing data with fake placeholder data.
+
+Do not change content unless explicitly instructed.
+
+==================================================
+22. CODE QUALITY
+==================================================
+
+Before modifying anything:
+
+Understand the existing architecture.
+
+Reuse existing components where possible.
+
+Do not create duplicate components unnecessarily.
+
+Do not create multiple competing implementations of the same feature.
+
+Keep the project organized.
+
+Use the existing styling system.
+
+Do not rewrite working code just for the sake of rewriting it.
+
+==================================================
+23. FIRST TASK
+==================================================
+
+Before making major changes, inspect the entire repository.
+
+Identify:
+
+- Framework
+- Entry points
+- Routes
+- Components
+- Database integration
+- Supabase configuration
+- Existing assets
+- Existing review/comment implementation
+- Existing college data
+- Existing opportunity data
+- Existing video/media implementation
+- Existing forms
+- Existing authentication
+
+Then provide me with a concise implementation plan.
+
+DO NOT rebuild the application.
+
+DO NOT delete existing functionality.
+
+DO NOT make large architectural changes without explaining them.
+
+After your analysis, wait for my next instruction.
