@@ -9,6 +9,7 @@ import MentorCard from "./components/MentorCard";
 import OpportunityCard from "./components/OpportunityCard";
 import Footer from "./components/Footer";
 import Icon from "./components/Icon";
+import InteractiveDotGrid from "./components/InteractiveDotGrid";
 import { platformPanels } from "./data/platformPanels";
 import { videos, videoCategories } from "./data/videos";
 import { reviews } from "./data/reviews";
@@ -17,6 +18,10 @@ import { opportunities } from "./data/opportunities";
 import { exploreDuCards } from "./data/exploreDu";
 
 export default function App() {
+  if (window.location.pathname === "/dot-grid") {
+    return <InteractiveDotGrid />;
+  }
+
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
