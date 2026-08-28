@@ -7,6 +7,17 @@
   isolation: isolate;
 }
 
+.dot-grid-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #1e3a5f;
+  opacity: 0.12;
+  isolation: isolate;
+}
+
 .dot-grid-canvas {
   position: absolute;
   inset: 0;

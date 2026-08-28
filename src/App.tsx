@@ -19,10 +19,12 @@ import { exploreDuCards } from "./data/exploreDu";
 
 function DuScienceHubHome() {
   return (
-    <div className="min-h-screen bg-surface">
-      <Navbar />
-      <main>
-        <Hero />
+    <div className="relative min-h-screen isolate">
+      <InteractiveDotGrid background />
+      <div className="relative z-10">
+        <Navbar />
+        <main>
+          <Hero />
 
         {/* UNIFIED PLATFORM SECTION — THREE CORE PANELS */}
         <section id="pillars" className="py-12 sm:py-16 lg:py-20">
@@ -154,8 +156,9 @@ function DuScienceHubHome() {
             </div>
           </div>
         </section>
-      </main>
-      <Footer />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }

@@ -14,7 +14,11 @@ type Dot = {
   opacity: number;
 };
 
-export default function InteractiveDotGrid() {
+type InteractiveDotGridProps = {
+  background?: boolean;
+};
+
+export default function InteractiveDotGrid({ background = false }: InteractiveDotGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -79,10 +83,15 @@ export default function InteractiveDotGrid() {
         dot.scale += (targetScale - dot.scale) * easing;
         dot.opacity += (targetOpacity - dot.opacity) * easing;
 
+        const redInfluence = influence * 0.9;
+        const red = Math.round(255 + (230 - 255) * redInfluence);
+        const green = Math.round(255 + (0 - 255) * redInfluence);
+        const blue = Math.round(255 + (35 - 255) * redInfluence);
+
         context.beginPath();
         context.arc(dot.x, dot.y, DOT_RADIUS * dot.scale, 0, Math.PI * 2);
-        context.fillStyle = `rgba(255, 255, 255, ${dot.opacity})`;
-        context.shadowColor = `rgba(255, 255, 255, ${influence * 0.8})`;
+        context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${dot.opacity})`;
+        context.shadowColor = `rgba(230, 0, 35, ${influence * 0.85})`;
         context.shadowBlur = influence * 22;
         context.fill();
       }
@@ -115,13 +124,21 @@ export default function InteractiveDotGrid() {
     };
   }, []);
 
+  const canvas = (
+    <canvas
+      ref={canvasRef}
+      className="dot-grid-canvas"
+      aria-hidden="true"
+    />
+  );
+
+  if (background) {
+    return <div className="dot-grid-background">{canvas}</div>;
+  }
+
   return (
     <main className="dot-grid-page">
-      <canvas
-        ref={canvasRef}
-        className="dot-grid-canvas"
-        aria-hidden="true"
-      />
+      {canvas}
       <p className="sr-only">
         Interactive white dots on a blue background. Move the pointer across the page to activate nearby dots.
       </p>
