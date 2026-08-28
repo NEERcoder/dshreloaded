@@ -60,7 +60,7 @@ export default function InteractiveDotGrid({ background = false }: InteractiveDo
           x: xOffset + column * DOT_SPACING,
           y: yOffset + row * DOT_SPACING,
           phase: (column * 1.7 + row * 2.3) % (Math.PI * 2),
-          red: (column + row * 2) % 4 === 0,
+          red: (column + row) % 2 === 0,
           scale: BASE_SCALE,
           opacity: BASE_OPACITY,
         };
@@ -90,7 +90,7 @@ export default function InteractiveDotGrid({ background = false }: InteractiveDo
         dot.scale += (targetScale - dot.scale) * easing;
         dot.opacity += (targetOpacity - dot.opacity) * easing;
 
-        const redInfluence = Math.min(1, (dot.red ? 0.55 : 0) + influence * 0.95 + pulse * 0.2);
+        const redInfluence = Math.min(1, (dot.red ? 0.95 : 0) + influence * 0.95 + pulse * 0.2);
         const red = Math.round(255 + (230 - 255) * redInfluence);
         const green = Math.round(255 + (0 - 255) * redInfluence);
         const blue = Math.round(255 + (35 - 255) * redInfluence);
