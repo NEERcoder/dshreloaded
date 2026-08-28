@@ -17,11 +17,7 @@ import { mentors } from "./data/mentors";
 import { opportunities } from "./data/opportunities";
 import { exploreDuCards } from "./data/exploreDu";
 
-export default function App() {
-  if (window.location.pathname === "/dot-grid") {
-    return <InteractiveDotGrid />;
-  }
-
+function DuScienceHubHome() {
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
@@ -162,4 +158,14 @@ export default function App() {
       <Footer />
     </div>
   );
+}
+
+export default function App() {
+  const path = window.location.pathname;
+
+  if (path === "/dot-grid") {
+    return <InteractiveDotGrid />;
+  }
+
+  return <DuScienceHubHome />;
 }

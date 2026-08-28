@@ -4,7 +4,7 @@ import "./InteractiveDotGrid.css";
 const DOT_RADIUS = 9;
 const DOT_SPACING = 48;
 const INTERACTION_RADIUS = 100;
-const BASE_OPACITY = 0.84;
+const BASE_OPACITY = 0.78;
 const BASE_SCALE = 1;
 
 type Dot = {
@@ -62,7 +62,7 @@ export default function InteractiveDotGrid() {
     const draw = (time: number) => {
       const elapsed = Math.min(time - lastTime, 40);
       lastTime = time;
-      const easing = prefersReducedMotion ? 1 : 1 - Math.exp(-elapsed / 120);
+      const easing = prefersReducedMotion ? 1 : 1 - Math.exp(-elapsed / 180);
 
       context.clearRect(0, 0, width, height);
 
@@ -73,8 +73,8 @@ export default function InteractiveDotGrid() {
         const influence = pointer.active
           ? Math.max(0, 1 - distance / INTERACTION_RADIUS)
           : 0;
-        const targetScale = BASE_SCALE + influence * 0.58;
-        const targetOpacity = BASE_OPACITY + influence * 0.16;
+        const targetScale = BASE_SCALE + influence * 0.82;
+        const targetOpacity = BASE_OPACITY + influence * 0.22;
 
         dot.scale += (targetScale - dot.scale) * easing;
         dot.opacity += (targetOpacity - dot.opacity) * easing;
@@ -83,7 +83,7 @@ export default function InteractiveDotGrid() {
         context.arc(dot.x, dot.y, DOT_RADIUS * dot.scale, 0, Math.PI * 2);
         context.fillStyle = `rgba(255, 255, 255, ${dot.opacity})`;
         context.shadowColor = `rgba(255, 255, 255, ${influence * 0.8})`;
-        context.shadowBlur = influence * 14;
+        context.shadowBlur = influence * 22;
         context.fill();
       }
 
@@ -103,15 +103,15 @@ export default function InteractiveDotGrid() {
 
     resize();
     window.addEventListener("resize", resize);
-    canvas.addEventListener("pointermove", handlePointerMove);
-    canvas.addEventListener("pointerleave", handlePointerLeave);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("blur", handlePointerLeave);
     frame = window.requestAnimationFrame(draw);
 
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("pointermove", handlePointerMove);
-      canvas.removeEventListener("pointerleave", handlePointerLeave);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("blur", handlePointerLeave);
     };
   }, []);
 
