@@ -10,6 +10,8 @@ const BASE_SCALE = 1;
 type Dot = {
   x: number;
   y: number;
+  phase: number;
+  red: boolean;
   scale: number;
   opacity: number;
 };
@@ -57,6 +59,8 @@ export default function InteractiveDotGrid({ background = false }: InteractiveDo
         return {
           x: xOffset + column * DOT_SPACING,
           y: yOffset + row * DOT_SPACING,
+          phase: (column * 1.7 + row * 2.3) % (Math.PI * 2),
+          red: (column + row * 2) % 4 === 0,
           scale: BASE_SCALE,
           opacity: BASE_OPACITY,
         };
@@ -77,13 +81,16 @@ export default function InteractiveDotGrid({ background = false }: InteractiveDo
         const influence = pointer.active
           ? Math.max(0, 1 - distance / INTERACTION_RADIUS)
           : 0;
-        const targetScale = BASE_SCALE + influence * 0.82;
-        const targetOpacity = BASE_OPACITY + influence * 0.22;
+        const pulse = !prefersReducedMotion && influence > 0
+          ? (0.5 + 0.5 * Math.sin(time * 0.018 + dot.phase)) * influence
+          : 0;
+        const targetScale = BASE_SCALE + influence * 0.7 + pulse * 0.35;
+        const targetOpacity = BASE_OPACITY + influence * 0.22 + pulse * 0.08;
 
         dot.scale += (targetScale - dot.scale) * easing;
         dot.opacity += (targetOpacity - dot.opacity) * easing;
 
-        const redInfluence = influence * 0.9;
+        const redInfluence = Math.min(1, (dot.red ? 0.55 : 0) + influence * 0.95 + pulse * 0.2);
         const red = Math.round(255 + (230 - 255) * redInfluence);
         const green = Math.round(255 + (0 - 255) * redInfluence);
         const blue = Math.round(255 + (35 - 255) * redInfluence);
@@ -91,8 +98,8 @@ export default function InteractiveDotGrid({ background = false }: InteractiveDo
         context.beginPath();
         context.arc(dot.x, dot.y, DOT_RADIUS * dot.scale, 0, Math.PI * 2);
         context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${dot.opacity})`;
-        context.shadowColor = `rgba(230, 0, 35, ${influence * 0.85})`;
-        context.shadowBlur = influence * 22;
+        context.shadowColor = `rgba(230, 0, 35, ${Math.min(1, influence * 0.9 + pulse * 0.4)})`;
+        context.shadowBlur = influence * 22 + pulse * 10;
         context.fill();
       }
 
