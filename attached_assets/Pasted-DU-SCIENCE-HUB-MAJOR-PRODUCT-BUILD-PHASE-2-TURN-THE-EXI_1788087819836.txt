@@ -1,0 +1,1228 @@
+DU SCIENCE HUB — MAJOR PRODUCT BUILD
+PHASE 2: TURN THE EXISTING UI INTO THE FUNCTIONAL PLATFORM
+
+You are working on an EXISTING DU Science Hub project imported from GitHub.
+
+THIS IS NOT A NEW PROJECT.
+
+DO NOT rebuild the website from scratch.
+
+DO NOT replace the existing architecture.
+
+DO NOT delete existing working UI.
+
+DO NOT redesign the entire website.
+
+First inspect the current project thoroughly, then implement the functionality described below while preserving the existing visual identity.
+
+==================================================
+1. PRODUCT DEFINITION
+==================================================
+
+DU Science Hub is a student-powered Delhi University platform.
+
+It has three core product areas:
+
+1. EXPLORE DU
+2. JOIN DU SCIENCE HUB
+3. OPPORTUNITIES
+
+The existing website already has the visual foundation for these.
+
+We are now turning the existing UI into a real functional product.
+
+==================================================
+2. NON-NEGOTIABLE BRAND RULES
+==================================================
+
+Preserve the existing:
+
+- official DU Science Hub logo
+- standalone elephant brand mark
+- white-first visual system
+- red brand accent
+- deep blue brand accent
+- typography
+- overall premium educational design
+- existing animations
+- responsive layout
+
+DO NOT introduce:
+
+- dark theme
+- purple
+- neon
+- unrelated colours
+- excessive glassmorphism
+- excessive gradients
+
+The website must remain:
+
+BRIGHT
+WHITE-FIRST
+EDUCATIONAL
+STUDENT-CENTRIC
+PREMIUM
+MODERN
+
+==================================================
+3. NAVIGATION
+==================================================
+
+The main navigation must be:
+
+Explore DU
+Join Our Team
+Opportunities
+
+Keep:
+
+YouTube
+Instagram
+Find Opportunities
+
+Use the actual uploaded DU Science Hub logo.
+
+Do NOT use a text-only "DU Science Hub" logo.
+
+==================================================
+4. EXPLORE DU
+==================================================
+
+Create/complete a dedicated:
+
+/explore
+
+route.
+
+The Explore DU page should contain four major areas:
+
+1. DU Unfiltered
+2. College Directory
+3. Student Reviews
+4. Seniors & Mentors
+
+==================================================
+5. DU UNFILTERED
+==================================================
+
+Use "DU Unfiltered" as the name.
+
+Purpose:
+
+Real student experiences, college reviews, interviews, podcasts and campus stories.
+
+Categories:
+
+- College Reviews
+- Campus Tours
+- Student Interviews
+- Podcasts
+- CUET Guidance
+- Campus Stories
+
+Create a polished video discovery UI.
+
+Use real existing video data if it already exists.
+
+Do NOT invent:
+
+- YouTube URLs
+- view counts
+- student names
+- video statistics
+
+Prepare the architecture to accept actual YouTube URLs.
+
+Each video record should support:
+
+title
+youtubeUrl
+thumbnail
+category
+college
+description
+duration
+
+The real videos will be provided later.
+
+==================================================
+6. COLLEGE DIRECTORY
+==================================================
+
+The Explore DU directory must cover ALL DU COLLEGES.
+
+Create/maintain:
+
+/explore
+
+with:
+
+Search
+Filters
+Sort
+College cards
+Results count
+
+Search by:
+
+- college name
+- course
+- campus
+- location
+- category
+
+Filters:
+
+Campus
+- North Campus
+- South Campus
+- Off Campus
+- Other/Specialized
+
+Academic area:
+- Science
+- Commerce
+- Arts & Humanities
+- Social Sciences
+- Management/Commerce
+- Vocational
+- Education
+- Law
+- Medicine/Health
+- Other
+
+College type:
+- Co-educational
+- Women's
+- Specialized
+
+Use the current college dataset where available.
+
+Do not invent college data.
+
+==================================================
+7. COLLEGE PROFILE PAGE
+==================================================
+
+Every college must have a route such as:
+
+/explore/[college-slug]
+
+Example:
+
+/explore/hindu-college
+
+The page should include:
+
+College Hero
+Quick Facts
+Courses
+Campus Information
+About
+DU Unfiltered/video content
+Student Reviews
+Seniors/Mentors
+Related Opportunities
+
+Do not invent data.
+
+Use "Coming soon" where actual data does not yet exist.
+
+==================================================
+8. STUDENT REVIEWS
+==================================================
+
+IMPORTANT PRODUCT DECISION:
+
+Anyone can post a college review without logging in.
+
+There is NO:
+
+- signup requirement
+- login requirement
+- email verification
+- college ID verification
+
+The flow must be:
+
+College page
+↓
+Student Reviews
+↓
+Share Your Experience
+↓
+Name
+↓
+Rating
+↓
+Comment
+↓
+Post Review
+
+Minimum fields:
+
+Name
+Rating 1–5
+Review
+
+Do not ask for:
+
+- password
+- account
+- college ID
+- phone
+- email
+
+==================================================
+9. REVIEW DATABASE
+==================================================
+
+Store reviews in Supabase.
+
+Suggested table:
+
+college_reviews
+
+Fields:
+
+id
+college_id
+name
+rating
+review
+status
+created_at
+
+status values:
+
+pending
+approved
+rejected
+
+IMPORTANT:
+
+Anonymous users can INSERT a review.
+
+Anonymous users must NOT be able to:
+
+- edit other reviews
+- delete reviews
+- modify colleges
+- modify mentors
+- modify opportunities
+- access admin data
+
+Use Row Level Security.
+
+Never expose a Supabase service-role key in frontend code.
+
+Only approved reviews should be publicly displayed.
+
+==================================================
+10. REVIEW UI
+==================================================
+
+Make reviews visually similar to a modern social/community comment section.
+
+Show:
+
+Name
+College
+Rating
+Comment
+Date
+
+Add:
+
+Report
+
+The report UI can be a lightweight placeholder for now if the reporting backend does not yet exist.
+
+Allow users to submit without authentication.
+
+==================================================
+11. MENTOR SECTION
+==================================================
+
+Create:
+
+Seniors & Mentors
+
+Purpose:
+
+Show students/mentors who have already worked with DU Science Hub.
+
+Mentor record:
+
+name
+photo_url
+college
+course
+year/designation
+bio
+role
+profile_url/contact_url if applicable
+
+Do NOT invent actual people.
+
+Use placeholder records only where necessary and clearly mark them as placeholders.
+
+==================================================
+12. MENTOR CAROUSEL
+==================================================
+
+The mentor display should use an automatic horizontal carousel.
+
+Direction:
+
+RIGHT TO LEFT
+
+Requirements:
+
+- smooth continuous movement
+- pause on hover
+- touch-friendly
+- no layout jumping
+- no excessive JS
+- duplicate slide track if necessary for seamless looping
+- CSS transforms preferred
+- mobile responsive
+
+Users should be able to manually interact if useful.
+
+The mentor photos should be prominent and visually polished.
+
+==================================================
+13. JOIN DU SCIENCE HUB
+==================================================
+
+Create/complete:
+
+/join
+
+or equivalent route.
+
+The Join page must contain:
+
+1. Our Members
+2. Why Join Us?
+3. What You'll Get
+4. Open Positions
+5. Apply / General Application
+
+==================================================
+14. OUR MEMBERS
+==================================================
+
+Show actual DU Science Hub team members.
+
+Data:
+
+photo
+name
+role
+college if available
+short bio if available
+
+Do not invent real team members.
+
+Use placeholders only until the real data is connected.
+
+The UI should be ready to receive actual photos and names.
+
+==================================================
+15. WHY JOIN US
+==================================================
+
+Use this messaging:
+
+"Build Something Students Actually Use."
+
+Emphasize:
+
+- real-world experience
+- student-focused work
+- portfolio building
+- networking
+- practical exposure
+- making an impact on DU students
+
+Keep the language natural and student-friendly.
+
+==================================================
+16. WHAT YOU'LL GET
+==================================================
+
+Show:
+
+Paid internship opportunities, where applicable
+Certificate of Completion
+Letter of Recommendation for eligible performers
+LinkedIn / digital badge where applicable
+Portfolio experience
+Networking / practical experience
+
+Do not imply every applicant automatically receives every benefit.
+
+==================================================
+17. OPEN POSITIONS
+==================================================
+
+Roles:
+
+Campus Correspondent
+Canva Editor
+Content Writer
+Founder's Office Intern
+
+Create reusable role cards.
+
+Each role must support:
+
+title
+short description
+responsibilities
+requirements
+benefits
+google_form_url
+status
+
+Example status:
+
+Open
+Closed
+
+==================================================
+18. ROLE DETAIL PAGE
+==================================================
+
+When user clicks a position:
+
+Show:
+
+Role title
+About role
+Responsibilities
+Who we're looking for
+What you'll get
+Work arrangement
+Duration
+Status
+
+Then:
+
+"Apply Now"
+
+This button should open the corresponding Google Form.
+
+Do NOT hardcode the Google Form URL into multiple components.
+
+Store the URL in the role data.
+
+I will provide the real Google Form links later.
+
+Create the architecture so they can be updated in one place or through future admin functionality.
+
+==================================================
+19. GENERAL APPLICATION
+==================================================
+
+At the bottom of Join Our Team:
+
+"Can't find the right role?"
+
+"Send us your CV and we'll keep you in mind for future opportunities."
+
+Fields:
+
+Email
+CV/Resume upload
+
+Official email:
+
+connect@dusciencehub.in
+
+IMPORTANT:
+
+Do not pretend browser mailto is capable of attaching uploaded files.
+
+Build this as a proper form submission architecture.
+
+Preferred architecture:
+
+Supabase Storage for CV
++
+Supabase table for application metadata
++
+secure server/Edge Function for notification/email
+
+Do not expose service-role keys in the frontend.
+
+If an email provider is required and credentials are not yet available, build the storage/database flow and clearly identify the single environment variable/configuration needed later.
+
+Do not invent credentials.
+
+==================================================
+20. OPPORTUNITIES
+==================================================
+
+Create/complete:
+
+/opportunities
+
+Main categories:
+
+Internships
+Competitions
+Research
+Certifications
+
+Future-ready categories:
+
+Jobs
+Fellowships
+Scholarships
+
+Do not make future categories appear active unless there is real data.
+
+==================================================
+21. OPPORTUNITIES LANDING PAGE
+==================================================
+
+Page heading:
+
+Find Opportunities
+
+Subheading:
+
+"Internships, Jobs & Opportunities for BSc & Science Students."
+
+Main category cards:
+
+Internships
+Competitions
+Research
+Certifications
+
+Each category should have:
+
+icon
+description
+number of opportunities if real
+View opportunities
+
+Do not fabricate counts.
+
+==================================================
+22. INTERNSHIPS
+==================================================
+
+Route:
+
+/opportunities/internships
+
+Features:
+
+Search
+Filters
+Sort
+Opportunity cards
+
+Useful filters:
+
+Field
+Course
+Location
+Remote/On-site
+Paid/Unpaid
+Duration
+Deadline
+
+Each card:
+
+Title
+Organization
+Field
+Location
+Mode
+Deadline
+Stipend if available
+Verified/curated status if actually verified
+View Details
+
+==================================================
+23. COMPETITIONS
+==================================================
+
+Route:
+
+/opportunities/competitions
+
+Show:
+
+Science competitions
+Hackathons
+Quizzes
+Academic contests
+Challenges
+
+Use same reusable opportunity-card system.
+
+==================================================
+24. RESEARCH
+==================================================
+
+Route:
+
+/opportunities/research
+
+Show:
+
+Research internships
+Research projects
+Research assistant opportunities
+Research programmes
+
+Use same opportunity architecture.
+
+==================================================
+25. CERTIFICATIONS
+==================================================
+
+Route:
+
+/opportunities/certifications
+
+Show:
+
+Relevant certifications
+Courses
+Skill programs
+
+This section should receive stronger visual promotion.
+
+It is an important future business category.
+
+==================================================
+26. CROSS-PROMOTE CERTIFICATIONS
+==================================================
+
+Promote certifications naturally inside:
+
+Internships
+Competitions
+Research
+
+Examples:
+
+"Build the skills recruiters look for."
+
+"Strengthen your profile before applying."
+
+"Explore relevant certifications."
+
+These should link to:
+
+/opportunities/certifications
+
+Do NOT make the promotion intrusive.
+
+==================================================
+27. OPPORTUNITY DATABASE
+==================================================
+
+Store opportunities in Supabase.
+
+Suggested table:
+
+opportunities
+
+Fields:
+
+id
+title
+organization
+category
+description
+eligibility
+field
+courses
+location
+mode
+stipend
+duration
+deadline
+application_url
+image_url
+status
+featured
+created_at
+updated_at
+
+Possible category values:
+
+internship
+competition
+research
+certification
+
+Future values can include:
+
+job
+fellowship
+scholarship
+
+==================================================
+28. OPPORTUNITY ADMIN PANEL
+==================================================
+
+THIS IS CRITICAL.
+
+I need to be able to add opportunities myself without touching code.
+
+Create a protected admin area.
+
+Example:
+
+/admin
+
+Admin authentication must use Supabase Auth.
+
+Do not create insecure hardcoded passwords.
+
+Admin should be able to:
+
+Create opportunity
+Edit opportunity
+Delete opportunity
+Publish/unpublish
+Mark featured
+Set deadline
+Set category
+Add application link
+
+Support:
+
+Internship
+Competition
+Research
+Certification
+
+The public site must automatically reflect admin changes.
+
+==================================================
+29. ADMIN DASHBOARD
+==================================================
+
+Create a clean admin dashboard with navigation:
+
+Overview
+Opportunities
+Reviews
+Mentors
+Team Members
+Videos
+Settings
+
+In the first implementation, fully implement:
+
+Opportunities
+
+Reviews can have basic approval/rejection.
+
+Other sections can initially be prepared for later CRUD.
+
+Do not create unnecessary complexity.
+
+==================================================
+30. ADMIN REVIEW MODERATION
+==================================================
+
+Admin should be able to see:
+
+Pending Reviews
+Approved Reviews
+Rejected Reviews
+
+Actions:
+
+Approve
+Reject
+Delete
+
+New anonymous reviews should enter:
+
+pending
+
+Only approved reviews are public.
+
+==================================================
+31. DATA ARCHITECTURE
+==================================================
+
+Do not hardcode dynamic content into React components.
+
+Use a clear data-access layer.
+
+Frontend:
+
+Components
+↓
+Data access functions
+↓
+Supabase
+
+Do NOT scatter direct Supabase queries through every component.
+
+Use reusable functions/services such as:
+
+getColleges()
+getCollegeBySlug()
+getReviewsByCollege()
+createAnonymousReview()
+getMentors()
+getVideos()
+getOpportunities()
+getOpportunitiesByCategory()
+
+==================================================
+32. SECURITY
+==================================================
+
+IMPORTANT:
+
+Never expose:
+
+Supabase service-role key
+private secrets
+admin credentials
+
+Frontend should only use safe publishable configuration.
+
+Supabase RLS must be configured.
+
+Anonymous users:
+
+Can insert reviews.
+
+Cannot modify protected data.
+
+Admin users:
+
+Can manage opportunities/reviews/team/mentors according to role.
+
+Use authenticated admin access.
+
+==================================================
+33. SUPABASE SCHEMA
+==================================================
+
+Before creating migrations, inspect whether the project already contains Supabase tables.
+
+Do NOT duplicate existing tables.
+
+If tables already exist, reuse them when appropriate.
+
+If new tables are required, create clean migrations.
+
+Likely tables:
+
+colleges
+college_reviews
+mentors
+videos
+team_members
+team_roles
+opportunities
+applications
+
+Use foreign keys where appropriate.
+
+Do NOT unnecessarily modify unrelated existing tables.
+
+==================================================
+34. EXISTING UI PRESERVATION
+==================================================
+
+The current screenshots represent the visual direction we want.
+
+Preserve:
+
+- white/light backgrounds
+- red/blue palette
+- typography
+- logo
+- navbar
+- card language
+- animations
+- responsive layout
+- three main product areas
+
+Functional work should fit inside the existing design.
+
+Do not replace the design with a generic dashboard style.
+
+==================================================
+35. REAL CONTENT RULE
+==================================================
+
+Do not invent:
+
+- real students
+- mentors
+- organizations
+- opportunities
+- YouTube URLs
+- view counts
+- reviews
+- ratings
+- deadlines
+- salaries
+- certification providers
+
+Where real data has not yet been supplied:
+
+Use a clearly marked empty/coming-soon state.
+
+Do not present fictional examples as real.
+
+==================================================
+36. MOBILE EXPERIENCE
+==================================================
+
+Mobile is extremely important.
+
+Test around:
+
+320px
+375px
+390px
+430px
+
+Ensure:
+
+- no horizontal overflow
+- comment form works
+- mentor carousel works
+- opportunity filters work
+- Google Form buttons work
+- CV upload works
+- navbar works
+- cards remain readable
+
+==================================================
+37. PERFORMANCE
+==================================================
+
+Keep everything lightweight.
+
+Use:
+
+- CSS transforms
+- lazy-loaded images
+- optimized images
+- efficient Supabase queries
+- pagination where appropriate
+- minimal dependencies
+- no unnecessary animation libraries
+
+The mentor carousel must not continuously trigger expensive React renders.
+
+Prefer CSS transform animation.
+
+==================================================
+38. CLOUDflare COMPATIBILITY
+==================================================
+
+This project must remain deployable on Cloudflare.
+
+Do not introduce:
+
+- Node-only filesystem APIs
+- fs
+- path
+- unsupported Node APIs
+- insecure server assumptions
+
+Use Cloudflare-compatible/server-compatible architecture.
+
+Supabase integration must remain compatible with the existing deployment environment.
+
+==================================================
+39. ROUTE STRUCTURE
+==================================================
+
+Expected routes:
+
+/
+ 
+/explore
+
+/explore/[college-slug]
+
+/join
+
+/join/[role]
+
+/opportunities
+
+/opportunities/internships
+
+/opportunities/competitions
+
+/opportunities/research
+
+/opportunities/certifications
+
+/admin
+
+Adjust the exact routing syntax to match the current framework.
+
+Do NOT break existing routes.
+
+==================================================
+40. SEO
+==================================================
+
+Add appropriate metadata.
+
+Explore:
+
+"Explore Delhi University | DU Science Hub"
+
+College:
+
+"[College Name] | DU Science Hub"
+
+Opportunities:
+
+"Science Internships, Jobs & Competitions | DU Science Hub"
+
+Maintain semantic HTML.
+
+==================================================
+41. IMPLEMENTATION ORDER
+==================================================
+
+Implement in this order:
+
+1. Inspect existing codebase.
+2. Preserve existing visual system.
+3. Set up/verify Supabase connection.
+4. Verify database architecture.
+5. Build Explore DU routes.
+6. Build college directory.
+7. Build college detail pages.
+8. Add anonymous reviews.
+9. Add review moderation.
+10. Build mentors carousel.
+11. Build Join Our Team.
+12. Build role pages + Google Form architecture.
+13. Build general CV application flow.
+14. Build Opportunities.
+15. Build Supabase opportunity CRUD.
+16. Build admin dashboard.
+17. Add certification promotion.
+18. Run full responsive/performance/accessibility audit.
+
+Do NOT skip directly to random features.
+
+==================================================
+42. BEFORE DATABASE CHANGES
+==================================================
+
+Before modifying the Supabase schema:
+
+Inspect the current project and existing schema.
+
+Do not destroy existing data.
+
+Do not drop tables merely to make the new structure easier.
+
+Prefer additive migrations.
+
+If an existing table can support the feature, reuse it.
+
+==================================================
+43. BEFORE FINISHING
+==================================================
+
+Run checks for:
+
+TypeScript errors
+Build errors
+Runtime errors
+Console errors
+Broken imports
+Broken routes
+Broken mobile layouts
+Supabase errors
+RLS errors
+
+Test:
+
+Anonymous review submission
+Admin review approval
+Opportunity creation
+Opportunity editing
+Opportunity deletion
+Opportunity publishing
+Opportunity filtering
+College search
+College navigation
+Mentor carousel
+Role navigation
+Google Form links
+CV upload workflow
+
+==================================================
+44. VERY IMPORTANT
+==================================================
+
+Do NOT make assumptions about missing data.
+
+When something requires information I have not yet provided, create the correct data structure/UI and leave the actual value empty.
+
+Examples:
+
+YouTube URLs → I will provide them.
+Google Form URLs → I will provide them.
+Mentor photos/names → I will provide them.
+Team member details → I will provide them.
+Opportunity listings → I will add them through admin.
+
+Do not fabricate any of these.
+
+==================================================
+45. FINAL PRODUCT VISION
+==================================================
+
+The finished platform should feel like:
+
+A trusted DU student ecosystem.
+
+A student comes for:
+
+COLLEGE INFORMATION
+
+stays for:
+
+REAL STUDENT EXPERIENCES
+
+returns for:
+
+INTERNSHIPS
+COMPETITIONS
+RESEARCH
+CERTIFICATIONS
+
+and students can also:
+
+JOIN DU SCIENCE HUB
+
+The website should feel useful first and commercial second.
+
+Build on the existing project rather than replacing it.
+
+START BY INSPECTING THE EXISTING PROJECT AND THEN IMPLEMENT THIS PLAN.
