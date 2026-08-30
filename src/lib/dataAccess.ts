@@ -10,6 +10,8 @@ export type CollegeRecord = {
   type: string;
   courses: string[];
   about: string | null;
+  heroImageUrl: string | null;
+  createdAt: string;
 };
 
 export type ReviewRecord = {
@@ -127,6 +129,8 @@ const mapCollege = (row: Record<string, unknown>): CollegeRecord => ({
   type: String(row.college_type ?? ""),
   courses: Array.isArray(row.popular_courses) ? row.popular_courses.map(String) : [],
   about: row.short_description ? String(row.short_description) : null,
+  heroImageUrl: row.hero_image_url ? String(row.hero_image_url) : null,
+  createdAt: String(row.created_at ?? ""),
 });
 
 const mapReview = (row: Record<string, unknown>): ReviewRecord => ({
@@ -277,6 +281,30 @@ export async function getVideos(): Promise<DataResult<VideoRecord[]>> {
   if (!supabase) return unavailable([]);
   const result = await supabase.from("videos").select("*, colleges(name)").eq("active", true).order("sort_order").order("created_at", { ascending: false });
   return result.error ? failure([], result.error) : { data: (result.data ?? []).map(mapVideo), error: null, configured: true };
+}
+
+export async function getVideosByCollege(collegeId: string): Promise<DataResult<VideoRecord[]>> {
+  if (!supabase) return unavailable([]);
+  const result = await supabase
+    .from("videos")
+    .select("*, colleges(name)")
+    .eq("college_id", collegeId)
+    .eq("active", true)
+    .order("sort_order")
+    .order("created_at", { ascending: false });
+  return result.error ? failure([], result.error) : { data: (result.data ?? []).map(mapVideo), error: null, configured: true };
+}
+
+export async function getMentorsByCollege(collegeName: string): Promise<DataResult<MentorRecord[]>> {
+  if (!supabase) return unavailable([]);
+  const result = await supabase
+    .from("mentors")
+    .select("*")
+    .eq("college", collegeName)
+    .eq("active", true)
+    .order("sort_order")
+    .order("created_at");
+  return result.error ? failure([], result.error) : { data: (result.data ?? []).map(mapMentor), error: null, configured: true };
 }
 
 export async function getTeamMembers(): Promise<DataResult<TeamMemberRecord[]>> {

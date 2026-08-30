@@ -26,6 +26,22 @@ To enable the browser data layer:
 
 Only publishable Supabase configuration belongs in the browser. Never add a service-role key to `VITE_*` variables, source code, or the repository.
 
+### Official DU college baseline
+
+The Phase 3A college directory is sourced only from the University of Delhi’s official college page. The idempotent handoff is:
+
+`supabase/seeds/001_official_du_colleges.sql`
+
+Run that SQL after the platform migration to add the 91 unique official institution names. It deliberately leaves descriptions, courses, classifications, locations, and images empty/null until approved data is available.
+
+For a future authorized import, use the source-aware script:
+
+```bash
+node scripts/import-du-colleges.mjs
+```
+
+This performs a read-only dry run. Writing requires `--apply` plus a service-role key supplied through the environment; never put that key in `VITE_*` variables or commit it.
+
 The application intentionally shows coming-soon states when official college, mentor, video, team, or opportunity records have not been connected. No fictional records are seeded.
 
 ## Checks

@@ -131,6 +131,11 @@ const paths: Record<string, JSX.Element> = {
       <path d="M21 21l-4.3-4.3" />
     </>
   ),
+  filter: (
+    <>
+      <path d="M4 6h16M7 12h10M10 18h4" />
+    </>
+  ),
 };
 
 export default function Icon({ name, ...props }: IconProps) {
