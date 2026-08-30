@@ -5,12 +5,3 @@ channel = "stable-25_05"
 
 [agent]
 expertMode = true
-
-[userenv]
-
-[userenv.shared]
-
-[userenv.shared."https:"]
-
-[userenv.shared."https:".""]
-"impbwhaigoqjtxzyqvct.supabase.co" = "sb_publishable_z4ZAjEgs3Y0DnUT6xTbPnQ_P2puh9kb"
