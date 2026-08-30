@@ -33,3 +33,12 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+
+[userenv.shared."https:"]
+
+[userenv.shared."https:".""]
+"impbwhaigoqjtxzyqvct.supabase.co" = "sb_publishable_z4ZAjEgs3Y0DnUT6xTbPnQ_P2puh9kb"
