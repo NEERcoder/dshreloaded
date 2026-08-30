@@ -3,9 +3,9 @@ import Icon from "./Icon";
 import MobileMenu from "./MobileMenu";
 
 const navLinks = [
-  { label: "Explore DU", href: "#explore-du" },
-  { label: "Join Our Team", href: "#join-team" },
-  { label: "Opportunities", href: "#find-opportunities" },
+  { label: "Explore DU", href: "/explore" },
+  { label: "Join Our Team", href: "/join" },
+  { label: "Opportunities", href: "/opportunities" },
 ];
 
 const socialLinks = [
@@ -77,7 +77,7 @@ export default function Navbar() {
                 <Icon name={s.icon} className="h-5 w-5" />
               </a>
             ))}
-            <a href="#find-opportunities" className="btn-primary ml-1">
+            <a href="/opportunities" className="btn-primary ml-1">
               Find Opportunities
             </a>
           </div>

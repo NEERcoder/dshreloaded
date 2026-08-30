@@ -68,6 +68,18 @@
   .accent-line {
     @apply mx-auto h-px w-16 bg-gradient-to-r from-transparent via-brand-blue/30 to-transparent;
   }
+
+  .field-label {
+    @apply block text-xs font-bold uppercase tracking-wider text-ink-700;
+  }
+
+  .field-input {
+    @apply mt-2 w-full rounded-xl border border-surface-border bg-white px-3.5 py-3 text-sm text-ink-900 placeholder:text-ink-400 transition-colors focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15;
+  }
+
+  .filter-select {
+    @apply w-full rounded-xl border border-surface-border bg-white px-3.5 py-3 text-sm font-semibold text-ink-700;
+  }
 }
 
 @layer utilities {
@@ -114,6 +126,36 @@
   animation: phrase-in 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.mentor-carousel {
+  overflow: hidden;
+  width: 100%;
+}
+
+.mentor-track {
+  display: flex;
+  width: max-content;
+  gap: 1rem;
+  animation: mentor-scroll 36s linear infinite;
+}
+
+.mentor-carousel:hover .mentor-track,
+.mentor-carousel:focus-within .mentor-track {
+  animation-play-state: paused;
+}
+
+.mentor-slide {
+  width: min(82vw, 21rem);
+}
+
+@keyframes mentor-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -131,5 +173,8 @@
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+  .mentor-track {
+    animation: none !important;
   }
 }

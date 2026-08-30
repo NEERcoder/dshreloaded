@@ -95,7 +95,7 @@ export default function MobileMenu({ open, onClose, navLinks, socialLinks }: Mob
           </div>
 
           <a
-            href="#find-opportunities"
+            href="/opportunities"
             onClick={onClose}
             className="btn-primary mt-4 w-full"
           >

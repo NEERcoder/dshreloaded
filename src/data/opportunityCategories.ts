@@ -22,7 +22,7 @@ export const opportunityCategories: OpportunityCategory[] = [
     description: "Full-time and part-time roles for science graduates.",
     icon: "target",
     accent: "blue",
-    available: true,
+    available: false,
   },
   {
     id: "competitions",
@@ -46,7 +46,7 @@ export const opportunityCategories: OpportunityCategory[] = [
     description: "Projects, assistantships and research programs.",
     icon: "flask",
     accent: "blue",
-    available: false,
+    available: true,
   },
   {
     id: "scholarships",

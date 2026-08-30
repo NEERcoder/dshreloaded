@@ -1,0 +1,805 @@
+DU SCIENCE HUB — PHASE 2 BACKEND FOUNDATION
+SUPABASE DATABASE + SECURITY SETUP
+
+You are working on the EXISTING DU Science Hub project.
+
+Supabase has now been connected through the Replit Supabase connector.
+
+IMPORTANT:
+This task is ONLY to establish the backend/database foundation.
+
+Do NOT rebuild the website.
+Do NOT redesign the UI.
+Do NOT remove existing functionality.
+Do NOT replace existing data.
+Do NOT create fake content.
+
+Before making any changes, inspect the existing codebase AND existing Supabase/database structure.
+
+==================================================
+1. FIRST: INSPECT BEFORE CHANGING
+==================================================
+
+Before writing any migration, determine:
+
+1. What Supabase tables already exist.
+2. What columns already exist.
+3. What relationships already exist.
+4. Whether authentication is already configured.
+5. Whether any existing review/college/video/opportunity tables are present.
+6. Whether the project already contains Supabase migrations.
+7. Which Supabase client/helper files already exist.
+8. Which environment variables/configuration are already being used.
+
+DO NOT immediately create duplicate tables.
+
+If an existing table already serves the purpose of one of the requested tables, reuse it where practical instead of creating a duplicate.
+
+==================================================
+2. DATABASE SAFETY
+==================================================
+
+This is an existing project.
+
+NEVER:
+
+- drop existing tables
+- reset the database
+- delete existing rows
+- truncate tables
+- destroy existing schema
+- replace existing data
+
+UNLESS I explicitly approve it.
+
+Use ADDITIVE migrations wherever possible.
+
+If something conflicts with the requested schema, preserve the existing structure and report the conflict before making destructive changes.
+
+==================================================
+3. CORE DATABASE STRUCTURE
+==================================================
+
+The platform needs to support:
+
+EXPLORE DU
+JOIN DU SCIENCE HUB
+OPPORTUNITIES
+ADMIN CONTROL
+
+The intended logical tables are:
+
+1. colleges
+2. college_reviews
+3. videos
+4. mentors
+5. team_members
+6. team_roles
+7. opportunities
+8. admin_users
+9. general_applications
+
+Create only the tables that are actually missing.
+
+==================================================
+4. TABLE: COLLEGES
+==================================================
+
+Required logical fields:
+
+id
+name
+slug
+short_description
+campus
+location
+categories
+popular_courses
+college_type
+hero_image_url
+created_at
+updated_at
+
+Requirements:
+
+- id should use UUID
+- slug should be unique
+- created_at/updated_at should use timestamps
+- arrays should use appropriate PostgreSQL array types where necessary
+
+Use sensible defaults.
+
+Do NOT invent college content as part of this task.
+
+==================================================
+5. TABLE: COLLEGE_REVIEWS
+==================================================
+
+Required logical fields:
+
+id
+college_id
+name
+rating
+review
+status
+created_at
+updated_at
+
+Relationship:
+
+college_reviews.college_id
+→ colleges.id
+
+Constraints:
+
+rating must be an integer from 1 to 5.
+
+status should support:
+
+pending
+approved
+rejected
+
+IMPORTANT PRODUCT DECISION:
+
+Anyone should eventually be able to submit a college review WITHOUT logging in.
+
+Therefore the public review flow must support anonymous INSERT.
+
+Anonymous users must NOT be able to:
+
+- update reviews
+- delete reviews
+- approve reviews
+- reject reviews
+- modify college data
+
+Only the minimum required INSERT capability should be exposed.
+
+Public users should only be able to read reviews whose status is:
+
+approved
+
+==================================================
+6. TABLE: VIDEOS
+==================================================
+
+Required logical fields:
+
+id
+title
+youtube_url
+thumbnail_url
+category
+college_id
+description
+duration
+featured
+active
+sort_order
+published_at
+created_at
+updated_at
+
+college_id should be nullable because some videos may not belong to a specific college.
+
+Relationship:
+
+videos.college_id
+→ colleges.id
+
+Supported logical categories:
+
+college_review
+campus_tour
+student_interview
+podcast
+cuet_guidance
+campus_story
+
+Do NOT create fake videos.
+
+==================================================
+7. TABLE: MENTORS
+==================================================
+
+Required logical fields:
+
+id
+name
+photo_url
+college
+course
+year
+designation
+bio
+expertise
+contact_url
+active
+sort_order
+created_at
+updated_at
+
+Do NOT insert fictional people.
+
+This table will later power the right-to-left mentor carousel.
+
+==================================================
+8. TABLE: TEAM_MEMBERS
+==================================================
+
+Required logical fields:
+
+id
+name
+photo_url
+role
+college
+course
+short_bio
+linkedin_url
+active
+sort_order
+created_at
+updated_at
+
+Do NOT insert fake real-world people.
+
+This will power the "Our Members" section.
+
+==================================================
+9. TABLE: TEAM_ROLES
+==================================================
+
+Required logical fields:
+
+id
+title
+slug
+short_description
+full_description
+responsibilities
+requirements
+benefits
+work_mode
+duration
+google_form_url
+is_open
+sort_order
+created_at
+updated_at
+
+Initial role structure should support:
+
+Campus Correspondent
+Canva Editor
+Content Writer
+Founder's Office Intern
+
+IMPORTANT:
+
+Do NOT invent the real Google Form URLs.
+
+Leave google_form_url empty/null until I provide them.
+
+==================================================
+10. TABLE: OPPORTUNITIES
+==================================================
+
+This is one of the most important tables.
+
+Required logical fields:
+
+id
+title
+organization
+category
+description
+eligibility
+field
+eligible_courses
+location
+mode
+stipend
+duration
+deadline
+application_url
+image_url
+featured
+status
+created_at
+updated_at
+
+Supported category values:
+
+internship
+competition
+research
+certification
+job
+fellowship
+scholarship
+
+Initial public sections are:
+
+Internships
+Competitions
+Research
+Certifications
+
+Future sections can use:
+
+Jobs
+Fellowships
+Scholarships
+
+Supported status values:
+
+draft
+published
+closed
+archived
+
+Do NOT create fake opportunity records.
+
+==================================================
+11. TABLE: ADMIN_USERS
+==================================================
+
+Create a secure mapping between authenticated Supabase users and administrator privileges.
+
+Fields:
+
+id
+user_id
+role
+created_at
+
+user_id should reference the authenticated Supabase user identity where appropriate.
+
+Initial role:
+
+admin
+
+Do NOT create hardcoded passwords.
+
+Do NOT create admin credentials in source code.
+
+Admin access must be based on Supabase authentication.
+
+==================================================
+12. TABLE: GENERAL_APPLICATIONS
+==================================================
+
+This is for:
+
+"Can't find the right role? Send us your CV."
+
+Fields:
+
+id
+email
+cv_path
+status
+created_at
+
+status:
+
+new
+reviewed
+archived
+
+IMPORTANT:
+
+Do NOT store the CV binary directly in the database.
+
+The CV will eventually be stored in private Supabase Storage.
+
+The table should store the secure storage path/reference.
+
+==================================================
+13. SUPABASE STORAGE
+==================================================
+
+Create or prepare a PRIVATE storage bucket for general CV applications.
+
+Suggested bucket name:
+
+general-applications
+
+IMPORTANT:
+
+The bucket must NOT be public.
+
+Do NOT expose CV files through public URLs.
+
+Do NOT create a public storage policy for applicant CVs.
+
+Admins will eventually access them through authenticated/authorized operations.
+
+==================================================
+14. ROW LEVEL SECURITY — CRITICAL
+==================================================
+
+Enable/configure RLS on all application tables.
+
+Use least-privilege policies.
+
+PUBLIC READ ACCESS:
+
+colleges:
+Public SELECT
+
+videos:
+Public SELECT where active = true
+
+mentors:
+Public SELECT where active = true
+
+team_members:
+Public SELECT where active = true
+
+team_roles:
+Public SELECT where is_open = true
+
+opportunities:
+Public SELECT where status = published
+
+college_reviews:
+Public SELECT where status = approved
+
+==================================================
+15. ANONYMOUS REVIEW INSERT
+==================================================
+
+Allow unauthenticated/anonymous users to INSERT a new college review.
+
+The anonymous INSERT policy must:
+
+- allow only insertion of the review fields
+- force/ensure status = pending
+- validate rating range 1–5
+- require a valid college_id
+- not allow anonymous users to choose approved/rejected status
+- not allow anonymous users to update existing reviews
+
+If necessary, use database constraints, defaults or a safe insert policy so the client cannot submit a review directly as "approved".
+
+==================================================
+16. ADMIN POLICIES
+==================================================
+
+Only authorized admin users should be able to:
+
+COLLEGES:
+INSERT
+UPDATE
+DELETE
+
+REVIEWS:
+SELECT all
+UPDATE status
+DELETE
+
+VIDEOS:
+INSERT
+UPDATE
+DELETE
+
+MENTORS:
+INSERT
+UPDATE
+DELETE
+
+TEAM MEMBERS:
+INSERT
+UPDATE
+DELETE
+
+TEAM ROLES:
+INSERT
+UPDATE
+DELETE
+
+OPPORTUNITIES:
+INSERT
+UPDATE
+DELETE
+
+GENERAL APPLICATIONS:
+SELECT
+UPDATE status
+and authorized access to associated private CV files
+
+Do NOT grant these permissions to anonymous users.
+
+==================================================
+17. SECURITY
+==================================================
+
+Never expose:
+
+SUPABASE SERVICE ROLE KEY
+
+in:
+
+- React code
+- browser JavaScript
+- public environment variables
+- GitHub
+- client-side bundles
+
+Use only safe public/publishable credentials on the client.
+
+Any privileged operation must happen through a secure server-side/Edge Function mechanism where required.
+
+==================================================
+18. ADMIN AUTHORIZATION
+==================================================
+
+Use Supabase Auth for admin authentication.
+
+Do NOT create:
+
+- hardcoded admin usernames
+- hardcoded admin passwords
+- password checks inside React
+- client-side-only admin protection
+
+The eventual /admin route must verify that the authenticated user is actually present in admin_users / has the appropriate admin role.
+
+==================================================
+19. DATABASE RELATIONSHIPS
+==================================================
+
+Implement logical relationships:
+
+colleges
+  ↓
+college_reviews
+
+colleges
+  ↓
+videos
+
+Use foreign keys where appropriate.
+
+Avoid unnecessary relationships.
+
+==================================================
+20. INDEXES
+==================================================
+
+Add sensible indexes for frequently queried fields.
+
+At minimum consider:
+
+colleges.slug
+colleges.name
+
+college_reviews.college_id
+college_reviews.status
+college_reviews.created_at
+
+videos.college_id
+videos.category
+videos.active
+
+mentors.active
+mentors.sort_order
+
+team_members.active
+team_members.sort_order
+
+team_roles.slug
+team_roles.is_open
+
+opportunities.category
+opportunities.status
+opportunities.deadline
+
+Choose indexes based on the actual schema and avoid over-indexing.
+
+==================================================
+21. TIMESTAMPS
+==================================================
+
+Use created_at and updated_at appropriately.
+
+updated_at should be maintained safely when records are changed.
+
+If triggers are needed, implement them cleanly.
+
+==================================================
+22. DATA ACCESS ARCHITECTURE
+==================================================
+
+Do not scatter raw Supabase calls throughout UI components.
+
+Create/reuse a clean data-access layer.
+
+Conceptually support functions such as:
+
+getColleges()
+getCollegeBySlug(slug)
+getApprovedReviewsByCollege(collegeId)
+createAnonymousReview(...)
+getVideos(...)
+getMentors(...)
+getTeamMembers(...)
+getOpenTeamRoles(...)
+getOpportunitiesByCategory(category)
+
+The frontend should communicate with the database through reusable services/functions.
+
+==================================================
+23. NO FAKE DATA
+==================================================
+
+Do not insert:
+
+fake colleges
+fake mentors
+fake team members
+fake opportunities
+fake reviews
+fake YouTube videos
+fake applications
+fake statistics
+
+The database should be structurally ready, not artificially filled.
+
+==================================================
+24. IMPORTANT PRODUCT DECISION
+==================================================
+
+There is NO college-ID verification system.
+
+There is NO requirement for users to log in before submitting a college review.
+
+Do NOT create:
+
+college ID upload
+student verification
+verification queue
+"Verified DU Student" status
+
+The review flow is:
+
+College page
+→ Name
+→ Rating
+→ Review
+→ Submit
+→ pending
+→ admin approval
+→ public display
+
+==================================================
+25. FUTURE OPPORTUNITY MANAGEMENT
+==================================================
+
+The eventual admin dashboard must allow me to manage:
+
+Internships
+Competitions
+Research
+Certifications
+
+without editing code.
+
+Therefore the database needs to support complete CRUD and publication status.
+
+DO NOT build the full admin UI in this task unless it is already part of the existing project.
+
+This phase is database/backend foundation first.
+
+==================================================
+26. FUTURE GOOGLE FORMS
+==================================================
+
+Team roles will eventually have different Google Forms.
+
+The database must support:
+
+Campus Correspondent → Google Form URL
+Canva Editor → Google Form URL
+Content Writer → Google Form URL
+Founder's Office Intern → Google Form URL
+
+Do not invent URLs.
+
+==================================================
+27. FUTURE CV SUBMISSION
+==================================================
+
+The general application system will eventually support:
+
+Email
+CV upload
+
+Destination/contact:
+
+connect@dusciencehub.in
+
+For now:
+
+- create the table
+- prepare private storage
+- do not invent an email provider
+- do not create fake email credentials
+- do not expose secrets
+
+==================================================
+28. MIGRATIONS
+==================================================
+
+Create proper version-controlled Supabase migrations.
+
+Do NOT make undocumented manual schema changes.
+
+The migration files must be committed into the existing GitHub repository.
+
+Use additive migrations.
+
+Before applying a migration:
+
+inspect existing schema and avoid conflicts.
+
+==================================================
+29. VERIFY THE RESULT
+==================================================
+
+After implementing:
+
+Run database/type generation if the project uses generated Supabase types.
+
+Verify:
+
+- migrations succeed
+- project builds
+- TypeScript remains valid
+- Supabase client still works
+- RLS is enabled
+- anonymous review insertion works safely
+- anonymous users cannot modify protected data
+- approved review reading works
+- unpublished opportunities are not public
+- admin authorization is not bypassable
+- private CV bucket is not publicly readable
+
+==================================================
+30. IMPORTANT STOP CONDITION
+==================================================
+
+If you discover a conflict with the existing database/schema that could require:
+
+- dropping a table
+- deleting data
+- changing existing production data destructively
+- replacing an existing table
+
+STOP and report the conflict to me.
+
+Do NOT make the destructive change automatically.
+
+==================================================
+31. FINAL OUTPUT
+==================================================
+
+When finished, tell me:
+
+1. Which tables already existed.
+2. Which tables you created.
+3. Which migrations were added.
+4. Which RLS policies were added.
+5. Whether the private CV bucket was created.
+6. Whether anonymous review insertion was tested.
+7. Whether the project still builds successfully.
+8. Any issues or decisions that require my approval.
+
+Do not hide errors.
+
+DATABASE FOUNDATION ONLY.
+DO NOT REDESIGN THE WEBSITE.

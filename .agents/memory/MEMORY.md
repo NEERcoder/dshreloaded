@@ -1,0 +1,1 @@
+- [Supabase connector access](supabase-connector-access.md) — conversation runtime may lack connectorFetch; use the attached connector's authenticated proxy for read/write API checks.

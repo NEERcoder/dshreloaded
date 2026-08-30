@@ -16,6 +16,11 @@ import { reviews } from "./data/reviews";
 import { mentors } from "./data/mentors";
 import { opportunities } from "./data/opportunities";
 import { exploreDuCards } from "./data/exploreDu";
+import ExplorePage from "./pages/ExplorePage";
+import CollegePage from "./pages/CollegePage";
+import JoinPage from "./pages/JoinPage";
+import OpportunitiesPage from "./pages/OpportunitiesPage";
+import AdminPage from "./pages/AdminPage";
 
 function DuScienceHubHome() {
   return (
@@ -168,6 +173,24 @@ export default function App() {
 
   if (path === "/dot-grid") {
     return <InteractiveDotGrid />;
+  }
+  if (path === "/explore") {
+    return <ExplorePage />;
+  }
+  if (path.startsWith("/explore/")) {
+    return <CollegePage slug={path.replace("/explore/", "").replace(/\/$/, "")} />;
+  }
+  if (path === "/join") {
+    return <JoinPage />;
+  }
+  if (path.startsWith("/join/")) {
+    return <JoinPage roleId={path.replace("/join/", "").replace(/\/$/, "")} />;
+  }
+  if (path === "/opportunities" || path.startsWith("/opportunities/")) {
+    return <OpportunitiesPage categoryId={path.replace("/opportunities", "").replace(/^\/|\/$/g, "") || undefined} />;
+  }
+  if (path === "/admin") {
+    return <AdminPage />;
   }
 
   return <DuScienceHubHome />;
