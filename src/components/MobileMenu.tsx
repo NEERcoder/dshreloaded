@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import { Link, useLocation } from "../lib/router";
 
 type NavLink = { label: string; href: string };
-type SocialLink = { label: string; href: string; icon: string };
 
 type MobileMenuProps = {
   open: boolean;
   onClose: () => void;
   navLinks: NavLink[];
-  socialLinks: SocialLink[];
 };
 
-export default function MobileMenu({ open, onClose, navLinks, socialLinks }: MobileMenuProps) {
+export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps) {
   const [render, setRender] = useState(open);
+  const { path } = useLocation();
 
   useEffect(() => {
     if (open) setRender(true);
@@ -64,43 +64,32 @@ export default function MobileMenu({ open, onClose, navLinks, socialLinks }: Mob
         </div>
 
         <div className="px-5 py-6 flex flex-col gap-1">
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              onClick={onClose}
-              className="px-4 py-3 text-base font-semibold text-ink-900 rounded-xl hover:bg-brand-blue-soft transition-colors"
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = path === link.href || path.startsWith(link.href + "/");
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                onClick={onClose}
+                className={`px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
+                  isActive
+                    ? "text-brand-blue bg-brand-blue-soft"
+                    : "text-ink-900 hover:bg-brand-blue-soft"
+                }`}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
 
-          <div className="mt-4 pt-4 border-t border-surface-border">
-            <p className="px-4 mb-2 text-xs font-bold uppercase tracking-wider text-ink-400">
-              Follow
-            </p>
-            <div className="flex gap-2">
-              {socialLinks.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  onClick={onClose}
-                  aria-label={s.label}
-                  className="p-3 rounded-xl border border-surface-border text-ink-700 hover:text-brand-blue hover:bg-brand-blue-soft transition-colors"
-                >
-                  <Icon name={s.icon} className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <a
+          <Link
             href="/opportunities"
             onClick={onClose}
-            className="btn-primary mt-4 w-full"
+            className="btn-primary mt-4 w-full shadow-card"
           >
-            Find Opportunities
-          </a>
+            Opportunity Radar
+          </Link>
         </div>
       </div>
     </div>

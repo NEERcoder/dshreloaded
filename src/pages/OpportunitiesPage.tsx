@@ -2,8 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import Icon from "../components/Icon";
 import PageShell from "../components/PageShell";
 import SectionHeading from "../components/SectionHeading";
-import { opportunityCategories } from "../data/opportunityCategories";
+import TiltCard from "../components/TiltCard";
+import DeadlineProgress from "../components/DeadlineProgress";
+import { SkeletonOpportunityGrid } from "../components/Skeleton";
+import { Link } from "../lib/router";
 import { getOpportunities, type OpportunityRecord } from "../lib/dataAccess";
+import { sanitizeExternalUrl } from "../lib/urlSafety";
 
 const categoryMap: Record<string, OpportunityRecord["category"]> = {
   internships: "internship",
@@ -12,8 +16,71 @@ const categoryMap: Record<string, OpportunityRecord["category"]> = {
   certifications: "certification",
 };
 
+const categoryVoice: Record<string, { eyebrow: string; title: string; subtitle: string }> = {
+  internships: {
+    eyebrow: "INTERNSHIPS",
+    title: "Find experience worth applying for.",
+    subtitle: "Verified industry and startup roles for Delhi University undergraduates.",
+  },
+  competitions: {
+    eyebrow: "COMPETITIONS",
+    title: "Put your skills to work.",
+    subtitle: "National contests, hackathons, and challenges worth winning.",
+  },
+  research: {
+    eyebrow: "RESEARCH",
+    title: "Find opportunities to learn and contribute.",
+    subtitle: "Faculty laboratory attachments, funded fellowships, and academic projects.",
+  },
+  certifications: {
+    eyebrow: "CERTIFICATIONS",
+    title: "Build skills that strengthen your next application.",
+    subtitle: "Verified credentials recognized across academia and industry.",
+  },
+};
+
+const mainCategories = [
+  {
+    id: "internships",
+    tag: "INTERNSHIPS",
+    headline: "Find experience worth applying for.",
+    description: "Industry attachments, startup projects, and technical internships.",
+    cta: "EXPLORE INTERNSHIPS",
+    accent: "blue",
+    icon: "briefcase",
+  },
+  {
+    id: "competitions",
+    tag: "COMPETITIONS",
+    headline: "Put your skills to work.",
+    description: "National hackathons, case challenges, and lab competitions.",
+    cta: "EXPLORE COMPETITIONS",
+    accent: "red",
+    icon: "target",
+  },
+  {
+    id: "research",
+    tag: "RESEARCH",
+    headline: "Opportunities to learn & contribute.",
+    description: "Faculty lab attachments, fellowships, and academic paper co-authorship.",
+    cta: "EXPLORE RESEARCH",
+    accent: "blue",
+    icon: "book",
+  },
+  {
+    id: "certifications",
+    tag: "CERTIFICATIONS",
+    headline: "Skills for your next application.",
+    description: "Verified certifications in Python, Data Science, and laboratory techniques.",
+    cta: "EXPLORE CERTIFICATIONS",
+    accent: "blue",
+    icon: "award",
+  },
+];
+
 function OpportunityList({ category }: { category?: OpportunityRecord["category"] }) {
   const [items, setItems] = useState<OpportunityRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState("");
   const [paid, setPaid] = useState("");
@@ -22,111 +89,282 @@ function OpportunityList({ category }: { category?: OpportunityRecord["category"
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     getOpportunities(category).then((result) => {
       if (cancelled) return;
       setItems(result.data);
       setError(result.error);
+      setLoading(false);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [category]);
 
   const filtered = useMemo(() => {
     const query = search.toLowerCase().trim();
     return items
       .filter((item) => {
-        const searchable = [item.title, item.organization, item.field, item.location, item.description, ...item.eligibleCourses].join(" ").toLowerCase();
+        const searchable = [
+          item.title,
+          item.organization,
+          item.field,
+          item.location,
+          item.description,
+          ...item.eligibleCourses,
+        ]
+          .join(" ")
+          .toLowerCase();
         const isPaid = Boolean(item.stipend && !/unpaid|voluntary/i.test(item.stipend));
-        return (!query || searchable.includes(query)) && (!mode || item.mode === mode) && (!paid || (paid === "paid" ? isPaid : !isPaid));
+        return (
+          (!query || searchable.includes(query)) &&
+          (!mode || item.mode === mode) &&
+          (!paid || (paid === "paid" ? isPaid : !isPaid))
+        );
       })
-      .sort((a, b) => sort === "deadline" ? (a.deadline || "z").localeCompare(b.deadline || "z") : Number(b.featured) - Number(a.featured));
+      .sort((a, b) =>
+        sort === "deadline"
+          ? (a.deadline || "z").localeCompare(b.deadline || "z")
+          : Number(b.featured) - Number(a.featured)
+      );
   }, [items, mode, paid, search, sort]);
 
   return (
     <div className="mt-8">
-      <div className="card p-4 sm:p-5">
+      {/* Search and Filters */}
+      <div className="card p-5 sm:p-6 bg-white shadow-card border border-surface-border">
         <div className="relative">
-          <Icon name="search" className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search opportunities by title, organization or field" className="field-input pl-10" />
+          <Icon name="search" className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by role, company, skills, or department…"
+            className="field-input pl-11"
+          />
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <select value={mode} onChange={(event) => setMode(event.target.value)} className="filter-select"><option value="">All modes</option><option>Remote</option><option>On-site</option><option>Hybrid</option></select>
-          <select value={paid} onChange={(event) => setPaid(event.target.value)} className="filter-select"><option value="">Paid or unpaid</option><option value="paid">Paid</option><option value="unpaid">Unpaid / not listed</option></select>
-          <select value={sort} onChange={(event) => setSort(event.target.value)} className="filter-select"><option value="featured">Sort: featured</option><option value="deadline">Sort: deadline</option></select>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[140px]">
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              className="filter-select text-xs"
+            >
+              <option value="">All Work Modes</option>
+              <option value="Remote">Remote</option>
+              <option value="On-site">On-site</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+          </div>
+
+          <div className="flex-1 min-w-[140px]">
+            <select
+              value={paid}
+              onChange={(e) => setPaid(e.target.value)}
+              className="filter-select text-xs"
+            >
+              <option value="">All Compensation</option>
+              <option value="paid">Paid Only</option>
+              <option value="unpaid">Volunteer / Unpaid</option>
+            </select>
+          </div>
+
+          <div className="w-full sm:w-auto sm:ml-auto min-w-[140px]">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="filter-select text-xs"
+            >
+              <option value="featured">Sort: Featured First</option>
+              <option value="deadline">Sort: Closest Deadline</option>
+            </select>
+          </div>
         </div>
       </div>
-      <p className="mt-5 text-sm font-semibold text-ink-700">{filtered.length} {filtered.length === 1 ? "opportunity" : "opportunities"}</p>
-      {error ? (
-        <div className="card mt-5 border-dashed p-8 text-center"><h3 className="font-bold text-ink-900">Opportunities are not available yet</h3><p className="mt-2 text-sm text-ink-500">{error}</p></div>
-      ) : filtered.length ? (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          {filtered.map((item) => <OpportunityItem item={item} key={item.id} />)}
-        </div>
-      ) : (
-        <div className="card mt-5 border-dashed p-8 sm:p-10 text-center">
-          <div className="mx-auto h-12 w-12 rounded-2xl bg-brand-red-soft text-brand-red flex items-center justify-center"><Icon name="flag" className="h-6 w-6" /></div>
-          <h3 className="mt-4 text-lg font-bold text-ink-900">No published opportunities yet</h3>
-          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-ink-500">Listings will appear here after they are added and published by the DU Science Hub team. We won’t fabricate counts or deadlines.</p>
-        </div>
-      )}
+
+      {/* Grid */}
+      <div className="mt-8">
+        {loading ? (
+          <SkeletonOpportunityGrid count={6} />
+        ) : error ? (
+          <div className="card border-dashed p-10 text-center bg-white">
+            <p className="text-base font-bold text-ink-900">Opportunities feed needs attention</p>
+            <p className="mt-1 text-sm text-ink-500">{error}</p>
+          </div>
+        ) : filtered.length ? (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((item) => (
+              <OpportunityCard key={item.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <div className="card border-dashed p-10 text-center bg-white">
+            <p className="text-base font-bold text-ink-900">No opportunities match those filters</p>
+            <p className="mt-1 text-sm text-ink-500">Try clearing filters or search terms.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function OpportunityItem({ item }: { item: OpportunityRecord }) {
+function OpportunityCard({ item }: { item: OpportunityRecord }) {
+  const safeUrl = sanitizeExternalUrl(item.applicationUrl);
+
   return (
-    <article className="card card-hover p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="rounded-md bg-brand-blue-soft px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-brand-blue">{item.category}</span>
-        {item.featured && <span className="text-xs font-bold text-brand-red">Featured</span>}
-      </div>
-      <h3 className="mt-4 text-lg font-bold leading-snug text-ink-900">{item.title}</h3>
-      <p className="mt-2 text-sm font-semibold text-ink-700">{item.organization}</p>
-      <p className="mt-3 text-sm leading-relaxed text-ink-500">{item.description}</p>
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-400">
-        {item.field && <span>{item.field}</span>}
-        {item.location && <span>{item.location}</span>}
-        {item.mode && <span>{item.mode}</span>}
-        {item.deadline && <span>Deadline: {item.deadline}</span>}
-      </div>
-      {item.applicationUrl ? <a href={item.applicationUrl} target="_blank" rel="noreferrer" className="btn-outline-blue mt-5 w-full">View details <Icon name="arrow" className="h-4 w-4" /></a> : <span className="mt-5 block text-center text-xs font-semibold text-ink-400">Application details coming soon</span>}
-    </article>
+    <TiltCard className="h-full">
+      <article
+        data-cursor="view"
+        className="card card-hover p-6 h-full flex flex-col justify-between bg-white border border-surface-border shadow-card"
+      >
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="rounded-md bg-brand-blue-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-blue">
+              {item.category}
+            </span>
+            {item.featured && (
+              <span className="rounded-full bg-brand-red-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-red">
+                Featured
+              </span>
+            )}
+          </div>
+          <h3 className="mt-4 font-bold text-lg leading-snug text-ink-900">{item.title}</h3>
+          <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
+          <p className="mt-3 text-sm leading-relaxed text-ink-500 line-clamp-3">{item.description}</p>
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-400">
+            {item.mode && <span className="font-semibold text-ink-600">{item.mode}</span>}
+            {item.field && <span>{item.field}</span>}
+            {item.stipend && <span className="font-bold text-emerald-600">{item.stipend}</span>}
+          </div>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-surface-border">
+          <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
+          {safeUrl ? (
+            <a
+              href={safeUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-outline-blue mt-4 w-full justify-center text-xs font-bold"
+            >
+              View Listing <Icon name="arrow" className="h-4 w-4" />
+            </a>
+          ) : (
+            <span className="mt-4 block text-center text-xs font-semibold text-ink-400">
+              Application details coming soon
+            </span>
+          )}
+        </div>
+      </article>
+    </TiltCard>
   );
 }
 
 export default function OpportunitiesPage({ categoryId }: { categoryId?: string }) {
   const category = categoryId ? categoryMap[categoryId] : undefined;
-  const selectedCategory = categoryId ? opportunityCategories.find((item) => item.id === categoryId) : undefined;
+  const currentVoice = categoryId && categoryVoice[categoryId]
+    ? categoryVoice[categoryId]
+    : {
+        eyebrow: "OPPORTUNITY RADAR",
+        title: "Find Things Worth Applying For.",
+        subtitle: "Verified internships, hackathons, research fellowships, and credentials for DU students.",
+      };
 
   return (
-    <PageShell title={selectedCategory ? `${selectedCategory.title} | DU Science Hub` : "Science Internships, Jobs & Competitions | DU Science Hub"} description="Find science internships, competitions, research and certifications for DU students.">
-      <section className="bg-brand-blue-pale border-b border-surface-border">
-        <div className="container-px py-14 sm:py-20 lg:py-24">
-          <p className="eyebrow">Opportunities</p>
-          <h1 className="mt-3 max-w-3xl text-4xl sm:text-5xl font-extrabold tracking-tight text-ink-900">{selectedCategory?.title || "Find Opportunities"}</h1>
-          <p className="mt-5 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-500">{selectedCategory?.description || "Internships, Jobs & Opportunities for BSc & Science Students."}</p>
+    <PageShell
+      title={category ? `${category.toUpperCase()} | Opportunity Radar | DU Science Hub` : "Find Opportunities | DU Science Hub"}
+      description="Find verified science internships, hackathons, research fellowships and certifications for DU students."
+      backgroundPreset="opportunities"
+    >
+      {/* 1. EDITORIAL HEADER */}
+      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-12 pb-16 sm:pt-16 sm:pb-20">
+        <div className="container-px max-w-7xl mx-auto">
+          <div className="max-w-3xl">
+            <p className="eyebrow text-brand-red">{currentVoice.eyebrow}</p>
+            <h1 className="mt-3 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
+              {currentVoice.title}
+            </h1>
+            <p className="mt-4 text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+              {currentVoice.subtitle}
+            </p>
+          </div>
+
+          {/* 2. THE 4 MAIN CATEGORIES (DOORS) WHEN AT ROOT /OPPORTUNITIES */}
+          {!categoryId && (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {mainCategories.map((cat) => {
+                const isRed = cat.accent === "red";
+                return (
+                  <TiltCard key={cat.id} className="h-full">
+                    <Link
+                      href={`/opportunities/${cat.id}`}
+                      data-cursor="view"
+                      className="card card-hover p-6 sm:p-7 h-full flex flex-col justify-between bg-white border border-surface-border shadow-card group"
+                    >
+                      <div>
+                        <span
+                          className={`inline-block rounded-lg px-3 py-1 text-[11px] font-black uppercase tracking-wider ${
+                            isRed
+                              ? "bg-brand-red text-white shadow-sm"
+                              : "bg-brand-blue text-white shadow-sm"
+                          }`}
+                        >
+                          {cat.tag}
+                        </span>
+
+                        <h2 className="mt-5 text-xl font-black text-ink-900 group-hover:text-brand-blue transition-colors leading-snug">
+                          {cat.headline}
+                        </h2>
+
+                        <p className="mt-3 text-sm text-ink-500 leading-relaxed font-normal">
+                          {cat.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-surface-border flex items-center justify-between">
+                        <span
+                          className={`text-xs font-black uppercase tracking-wider ${
+                            isRed ? "text-brand-red" : "text-brand-blue"
+                          }`}
+                        >
+                          {cat.cta} →
+                        </span>
+                        <div className="h-8 w-8 rounded-xl bg-surface-soft flex items-center justify-center text-ink-600 group-hover:bg-brand-blue-soft group-hover:text-brand-blue transition-colors">
+                          <Icon name="arrow" className="h-3.5 w-3.5" />
+                        </div>
+                      </div>
+                    </Link>
+                  </TiltCard>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
-      {!categoryId && (
-        <section className="py-14 sm:py-20">
-          <div className="container-px">
-            <SectionHeading eyebrow="Explore categories" title="Choose what you’re looking for" description="Browse the categories currently supported by DU Science Hub. Future categories stay inactive until real listings are available." />
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {opportunityCategories.filter((item) => ["internships", "competitions", "research", "certifications"].includes(item.id)).map((item) => (
-                <a key={item.id} href={`/opportunities/${item.id}`} className="card card-hover p-5">
-                  <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${item.accent === "red" ? "bg-brand-red-soft text-brand-red" : "bg-brand-blue-soft text-brand-blue"}`}><Icon name={item.icon} className="h-5 w-5" /></div>
-                  <h2 className="mt-4 font-bold text-ink-900">{item.title}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-500">{item.description}</p>
-                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue">View opportunities <Icon name="arrow" className="h-4 w-4" /></span>
-                </a>
-              ))}
+
+      {/* 3. OPPORTUNITY RADAR FEED */}
+      <section id="radar-feed" className="py-14 sm:py-20">
+        <div className="container-px max-w-7xl mx-auto">
+          {categoryId ? (
+            <div className="mb-6 flex items-center justify-between">
+              <Link
+                href="/opportunities"
+                className="inline-flex items-center gap-2 text-xs font-black text-brand-blue hover:underline uppercase tracking-wider"
+              >
+                ← Back to All 4 Categories
+              </Link>
+              <span className="text-xs font-bold text-ink-500 uppercase tracking-wider">
+                Showing {category} listings
+              </span>
             </div>
-            <div className="mt-8 rounded-2xl border border-brand-blue/15 bg-brand-blue-soft/50 p-5 sm:p-6"><p className="text-sm font-bold text-brand-blue">Build the skills recruiters look for.</p><p className="mt-1 text-sm text-ink-500">Explore relevant certifications before applying to an opportunity.</p><a href="/opportunities/certifications" className="mt-3 inline-flex text-sm font-bold text-brand-blue hover:underline">Explore certifications →</a></div>
-          </div>
-        </section>
-      )}
-      <section className={`${categoryId ? "py-14 sm:py-20" : "border-t border-surface-border bg-surface-soft py-14 sm:py-20"}`}>
-        <div className="container-px">
-          {categoryId && <a href="/opportunities" className="text-sm font-semibold text-brand-blue hover:underline">← All opportunities</a>}
+          ) : (
+            <SectionHeading
+              eyebrow="OPPORTUNITY RADAR"
+              title="All Active Listings"
+              subtitle="Filter and search across all verified science opportunities."
+              description="Real deadlines, verified partner organizations, and student-eligible openings."
+            />
+          )}
+
           <OpportunityList category={category} />
         </div>
       </section>

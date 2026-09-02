@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Icon from "./Icon";
 import { useReveal } from "../hooks/useReveal";
+import { Link } from "../lib/router";
 
 export type PanelItem = {
   label: string;
@@ -55,11 +56,11 @@ export default function PlatformPanel({
       <div className="p-6 sm:p-7 flex flex-col gap-5 flex-1">
         {/* Panel number badge */}
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-extrabold uppercase tracking-[0.15em] ${accentText}`}>
-             {personality === "editorial" ? "Explore DU" : personality === "community" ? "Join Our Team" : "Opportunities"}
+          <span className={`text-[11px] font-extrabold uppercase tracking-[0.18em] ${accentText}`}>
+             {personality === "editorial" ? "COLLEGE DIRECTORY" : personality === "community" ? "JOIN OUR TEAM" : "OPPORTUNITY RADAR"}
           </span>
           <span className={`flex items-center justify-center h-7 w-7 rounded-lg ${accentSoftBg} ${accentSoftText} text-xs font-extrabold`}>
-            {panelNumber}
+            0{panelNumber}
           </span>
         </div>
 
@@ -83,10 +84,10 @@ export default function PlatformPanel({
         </ul>
 
         {/* CTA */}
-        <a href={ctaHref} className={`${ctaClass} w-full mt-2`}>
+        <Link href={ctaHref} className={`${ctaClass} w-full mt-2`}>
           {cta}
           <Icon name="arrow" className="h-4 w-4" />
-        </a>
+        </Link>
       </div>
     </div>
   );

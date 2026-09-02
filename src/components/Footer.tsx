@@ -1,4 +1,4 @@
-import Icon from "./Icon";
+import { Link } from "../lib/router";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -24,14 +24,14 @@ export default function Footer() {
             <p className="text-xs font-bold uppercase tracking-wider text-ink-400 mb-4">Navigation</p>
             <ul className="space-y-2.5">
               {[
-                { label: "Explore DU", href: "#explore-du" },
+                { label: "Explore DU", href: "/explore" },
                 { label: "Join Our Team", href: "/join" },
                 { label: "Opportunities", href: "/opportunities" },
               ].map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className="text-sm text-ink-700 hover:text-brand-blue transition-colors">
+                  <Link href={l.href} className="text-sm text-ink-700 hover:text-brand-blue transition-colors">
                     {l.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -39,22 +39,15 @@ export default function Footer() {
 
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-ink-400 mb-4">Connect</p>
-            <div className="flex gap-2 mb-4">
-              <a href="#" aria-label="YouTube" className="p-2.5 rounded-xl border border-surface-border text-ink-700 hover:text-brand-red hover:bg-brand-red-soft transition-colors">
-                <Icon name="youtube" className="h-5 w-5" />
-              </a>
-              <a href="#" aria-label="Instagram" className="p-2.5 rounded-xl border border-surface-border text-ink-700 hover:text-brand-blue hover:bg-brand-blue-soft transition-colors">
-                <Icon name="instagram" className="h-5 w-5" />
-              </a>
-            </div>
             <ul className="space-y-2.5">
-              {["Privacy Policy", "Terms", "Contact"].map((l) => (
-                <li key={l}>
-                  <a href="#" className="text-sm text-ink-700 hover:text-brand-blue transition-colors">
-                    {l}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <a
+                  href="mailto:connect@dusciencehub.in"
+                  className="text-sm text-ink-700 hover:text-brand-blue transition-colors"
+                >
+                  connect@dusciencehub.in
+                </a>
+              </li>
             </ul>
           </div>
         </div>

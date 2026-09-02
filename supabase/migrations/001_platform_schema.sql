@@ -291,6 +291,10 @@ create policy "Users can read their admin mapping"
   on public.admin_users for select to authenticated
   using (user_id = auth.uid() or public.is_admin());
 
+create policy "Anyone can submit general applications"
+  on public.general_applications for insert to anon, authenticated
+  with check (status = 'new');
+
 create policy "Admins can read applications"
   on public.general_applications for select to authenticated
   using (public.is_admin());
@@ -300,9 +304,17 @@ create policy "Admins can update application status"
   using (public.is_admin())
   with check (public.is_admin());
 
+create policy "Admins can delete applications"
+  on public.general_applications for delete to authenticated
+  using (public.is_admin());
+
 insert into storage.buckets (id, name, public)
 values ('general-applications', 'general-applications', false)
 on conflict (id) do nothing;
+
+create policy "Anyone can upload application CVs"
+  on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'general-applications');
 
 create policy "Admins can read private application CVs"
   on storage.objects for select to authenticated
@@ -312,3 +324,4 @@ create policy "Admins can manage private application CVs"
   on storage.objects for all to authenticated
   using (bucket_id = 'general-applications' and public.is_admin())
   with check (bucket_id = 'general-applications' and public.is_admin());
+

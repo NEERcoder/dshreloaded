@@ -20,15 +20,22 @@
   ::selection {
     @apply bg-brand-blue-soft text-brand-blue-dark;
   }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
 }
 
 @layer components {
   .container-px {
-    @apply mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 select-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all duration-200 select-none min-h-[44px];
   }
   .btn-primary {
     @apply btn bg-brand-red text-white shadow-soft hover:bg-brand-red-dark hover:shadow-card active:scale-[0.98];
@@ -116,36 +123,66 @@
 
 /* Phrase animation for hero */
 .phrase-track {
-  display: inline-grid;
-  line-height: 1.2;
+  display: inline-flex;
+  align-items: baseline;
   overflow: hidden;
-  vertical-align: bottom;
+  vertical-align: baseline;
 }
-.phrase-item {
-  grid-area: 1 / 1;
-  animation: phrase-in 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+.phrase-item-modern {
+  display: inline-block;
+  animation: phrase-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+@keyframes phrase-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
 
 .mentor-carousel {
   overflow: hidden;
   width: 100%;
+  padding: 1rem 0;
 }
 
 .mentor-track {
   display: flex;
   width: max-content;
-  gap: 1rem;
-  animation: mentor-scroll 36s linear infinite;
+  gap: 1.25rem;
+  animation: mentor-scroll 34s linear infinite;
 }
 
-.mentor-carousel:hover .mentor-track,
-.mentor-carousel:focus-within .mentor-track {
-  animation-play-state: paused;
+.mentor-carousel:hover .mentor-track {
+  animation-duration: 90s; /* Slows down smoothly on approach */
 }
 
 .mentor-slide {
-  width: min(82vw, 21rem);
+  width: min(84vw, 21.5rem);
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform, opacity;
 }
+
+.mentor-track:hover .mentor-slide {
+  opacity: 0.65;
+  transform: scale(0.97);
+}
+
+.mentor-track .mentor-slide:hover {
+  opacity: 1 !important;
+  transform: scale(1.04) translateY(-4px) !important;
+  z-index: 20;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+}
+
 
 @keyframes mentor-scroll {
   from {
@@ -178,3 +215,13 @@
     animation: none !important;
   }
 }
+
+/* Hide scrollbar for horizontal tab navigation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

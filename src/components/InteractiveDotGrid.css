@@ -3,7 +3,7 @@
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
-  background: #1e3a5f;
+  background: #ffffff;
   isolation: isolate;
 }
 
@@ -13,8 +13,8 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: #1e3a5f;
-  opacity: 0.16;
+  background: #ffffff;
+  opacity: 1;
   isolation: isolate;
 }
 
@@ -24,6 +24,5 @@
   display: block;
   width: 100%;
   height: 100%;
-  cursor: crosshair;
-  touch-action: none;
+  pointer-events: none;
 }
