@@ -27,7 +27,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
       window.history.pushState(null, "", to);
     }
     setPath(to);
-    window.scrollTo({ top: 0, behavior: "instant" });
+    // Scroll-to-top is handled by PageTransition after exit animation
   }, [path]);
 
   return (

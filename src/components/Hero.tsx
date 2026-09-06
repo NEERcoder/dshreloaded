@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const heroPhrases = [
   "Delhi University",
@@ -15,14 +15,26 @@ const PHRASE_DURATION = 1400;
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const prevTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % heroPhrases.length);
+      setIndex((prev) => {
+        setPrevIndex(prev);
+        if (prevTimerRef.current) window.clearTimeout(prevTimerRef.current);
+        prevTimerRef.current = window.setTimeout(() => {
+          setPrevIndex(null);
+        }, 280);
+        return (prev + 1) % heroPhrases.length;
+      });
     }, PHRASE_DURATION);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      if (prevTimerRef.current) window.clearTimeout(prevTimerRef.current);
+    };
   }, []);
 
   return (
@@ -30,16 +42,21 @@ export default function Hero() {
       <div className="container-px">
         <div className="max-w-4xl mx-auto text-center">
           {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-surface-border bg-white/90 backdrop-blur-md px-4 py-1.5 text-xs font-bold text-ink-700 shadow-soft">
+          <div className="inline-flex items-center gap-2 rounded-full border border-surface-border bg-white/90 backdrop-blur-md px-4 py-1.5 text-xs font-bold text-ink-700 shadow-soft animate-fade-up">
             <span className="h-2 w-2 rounded-full bg-brand-red animate-pulse" />
             <span className="text-brand-blue font-extrabold uppercase tracking-wider">The Living Digital Campus</span>
           </div>
 
           {/* Signature Animated Headline: Explore [Rotating Phrase] */}
-          <div className="mt-6">
+          <div className="mt-6 animate-fade-up" style={{ animationDelay: "80ms" }}>
             <h1 className="text-3xl sm:text-6xl lg:text-7xl font-black tracking-tight text-ink-900 leading-[1.15] break-words">
               <span className="text-brand-blue">Explore </span>
-              <span className="phrase-track text-brand-red font-black">
+              <span className="phrase-track relative text-brand-red font-black inline-flex">
+                {prevIndex !== null && (
+                  <span key={`prev-${prevIndex}`} className="phrase-item-exit pointer-events-none">
+                    {heroPhrases[prevIndex]}
+                  </span>
+                )}
                 <span key={index} className="phrase-item-modern">
                   {heroPhrases[index]}
                 </span>
@@ -48,7 +65,7 @@ export default function Hero() {
           </div>
 
           {/* Simple Supporting Line */}
-          <p className="mt-5 max-w-2xl mx-auto text-base sm:text-lg lg:text-xl leading-relaxed text-ink-600 font-medium">
+          <p className="mt-5 max-w-2xl mx-auto text-base sm:text-lg lg:text-xl leading-relaxed text-ink-600 font-medium animate-fade-up" style={{ animationDelay: "160ms" }}>
             Everything you need to explore DU, represent your college, and find your next opportunity.
           </p>
         </div>

@@ -1,9 +1,17 @@
 import { Link } from "../lib/router";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.05 });
+
   return (
-    <footer className="mt-20 border-t border-surface-border bg-surface-soft elephant-watermark">
+    <footer
+      ref={ref}
+      className={`mt-20 border-t border-surface-border bg-surface-soft elephant-watermark reveal-stagger ${
+        isVisible ? "is-visible" : ""
+      }`}
+    >
       <div className="container-px py-12 sm:py-16 relative z-10">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2 max-w-sm">

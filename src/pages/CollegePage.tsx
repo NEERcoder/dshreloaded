@@ -158,6 +158,28 @@ export default function CollegePage({ slug }: { slug: string }) {
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
+  const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveTab(entry.target.id);
+          }
+        }
+      },
+      { threshold: 0.25, rootMargin: "-80px 0px -40% 0px" }
+    );
+
+    sectionTabs.forEach((tab) => {
+      const el = document.getElementById(tab.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [college]);
+
   return (
     <PageShell
       title={`${college.name} | DU Science Hub`}
@@ -236,19 +258,27 @@ export default function CollegePage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      {/* STICKY QUICK-NAV TABS */}
+      {/* STICKY QUICK-NAV TABS WITH ACTIVE INDICATOR */}
       <div className="sticky top-16 sm:top-20 z-30 bg-white/95 backdrop-blur-md border-b border-surface-border shadow-soft">
         <div className="container-px">
-          <nav className="flex gap-1 overflow-x-auto no-scrollbar py-2.5" aria-label="College sections">
-            {sectionTabs.map((tab) => (
-              <a
-                key={tab.id}
-                href={`#${tab.id}`}
-                className="shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-extrabold text-ink-600 hover:text-brand-blue hover:bg-brand-blue-soft/70 transition-colors active:scale-95"
-              >
-                {tab.label}
-              </a>
-            ))}
+          <nav className="flex gap-1.5 overflow-x-auto no-scrollbar py-2.5" aria-label="College sections">
+            {sectionTabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <a
+                  key={tab.id}
+                  href={`#${tab.id}`}
+                  className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all duration-200 active:scale-95 ${
+                    isActive
+                      ? "text-brand-blue bg-brand-blue-soft shadow-xs ring-1 ring-brand-blue/20"
+                      : "text-ink-600 hover:text-brand-blue hover:bg-brand-blue-soft/50"
+                  }`}
+                  aria-current={isActive ? "true" : undefined}
+                >
+                  {tab.label}
+                </a>
+              );
+            })}
           </nav>
         </div>
       </div>

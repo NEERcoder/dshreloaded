@@ -132,13 +132,16 @@ function CollegeCard({ college }: { college: CollegeRecord }) {
 function MentorCarousel({ mentors }: { mentors: MentorRecord[] }) {
   if (!mentors.length) return null;
 
+  // Duplicate mentors array for seamless continuous marquee loop
+  const displayMentors = mentors.length >= 4 ? [...mentors, ...mentors] : mentors;
+
   return (
-    <div className="relative overflow-hidden">
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {mentors.map((mentor) => (
+    <div className="mentor-carousel" tabIndex={0} aria-label="Mentors carousel, pause on hover">
+      <div className="mentor-track">
+        {displayMentors.map((mentor, index) => (
           <article
-            key={mentor.id}
-            className="card p-6 flex flex-col justify-between bg-white border border-surface-border shadow-card"
+            key={`${mentor.id}-${index}`}
+            className="mentor-slide card p-6 flex flex-col justify-between bg-white border border-surface-border shadow-card"
           >
             <div>
               <div className="flex items-center gap-3.5">

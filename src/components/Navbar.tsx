@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import MobileMenu from "./MobileMenu";
 import MagneticButton from "./MagneticButton";
@@ -23,12 +23,42 @@ export default function Navbar() {
     setTimeout(() => setEggActive(false), 2600);
   };
 
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number } | null>(null);
+  const navContainerRef = useRef<HTMLDivElement>(null);
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 8);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const activeIndex = navLinks.findIndex(
+      (link) => path === link.href || (link.href !== "/" && path.startsWith(link.href))
+    );
+    if (activeIndex !== -1 && linkRefs.current[activeIndex] && navContainerRef.current) {
+      const activeEl = linkRefs.current[activeIndex]!;
+      const containerRect = navContainerRef.current.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+      setIndicatorStyle({
+        left: elRect.left - containerRect.left,
+        width: elRect.width,
+      });
+    } else {
+      setIndicatorStyle(null);
+    }
+  }, [path]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -87,18 +117,32 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Nav Links with Animated Active Indicator */}
-          <div className="hidden lg:flex items-center gap-1.5 p-1 rounded-2xl bg-surface-soft/80 border border-surface-border/60 backdrop-blur-sm">
-            {navLinks.map((link) => {
+          {/* Nav Links with Animated Gliding Active Indicator */}
+          <div
+            ref={navContainerRef}
+            className="relative hidden lg:flex items-center gap-1.5 p-1 rounded-2xl bg-surface-soft/80 border border-surface-border/60 backdrop-blur-sm"
+          >
+            {/* Smooth Gliding Active Indicator Pill */}
+            {indicatorStyle && (
+              <div
+                className="nav-indicator"
+                style={{
+                  left: `${indicatorStyle.left}px`,
+                  width: `${indicatorStyle.width}px`,
+                }}
+              />
+            )}
+            {navLinks.map((link, idx) => {
               const isActive = path === link.href || (link.href !== "/" && path.startsWith(link.href));
               return (
                 <Link
                   key={link.label}
+                  ref={(el) => (linkRefs.current[idx] = el)}
                   href={link.href}
-                  className={`relative px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all duration-200 ${
+                  className={`relative z-10 px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-colors duration-200 ${
                     isActive
-                      ? "text-brand-blue bg-white shadow-soft"
-                      : "text-ink-600 hover:text-brand-blue hover:bg-white/60"
+                      ? "text-brand-blue"
+                      : "text-ink-600 hover:text-brand-blue"
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >

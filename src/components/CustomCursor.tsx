@@ -136,7 +136,7 @@ export default function CustomCursor() {
       {/* Outer Contextual Capsule / Ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 flex items-center justify-center rounded-full transition-all duration-200 ease-out border will-change-transform ${
+        className={`fixed top-0 left-0 flex items-center justify-center rounded-full transition-all duration-300 border will-change-transform ${
           isPressed ? "scale-90" : "scale-100"
         } ${
           isLabelActive
@@ -147,6 +147,7 @@ export default function CustomCursor() {
             ? "h-9 w-9 -ml-4.5 -mt-4.5 bg-brand-blue/10 border-brand-blue/40 shadow-soft"
             : "h-6 w-6 -ml-3 -mt-3 bg-transparent border-brand-blue/35"
         }`}
+        style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
       >
         {currentLabel && (
           <span className="text-[10px] font-black uppercase tracking-wider select-none animate-fade-in">

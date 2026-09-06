@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "../lib/router";
 import Icon from "./Icon";
 import TiltCard from "./TiltCard";
+import { useScrollReveal } from "../hooks/useScrollReveal";
+import { staggerDelay } from "../lib/motion";
 
 type ChoiceDoor = {
   id: string;
@@ -53,12 +55,14 @@ const doors: ChoiceDoor[] = [
 
 export default function HomeChoices() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.08 });
 
   return (
     <section className="pb-20 sm:pb-28 lg:pb-36">
       <div className="container-px max-w-7xl mx-auto">
         {/* Three Grand Doors */}
         <div
+          ref={ref}
           className="grid gap-6 lg:gap-8 lg:grid-cols-3 items-stretch"
           onMouseLeave={() => setHoveredIdx(null)}
         >
@@ -68,7 +72,12 @@ export default function HomeChoices() {
             const isRed = door.accent === "red";
 
             return (
-              <TiltCard key={door.id} className="h-full">
+              <div
+                key={door.id}
+                className={`reveal-stagger ${isVisible ? "is-visible" : ""}`}
+                style={{ transitionDelay: staggerDelay(idx, 80) }}
+              >
+                <TiltCard className="h-full">
                 <Link
                   href={door.href}
                   data-cursor={door.cursorAction}
@@ -163,6 +172,7 @@ export default function HomeChoices() {
                   </div>
                 </Link>
               </TiltCard>
+              </div>
             );
           })}
         </div>
