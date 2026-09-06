@@ -1,5 +1,6 @@
 import { RouterProvider, useLocation } from "./lib/router";
 import { CursorProvider } from "./context/CursorContext";
+import { AuthProvider } from "./context/AuthContext";
 import CustomCursor from "./components/CustomCursor";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -11,7 +12,6 @@ import CollegePage from "./pages/CollegePage";
 import JoinPage from "./pages/JoinPage";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
 import AdminPage from "./pages/AdminPage";
-import DevModeIndicator from "./components/DevModeIndicator";
 
 function DuScienceHubHome() {
   return (
@@ -51,11 +51,12 @@ function AppRouter() {
 export default function App() {
   return (
     <RouterProvider>
-      <CursorProvider>
-        <CustomCursor />
-        <AppRouter />
-        <DevModeIndicator />
-      </CursorProvider>
+      <AuthProvider>
+        <CursorProvider>
+          <CustomCursor />
+          <AppRouter />
+        </CursorProvider>
+      </AuthProvider>
     </RouterProvider>
   );
 }

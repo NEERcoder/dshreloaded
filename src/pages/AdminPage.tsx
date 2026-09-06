@@ -1,5 +1,4 @@
 import { FormEvent, useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
 import PageShell from "../components/PageShell";
 import {
   deleteOpportunity,
@@ -15,7 +14,6 @@ import {
   getAdminTeamMembers,
   getAdminTeamRoles,
   getColleges,
-  isCurrentUserAdmin,
   moderateReview,
   saveOpportunity,
   saveMentor,
@@ -32,7 +30,7 @@ import {
   type TeamMemberRecord,
   type TeamRoleRecord,
 } from "../lib/dataAccess";
-import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 import { sanitizeYouTubeUrl, getYouTubeThumbnailUrl } from "../lib/urlSafety";
 
 const blankOpportunity: OpportunityInput = {
@@ -108,48 +106,34 @@ const blankMember: Omit<TeamMemberRecord, "id"> = {
   linkedinUrl: null,
 };
 
+import { useAuth } from "../context/AuthContext";
+import { Link } from "../lib/router";
+
 export default function AdminPage() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [checking, setChecking] = useState(isSupabaseConfigured);
-  const [authorized, setAuthorized] = useState(!isSupabaseConfigured);
+  const { user, isAdmin, loading, signOut } = useAuth();
 
-  useEffect(() => {
-    if (!supabase) {
-      setChecking(false);
-      setAuthorized(true);
-      return;
-    }
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session) {
-        const adminResult = await isCurrentUserAdmin();
-        setAuthorized(adminResult.data);
-      }
-      setChecking(false);
-    });
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
-    return () => data.subscription.unsubscribe();
-  }, []);
-
-  if (checking) {
+  if (loading) {
     return (
       <PageShell title="Admin | DU Science Hub" backgroundPreset="admin">
-        <div className="container-px py-24 text-center text-sm text-ink-500">Checking admin access…</div>
+        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+          Verifying credentials…
+        </div>
       </PageShell>
     );
   }
 
-  // When Supabase is configured: require login and RBAC
-  if (isSupabaseConfigured) {
-    if (!session) {
-      return <AdminLogin />;
-    }
-    if (!authorized) {
-      return <NotAuthorized />;
-    }
+  // Not authenticated -> show Supabase Auth login
+  if (!user) {
+    return <AdminLogin />;
   }
 
-  return <AdminDashboard email={session?.user.email || "Local Developer (Development Mode)"} />;
+  // Authenticated, but not an authorized admin in public.admin_users
+  if (!isAdmin) {
+    return <NotAuthorized email={user.email} onSignOut={signOut} />;
+  }
+
+  // Authenticated AND authorized admin
+  return <AdminDashboard email={user.email || "Authorized Admin"} onSignOut={signOut} />;
 }
 
 function AdminLogin() {
@@ -160,51 +144,99 @@ function AdminLogin() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase) {
+      setMessage("Supabase authentication is not configured.");
+      return;
+    }
     setSubmitting(true);
     setMessage(null);
     const result = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
-    if (result.error) setMessage(result.error.message);
+    if (result.error) {
+      setMessage(result.error.message);
+    }
   }
 
   return (
     <PageShell title="Admin sign in | DU Science Hub" backgroundPreset="admin">
       <section className="container-px py-20 sm:py-28">
         <div className="mx-auto max-w-md">
-          <p className="eyebrow">Protected workspace</p>
+          <p className="eyebrow text-brand-red">PROTECTED WORKSPACE</p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">Admin sign in</h1>
           <p className="mt-4 text-sm leading-relaxed text-ink-500">
-            Use a Supabase Auth account with an admin role.
+            Access requires an authenticated Supabase account verified in the admin_users table.
           </p>
-          <form onSubmit={submit} className="card mt-8 p-6">
+          <form onSubmit={submit} className="card mt-8 p-6 bg-white border border-surface-border shadow-card">
             <label className="field-label" htmlFor="admin-email">Email</label>
-            <input id="admin-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field-input" />
+            <input
+              id="admin-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="field-input"
+              placeholder="admin@dusciencehub.in"
+            />
             <label className="field-label mt-4" htmlFor="admin-password">Password</label>
-            <input id="admin-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="field-input" />
-            <button disabled={submitting} className="btn-secondary mt-5 w-full disabled:opacity-60">
-              {submitting ? "Signing in…" : "Sign in"}
+            <input
+              id="admin-password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="field-input"
+              placeholder="••••••••"
+            />
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary mt-5 w-full justify-center disabled:opacity-60"
+            >
+              {submitting ? "Verifying…" : "Sign in to Admin"}
             </button>
-            {message && <p role="alert" className="mt-3 text-sm font-semibold text-brand-red">{message}</p>}
+            {message && (
+              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+                {message}
+              </div>
+            )}
           </form>
+
+          <div className="mt-6 text-center">
+            <Link href="/" className="text-xs font-bold text-ink-400 hover:text-brand-blue">
+              ← Return to DU Science Hub Homepage
+            </Link>
+          </div>
         </div>
       </section>
     </PageShell>
   );
 }
 
-function NotAuthorized() {
+function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
   return (
     <PageShell title="Admin access denied | DU Science Hub" backgroundPreset="admin">
       <section className="container-px py-20 sm:py-28">
-        <p className="eyebrow">Protected workspace</p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">Admin access is required.</h1>
-        <p className="mt-5 max-w-xl leading-relaxed text-ink-500">
-          This account is authenticated but is not present in the admin_users table.
-        </p>
-        <button className="btn-ghost mt-8" onClick={() => supabase?.auth.signOut()}>
-          Sign out
-        </button>
+        <div className="mx-auto max-w-lg text-center">
+          <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red">
+            ACCESS DENIED
+          </span>
+          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">
+            Admin permission required.
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-ink-600">
+            You are authenticated{email ? ` as ${email}` : ""}, but this account is not registered with active permissions in the <code className="rounded bg-surface-soft px-1.5 py-0.5 text-xs font-mono">public.admin_users</code> table.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/" className="btn-secondary w-full sm:w-auto">
+              Return to Homepage
+            </Link>
+            <button className="btn-ghost w-full sm:w-auto text-brand-red hover:bg-brand-red-soft" onClick={onSignOut}>
+              Sign out
+            </button>
+          </div>
+        </div>
       </section>
     </PageShell>
   );
@@ -212,7 +244,7 @@ function NotAuthorized() {
 
 type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "team_roles" | "team_members";
 
-function AdminDashboard({ email }: { email: string }) {
+function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabType>("opportunities");
   const [colleges, setColleges] = useState<CollegeRecord[]>([]);
   const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([]);
@@ -249,37 +281,22 @@ function AdminDashboard({ email }: { email: string }) {
   return (
     <PageShell title="Admin Dashboard | DU Science Hub" backgroundPreset="admin">
       <div className="container-px py-10 sm:py-14">
-        {!isSupabaseConfigured && (
-          <div className="mb-8 rounded-2xl border border-brand-blue/30 bg-brand-blue-pale p-5 sm:p-6 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-blue px-2.5 py-1 text-xs font-bold text-white uppercase tracking-wider">
-                  Local Development Admin Mode
-                </span>
-                <h3 className="mt-2 text-base font-bold text-ink-900">
-                  Offline Development Store Active (localStorage)
-                </h3>
-                <p className="mt-1 max-w-2xl text-xs leading-relaxed text-ink-500">
-                  You can create, edit, approve, and delete opportunities, reviews, mentors, videos, team roles, and team members. Changes will immediately update the live pages in this browser.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between pb-6 border-b border-surface-border">
           <div>
-            <p className="eyebrow">Admin workspace</p>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="eyebrow text-emerald-600">VERIFIED ADMIN WORKSPACE</p>
+            </div>
             <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">
               Keep the hub useful.
             </h1>
-            <p className="mt-2 text-sm text-ink-500">{email}</p>
+            <p className="mt-2 text-xs font-semibold text-ink-500 font-mono">
+              Authenticated: {email}
+            </p>
           </div>
-          {isSupabaseConfigured && (
-            <button className="btn-ghost self-start" onClick={() => supabase?.auth.signOut()}>
-              Sign out
-            </button>
-          )}
+          <button className="btn-ghost self-start text-xs font-bold text-ink-600 hover:text-brand-red" onClick={onSignOut}>
+            Sign out →
+          </button>
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">

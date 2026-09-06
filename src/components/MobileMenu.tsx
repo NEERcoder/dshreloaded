@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
 import { Link, useLocation } from "../lib/router";
+import { useAuth } from "../context/AuthContext";
 
 type NavLink = { label: string; href: string };
 
@@ -13,6 +14,7 @@ type MobileMenuProps = {
 export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps) {
   const [render, setRender] = useState(open);
   const { path } = useLocation();
+  const { isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (open) setRender(true);
@@ -82,6 +84,26 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
               </Link>
             );
           })}
+
+          {isAdmin && !authLoading && (
+            <Link
+              href="/admin"
+              onClick={onClose}
+              className={`px-4 py-3 text-base font-extrabold rounded-xl transition-colors flex items-center justify-between ${
+                path === "/admin"
+                  ? "text-white bg-brand-red"
+                  : "text-brand-red bg-brand-red-soft hover:bg-brand-red hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-current animate-pulse" />
+                <span>Admin Dashboard</span>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded bg-white/20">
+                Verified
+              </span>
+            </Link>
+          )}
 
           <Link
             href="/opportunities"

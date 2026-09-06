@@ -3,6 +3,7 @@ import Icon from "./Icon";
 import MobileMenu from "./MobileMenu";
 import MagneticButton from "./MagneticButton";
 import { Link, useLocation } from "../lib/router";
+import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
   { label: "Explore DU", href: "/explore" },
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [eggActive, setEggActive] = useState(false);
   const { path } = useLocation();
+  const { isAdmin, loading: authLoading } = useAuth();
 
   const triggerEasterEgg = () => {
     setEggActive(true);
@@ -109,8 +111,22 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Magnetic Primary CTA */}
+          {/* Magnetic Primary CTA + Admin Button (Visible strictly to authenticated verified admins) */}
           <div className="hidden lg:flex items-center gap-3">
+            {isAdmin && !authLoading && (
+              <Link
+                href="/admin"
+                className={`px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-200 inline-flex items-center gap-1.5 shadow-sm ${
+                  path === "/admin"
+                    ? "bg-brand-red text-white"
+                    : "text-brand-red bg-brand-red-soft hover:bg-brand-red hover:text-white"
+                }`}
+                title="Admin Dashboard"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                Admin
+              </Link>
+            )}
             <MagneticButton href="/opportunities" variant="primary">
               Opportunity Radar
               <Icon name="target" className="h-4 w-4" />

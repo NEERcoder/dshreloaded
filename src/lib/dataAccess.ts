@@ -268,51 +268,47 @@ export async function createAnonymousReview(input: {
 }
 
 export async function getAdminReviews(): Promise<DataResult<ReviewRecord[]>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("college_reviews").select("*, colleges(name)").order("created_at", { ascending: false });
-      if (!result.error && result.data) {
-        return remoteSuccess(
-          result.data.map((row) => ({
-            ...mapReview(row),
-            collegeName: (row.colleges as { name?: string } | null)?.name,
-          }))
-        );
-      }
-    } catch {
-      // fallback to local
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
   }
-  const localReviews = await LocalProvider.getAdminReviews();
-  return localSuccess(localReviews);
+  try {
+    const result = await supabase.from("college_reviews").select("*, colleges(name)").order("created_at", { ascending: false });
+    if (result.error) return failure([], result.error);
+    return remoteSuccess(
+      (result.data || []).map((row) => ({
+        ...mapReview(row),
+        collegeName: (row.colleges as { name?: string } | null)?.name,
+      }))
+    );
+  } catch (err) {
+    return failure([], err);
+  }
 }
 
 export async function moderateReview(id: string, status: "approved" | "rejected"): Promise<DataResult<boolean>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("college_reviews").update({ status }).eq("id", id);
-      if (result.error) return failure(false, result.error);
-      return remoteSuccess(true);
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const success = await LocalProvider.moderateReview(id, status);
-  return localSuccess(success);
+  try {
+    const result = await supabase.from("college_reviews").update({ status }).eq("id", id);
+    if (result.error) return failure(false, result.error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
 
 export async function deleteReview(id: string): Promise<DataResult<boolean>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("college_reviews").delete().eq("id", id);
-      if (result.error) return failure(false, result.error);
-      return remoteSuccess(true);
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const success = await LocalProvider.deleteReview(id);
-  return localSuccess(success);
+  try {
+    const result = await supabase.from("college_reviews").delete().eq("id", id);
+    if (result.error) return failure(false, result.error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
 
 // ==========================================
@@ -349,62 +345,58 @@ export async function getMentorsByCollege(collegeName: string): Promise<DataResu
 }
 
 export async function getAdminMentors(): Promise<DataResult<MentorRecord[]>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("mentors").select("*").order("sort_order").order("created_at");
-      if (!result.error && result.data) {
-        return remoteSuccess(result.data.map(mapMentor));
-      }
-    } catch {
-      // fallback to local
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
   }
-  const localMentors = await LocalProvider.getAdminMentors();
-  return localSuccess(localMentors);
+  try {
+    const result = await supabase.from("mentors").select("*").order("sort_order").order("created_at");
+    if (result.error) return failure([], result.error);
+    return remoteSuccess((result.data || []).map(mapMentor));
+  } catch (err) {
+    return failure([], err);
+  }
 }
 
 export async function saveMentor(input: Omit<MentorRecord, "id">, id?: string): Promise<DataResult<MentorRecord | null>> {
-  if (supabase) {
-    try {
-      const payload = {
-        name: input.name.trim(),
-        photo_url: input.photoUrl,
-        college: input.college,
-        course: input.course,
-        year: input.year,
-        bio: input.bio,
-        designation: input.role,
-        expertise: input.expertise,
-        profile_url: input.profileUrl,
-        contact_url: input.contactUrl,
-        active: input.active !== undefined ? input.active : true,
-        sort_order: input.sortOrder !== undefined ? input.sortOrder : 0,
-      };
-      const result = id
-        ? await supabase.from("mentors").update(payload).eq("id", id).select("*").single()
-        : await supabase.from("mentors").insert(payload).select("*").single();
-      if (result.error) return failure(null, result.error);
-      return remoteSuccess(mapMentor(result.data));
-    } catch (err) {
-      return failure(null, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const saved = await LocalProvider.saveMentor(input, id);
-  return localSuccess(saved);
+  try {
+    const payload = {
+      name: input.name.trim(),
+      photo_url: input.photoUrl,
+      college: input.college,
+      course: input.course,
+      year: input.year,
+      bio: input.bio,
+      designation: input.role,
+      expertise: input.expertise,
+      profile_url: input.profileUrl,
+      contact_url: input.contactUrl,
+      active: input.active !== undefined ? input.active : true,
+      sort_order: input.sortOrder !== undefined ? input.sortOrder : 0,
+    };
+    const result = id
+      ? await supabase.from("mentors").update(payload).eq("id", id).select("*").single()
+      : await supabase.from("mentors").insert(payload).select("*").single();
+    if (result.error) return failure(null, result.error);
+    return remoteSuccess(mapMentor(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
 }
 
 export async function deleteMentor(id: string): Promise<DataResult<boolean>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("mentors").delete().eq("id", id);
-      if (result.error) return failure(false, result.error);
-      return remoteSuccess(true);
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const success = await LocalProvider.deleteMentor(id);
-  return localSuccess(success);
+  try {
+    const result = await supabase.from("mentors").delete().eq("id", id);
+    if (result.error) return failure(false, result.error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
 
 export async function uploadMentorPhoto(file: File): Promise<DataResult<string | null>> {
@@ -477,65 +469,60 @@ export async function getVideosByCollege(collegeId: string): Promise<DataResult<
 }
 
 export async function getAdminVideos(): Promise<DataResult<VideoRecord[]>> {
-  if (supabase) {
-    try {
-      const result = await supabase
-        .from("videos")
-        .select("*, colleges(name)")
-        .order("sort_order")
-        .order("created_at", { ascending: false });
-      if (!result.error && result.data) {
-        return remoteSuccess(result.data.map(mapVideo));
-      }
-    } catch {
-      // fallback to local
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
   }
-  const localVideos = await LocalProvider.getAdminVideos();
-  return localSuccess(localVideos);
+  try {
+    const result = await supabase
+      .from("videos")
+      .select("*, colleges(name)")
+      .order("sort_order")
+      .order("created_at", { ascending: false });
+    if (result.error) return failure([], result.error);
+    return remoteSuccess((result.data || []).map(mapVideo));
+  } catch (err) {
+    return failure([], err);
+  }
 }
 
 export async function saveVideo(input: Omit<VideoRecord, "id">, id?: string): Promise<DataResult<VideoRecord | null>> {
-  if (supabase) {
-    try {
-      const payload = {
-        title: input.title.trim(),
-        youtube_url: input.youtubeUrl,
-        thumbnail_url: input.thumbnail,
-        category: input.category,
-        college_id: input.collegeId || null,
-        description: input.description,
-        duration: input.duration,
-        featured: Boolean(input.featured),
-        active: input.active !== undefined ? input.active : true,
-        sort_order: input.sortOrder !== undefined ? input.sortOrder : 0,
-      };
-      const result = id
-        ? await supabase.from("videos").update(payload).eq("id", id).select("*, colleges(name)").single()
-        : await supabase.from("videos").insert(payload).select("*, colleges(name)").single();
-      if (result.error) return failure(null, result.error);
-      return remoteSuccess(mapVideo(result.data));
-    } catch (err) {
-      return failure(null, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const saved = await LocalProvider.saveVideo(input, id);
-  return localSuccess(saved);
+  try {
+    const payload = {
+      title: input.title.trim(),
+      youtube_url: input.youtubeUrl,
+      thumbnail_url: input.thumbnail,
+      category: input.category,
+      college_id: input.collegeId || null,
+      description: input.description,
+      duration: input.duration,
+      featured: Boolean(input.featured),
+      active: input.active !== undefined ? input.active : true,
+      sort_order: input.sortOrder !== undefined ? input.sortOrder : 0,
+    };
+    const result = id
+      ? await supabase.from("videos").update(payload).eq("id", id).select("*, colleges(name)").single()
+      : await supabase.from("videos").insert(payload).select("*, colleges(name)").single();
+    if (result.error) return failure(null, result.error);
+    return remoteSuccess(mapVideo(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
 }
 
 export async function deleteVideo(id: string): Promise<DataResult<boolean>> {
-
-  if (supabase) {
-    try {
-      const result = await supabase.from("videos").delete().eq("id", id);
-      if (result.error) return failure(false, result.error);
-      return remoteSuccess(true);
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const success = await LocalProvider.deleteVideo(id);
-  return localSuccess(success);
+  try {
+    const result = await supabase.from("videos").delete().eq("id", id);
+    if (result.error) return failure(false, result.error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
 
 // ==========================================
@@ -557,57 +544,53 @@ export async function getTeamMembers(): Promise<DataResult<TeamMemberRecord[]>> 
 }
 
 export async function getAdminTeamMembers(): Promise<DataResult<TeamMemberRecord[]>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("team_members").select("*").order("sort_order").order("created_at");
-      if (!result.error && result.data) {
-        return remoteSuccess(result.data.map(mapTeamMember));
-      }
-    } catch {
-      // fallback to local
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
   }
-  const localMembers = await LocalProvider.getAdminTeamMembers();
-  return localSuccess(localMembers);
+  try {
+    const result = await supabase.from("team_members").select("*").order("sort_order").order("created_at");
+    if (result.error) return failure([], result.error);
+    return remoteSuccess((result.data || []).map(mapTeamMember));
+  } catch (err) {
+    return failure([], err);
+  }
 }
 
 export async function saveTeamMember(input: Omit<TeamMemberRecord, "id">, id?: string): Promise<DataResult<TeamMemberRecord | null>> {
-  if (supabase) {
-    try {
-      const payload = {
-        name: input.name,
-        photo_url: input.photoUrl,
-        role: input.role,
-        college: input.college,
-        course: input.course,
-        short_bio: input.shortBio,
-        linkedin_url: input.linkedinUrl,
-      };
-      const result = id
-        ? await supabase.from("team_members").update(payload).eq("id", id).select("*").single()
-        : await supabase.from("team_members").insert(payload).select("*").single();
-      if (result.error) return failure(null, result.error);
-      return remoteSuccess(mapTeamMember(result.data));
-    } catch (err) {
-      return failure(null, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const saved = await LocalProvider.saveTeamMember(input, id);
-  return localSuccess(saved);
+  try {
+    const payload = {
+      name: input.name,
+      photo_url: input.photoUrl,
+      role: input.role,
+      college: input.college,
+      course: input.course,
+      short_bio: input.shortBio,
+      linkedin_url: input.linkedinUrl,
+    };
+    const result = id
+      ? await supabase.from("team_members").update(payload).eq("id", id).select("*").single()
+      : await supabase.from("team_members").insert(payload).select("*").single();
+    if (result.error) return failure(null, result.error);
+    return remoteSuccess(mapTeamMember(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
 }
 
 export async function deleteTeamMember(id: string): Promise<DataResult<boolean>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("team_members").delete().eq("id", id);
-      if (result.error) return failure(false, result.error);
-      return remoteSuccess(true);
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const success = await LocalProvider.deleteTeamMember(id);
-  return localSuccess(success);
+  try {
+    const result = await supabase.from("team_members").delete().eq("id", id);
+    if (result.error) return failure(false, result.error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
 
 export async function getOpenTeamRoles(): Promise<DataResult<TeamRoleRecord[]>> {
@@ -626,61 +609,57 @@ export async function getOpenTeamRoles(): Promise<DataResult<TeamRoleRecord[]>> 
 }
 
 export async function getAdminTeamRoles(): Promise<DataResult<TeamRoleRecord[]>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("team_roles").select("*").order("sort_order").order("created_at");
-      if (!result.error && result.data) {
-        return remoteSuccess(result.data.map(mapTeamRole));
-      }
-    } catch {
-      // fallback to local
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
   }
-  const localRoles = await LocalProvider.getAdminTeamRoles();
-  return localSuccess(localRoles);
+  try {
+    const result = await supabase.from("team_roles").select("*").order("sort_order").order("created_at");
+    if (result.error) return failure([], result.error);
+    return remoteSuccess((result.data || []).map(mapTeamRole));
+  } catch (err) {
+    return failure([], err);
+  }
 }
 
 export async function saveTeamRole(input: Omit<TeamRoleRecord, "id">, id?: string): Promise<DataResult<TeamRoleRecord | null>> {
-  if (supabase) {
-    try {
-      const payload = {
-        title: input.title,
-        slug: input.slug,
-        short_description: input.shortDescription,
-        full_description: input.fullDescription,
-        responsibilities: input.responsibilities,
-        requirements: input.requirements,
-        benefits: input.benefits,
-        work_mode: input.workMode,
-        duration: input.duration,
-        google_form_url: input.googleFormUrl,
-        is_open: input.isOpen,
-      };
-      const result = id
-        ? await supabase.from("team_roles").update(payload).eq("id", id).select("*").single()
-        : await supabase.from("team_roles").insert(payload).select("*").single();
-      if (result.error) return failure(null, result.error);
-      return remoteSuccess(mapTeamRole(result.data));
-    } catch (err) {
-      return failure(null, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const saved = await LocalProvider.saveTeamRole(input, id);
-  return localSuccess(saved);
+  try {
+    const payload = {
+      title: input.title,
+      slug: input.slug,
+      short_description: input.shortDescription,
+      full_description: input.fullDescription,
+      responsibilities: input.responsibilities,
+      requirements: input.requirements,
+      benefits: input.benefits,
+      work_mode: input.workMode,
+      duration: input.duration,
+      google_form_url: input.googleFormUrl,
+      is_open: input.isOpen,
+    };
+    const result = id
+      ? await supabase.from("team_roles").update(payload).eq("id", id).select("*").single()
+      : await supabase.from("team_roles").insert(payload).select("*").single();
+    if (result.error) return failure(null, result.error);
+    return remoteSuccess(mapTeamRole(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
 }
 
 export async function deleteTeamRole(id: string): Promise<DataResult<boolean>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("team_roles").delete().eq("id", id);
-      if (result.error) return failure(false, result.error);
-      return remoteSuccess(true);
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const success = await LocalProvider.deleteTeamRole(id);
-  return localSuccess(success);
+  try {
+    const result = await supabase.from("team_roles").delete().eq("id", id);
+    if (result.error) return failure(false, result.error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
 
 // ==========================================
@@ -719,66 +698,62 @@ export async function getOpportunityById(id: string): Promise<DataResult<Opportu
 }
 
 export async function getAdminOpportunities(): Promise<DataResult<OpportunityRecord[]>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("opportunities").select("*").order("updated_at", { ascending: false });
-      if (!result.error && result.data) {
-        return remoteSuccess(result.data.map(mapOpportunity));
-      }
-    } catch {
-      // fallback to local
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
   }
-  const localOpps = await LocalProvider.getAdminOpportunities();
-  return localSuccess(localOpps);
+  try {
+    const result = await supabase.from("opportunities").select("*").order("updated_at", { ascending: false });
+    if (result.error) return failure([], result.error);
+    return remoteSuccess((result.data || []).map(mapOpportunity));
+  } catch (err) {
+    return failure([], err);
+  }
 }
 
 export async function saveOpportunity(input: OpportunityInput, id?: string): Promise<DataResult<OpportunityRecord | null>> {
-  if (supabase) {
-    try {
-      const payload = {
-        title: input.title,
-        organization: input.organization,
-        category: input.category,
-        description: input.description,
-        eligibility: input.eligibility,
-        field: input.field,
-        eligible_courses: input.eligibleCourses,
-        location: input.location,
-        mode: input.mode,
-        stipend: input.stipend,
-        duration: input.duration,
-        deadline: input.deadline,
-        application_url: input.applicationUrl,
-        image_url: input.imageUrl,
-        status: input.status,
-        featured: input.featured,
-      };
-      const result = id
-        ? await supabase.from("opportunities").update(payload).eq("id", id).select("*").single()
-        : await supabase.from("opportunities").insert(payload).select("*").single();
-      if (result.error) return failure(null, result.error);
-      return remoteSuccess(mapOpportunity(result.data));
-    } catch (err) {
-      return failure(null, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const saved = await LocalProvider.saveOpportunity(input, id);
-  return localSuccess(saved);
+  try {
+    const payload = {
+      title: input.title,
+      organization: input.organization,
+      category: input.category,
+      description: input.description,
+      eligibility: input.eligibility,
+      field: input.field,
+      eligible_courses: input.eligibleCourses,
+      location: input.location,
+      mode: input.mode,
+      stipend: input.stipend,
+      duration: input.duration,
+      deadline: input.deadline,
+      application_url: input.applicationUrl,
+      image_url: input.imageUrl,
+      status: input.status,
+      featured: input.featured,
+    };
+    const result = id
+      ? await supabase.from("opportunities").update(payload).eq("id", id).select("*").single()
+      : await supabase.from("opportunities").insert(payload).select("*").single();
+    if (result.error) return failure(null, result.error);
+    return remoteSuccess(mapOpportunity(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
 }
 
 export async function deleteOpportunity(id: string): Promise<DataResult<boolean>> {
-  if (supabase) {
-    try {
-      const result = await supabase.from("opportunities").delete().eq("id", id);
-      if (result.error) return failure(false, result.error);
-      return remoteSuccess(true);
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Unauthorized: Supabase admin authentication required."));
   }
-  const success = await LocalProvider.deleteOpportunity(id);
-  return localSuccess(success);
+  try {
+    const result = await supabase.from("opportunities").delete().eq("id", id);
+    if (result.error) return failure(false, result.error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
 
 // ==========================================
@@ -810,16 +785,42 @@ export async function submitGeneralApplication(email: string, file: File): Promi
 // ADMIN AUTHENTICATION
 // ==========================================
 export async function isCurrentUserAdmin(): Promise<DataResult<boolean>> {
-  if (supabase) {
-    try {
-      const { data: userResult, error: userError } = await supabase.auth.getUser();
-      if (userError || !userResult.user) return failure(false, userError || new Error("No authenticated user."));
-      const result = await supabase.from("admin_users").select("id").eq("user_id", userResult.user.id).maybeSingle();
-      return result.error ? failure(false, result.error) : remoteSuccess(Boolean(result.data));
-    } catch (err) {
-      return failure(false, err);
-    }
+  if (!supabase || !isSupabaseConfigured) {
+    return remoteSuccess(false);
   }
-  // In local development mode without Supabase, admin workspace is accessible for developer testing
-  return localSuccess(true);
+
+  try {
+    // 1. Get the current authenticated user from Supabase Auth
+    const { data: userResult, error: userError } = await supabase.auth.getUser();
+    const user = userResult?.user;
+    if (userError || !user) {
+      return remoteSuccess(false);
+    }
+
+    // 2. Validate against database security definer function is_admin()
+    try {
+      const { data: rpcIsAdmin, error: rpcError } = await supabase.rpc("is_admin");
+      if (!rpcError && typeof rpcIsAdmin === "boolean") {
+        if (!rpcIsAdmin) return remoteSuccess(false);
+      }
+    } catch {
+      // Continue to direct admin_users query
+    }
+
+    // 3. Verify user exists in public.admin_users with active role = 'admin'
+    const result = await supabase
+      .from("admin_users")
+      .select("id, user_id, role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (result.error || !result.data) {
+      return remoteSuccess(false);
+    }
+
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
 }
