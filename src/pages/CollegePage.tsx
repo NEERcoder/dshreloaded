@@ -623,20 +623,26 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    setMessage(null);
-    setSubmitting(true);
-    const result = await createAnonymousReview({ collegeId, name, rating, review });
-    setSubmitting(false);
-    if (result.error) {
-      setMessage(result.error);
+    const trimmedReview = review.trim();
+    const trimmedName = name.trim();
+    if (trimmedReview.length < 10) {
+      setMessage({ text: "Please write at least 10 characters to share a genuine student perspective.", isError: true });
       return;
     }
-    setMessage("Thanks! Your take is awaiting moderation before appearing publicly.");
+    setMessage(null);
+    setSubmitting(true);
+    const result = await createAnonymousReview({ collegeId, name: trimmedName, rating, review: trimmedReview });
+    setSubmitting(false);
+    if (result.error) {
+      setMessage({ text: result.error, isError: true });
+      return;
+    }
+    setMessage({ text: "Thanks! Your take is awaiting moderation before appearing publicly.", isError: false });
     setName("");
     setReview("");
     setRating(5);
@@ -656,6 +662,7 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
       <input
         id="review-name"
         required
+        maxLength={100}
         value={name}
         onChange={(event) => setName(event.target.value)}
         className="field-input"
@@ -685,12 +692,13 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
       </div>
 
       <label className="field-label mt-4" htmlFor="review-comment">
-        Honest Take
+        Honest Take <span className="text-xs font-normal text-ink-400">(min. 10 chars)</span>
       </label>
       <textarea
         id="review-comment"
         required
         minLength={10}
+        maxLength={3000}
         value={review}
         onChange={(event) => setReview(event.target.value)}
         className="field-input min-h-32 resize-y"
@@ -703,8 +711,15 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
         {submitting ? "Posting…" : "Post Your Take"}
       </button>
       {message && (
-        <p className="mt-3 text-xs font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-200" role="status">
-          {message}
+        <p
+          className={`mt-3 text-xs font-bold p-3 rounded-xl border text-center ${
+            message.isError
+              ? "border-brand-red/20 bg-brand-red-soft text-brand-red"
+              : "text-emerald-700 bg-emerald-50 border-emerald-200"
+          }`}
+          role={message.isError ? "alert" : "status"}
+        >
+          {message.text}
         </p>
       )}
     </form>

@@ -322,7 +322,7 @@ function WriteReviewModal({
   const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
   useEffect(() => {
     if (!collegeId && colleges.length > 0) {
@@ -335,14 +335,20 @@ function WriteReviewModal({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!collegeId) return;
+    const trimmedReview = review.trim();
+    const trimmedName = name.trim();
+    if (trimmedReview.length < 10) {
+      setMessage({ text: "Please write at least 10 characters to share a genuine student perspective.", isError: true });
+      return;
+    }
     setSubmitting(true);
     setMessage(null);
-    const res = await createAnonymousReview({ collegeId, name, rating, review });
+    const res = await createAnonymousReview({ collegeId, name: trimmedName, rating, review: trimmedReview });
     setSubmitting(false);
     if (res.error) {
-      setMessage(res.error);
+      setMessage({ text: res.error, isError: true });
     } else {
-      setMessage("Thanks! Your student take is awaiting quick moderation before appearing publicly.");
+      setMessage({ text: "Thanks! Your student take is awaiting quick moderation before appearing publicly.", isError: false });
       setName("");
       setReview("");
       setTimeout(() => {
@@ -395,6 +401,7 @@ function WriteReviewModal({
             <input
               id="modal-name"
               required
+              maxLength={100}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Physics Major '25 or Anonymous"
@@ -428,11 +435,13 @@ function WriteReviewModal({
 
           <div>
             <label className="field-label" htmlFor="modal-review">
-              Your Honest Review
+              Your Honest Review <span className="text-xs font-normal text-ink-400">(min. 10 chars)</span>
             </label>
             <textarea
               id="modal-review"
               required
+              minLength={10}
+              maxLength={3000}
               rows={4}
               value={review}
               onChange={(e) => setReview(e.target.value)}
@@ -450,8 +459,15 @@ function WriteReviewModal({
           </button>
 
           {message && (
-            <p className="text-xs font-bold text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-center" role="status">
-              {message}
+            <p
+              className={`text-xs font-bold p-3 rounded-xl border text-center ${
+                message.isError
+                  ? "border-brand-red/20 bg-brand-red-soft text-brand-red"
+                  : "text-emerald-700 bg-emerald-50 border-emerald-200"
+              }`}
+              role={message.isError ? "alert" : "status"}
+            >
+              {message.text}
             </p>
           )}
         </form>
@@ -472,7 +488,7 @@ export default function ExplorePage() {
   const [collegeType, setCollegeType] = useState("");
   const [sort, setSort] = useState("name");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [collegeError, setCollegeError] = useState<string | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
@@ -485,7 +501,7 @@ export default function ExplorePage() {
         setMentors(mentorResult.data);
         setVideos(videoResult.data);
         setRecentReviews(reviewResult.data);
-        setError(collegeResult.error || mentorResult.error || videoResult.error);
+        setCollegeError(collegeResult.error);
         setLoading(false);
       }
     );
@@ -822,8 +838,8 @@ export default function ExplorePage() {
           <div className="mt-8">
             {loading ? (
               <SkeletonCollegeGrid count={6} />
-            ) : error ? (
-              <EmptyState title="College directory needs attention">{error}</EmptyState>
+            ) : collegeError ? (
+              <EmptyState title="College directory needs attention">{collegeError}</EmptyState>
             ) : filteredColleges.length ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredColleges.map((college) => (

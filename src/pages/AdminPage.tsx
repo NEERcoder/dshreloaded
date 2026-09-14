@@ -137,6 +137,7 @@ export default function AdminPage() {
 }
 
 function AdminLogin() {
+  const { refreshAdminStatus } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -150,10 +151,21 @@ function AdminLogin() {
     }
     setSubmitting(true);
     setMessage(null);
-    const result = await supabase.auth.signInWithPassword({ email, password });
-    setSubmitting(false);
-    if (result.error) {
-      setMessage(result.error.message);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const result = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+      if (result.error) {
+        setMessage(result.error.message);
+        setSubmitting(false);
+        return;
+      }
+      if (result.data?.user) {
+        await refreshAdminStatus();
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "An unexpected error occurred during sign in.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -173,9 +185,10 @@ function AdminLogin() {
               type="email"
               autoComplete="email"
               required
+              disabled={submitting}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="field-input"
+              className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
               placeholder="admin@dusciencehub.in"
             />
             <label className="field-label mt-4" htmlFor="admin-password">Password</label>
@@ -184,9 +197,10 @@ function AdminLogin() {
               type="password"
               autoComplete="current-password"
               required
+              disabled={submitting}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="field-input"
+              className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
               placeholder="••••••••"
             />
             <button
