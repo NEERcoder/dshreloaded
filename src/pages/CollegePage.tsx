@@ -103,7 +103,17 @@ export default function CollegePage({ slug }: { slug: string }) {
   }, [slug]);
   
   const [activeTab, setActiveTab] = useState("overview");
-
+ useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveTab(entry.target.id);
+          }
+        }
+      },
+      { threshold: 0.25, rootMargin: "-80px 0px -40% 0px" }
+    );
 
   if (loading) {
     return (
@@ -160,18 +170,6 @@ export default function CollegePage({ slug }: { slug: string }) {
   const avgRating = reviews.length
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : null;
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveTab(entry.target.id);
-          }
-        }
-      },
-      { threshold: 0.25, rootMargin: "-80px 0px -40% 0px" }
-    );
 
     sectionTabs.forEach((tab) => {
       const el = document.getElementById(tab.id);
