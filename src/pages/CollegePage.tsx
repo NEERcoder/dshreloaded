@@ -114,6 +114,13 @@ export default function CollegePage({ slug }: { slug: string }) {
       },
       { threshold: 0.25, rootMargin: "-80px 0px -40% 0px" }
     );
+   sectionTabs.forEach((tab) => {
+      const el = document.getElementById(tab.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [college]);
 
   if (loading) {
     return (
@@ -170,14 +177,6 @@ export default function CollegePage({ slug }: { slug: string }) {
   const avgRating = reviews.length
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : null;
-
-    sectionTabs.forEach((tab) => {
-      const el = document.getElementById(tab.id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [college]);
 
   return (
     <PageShell
