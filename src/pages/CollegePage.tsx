@@ -101,6 +101,9 @@ export default function CollegePage({ slug }: { slug: string }) {
       cancelled = true;
     };
   }, [slug]);
+  
+  const [activeTab, setActiveTab] = useState("overview");
+
 
   if (loading) {
     return (
@@ -157,8 +160,6 @@ export default function CollegePage({ slug }: { slug: string }) {
   const avgRating = reviews.length
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : null;
-
-  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     const observer = new IntersectionObserver(
