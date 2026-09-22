@@ -13,8 +13,14 @@ type MobileMenuProps = {
 
 export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps) {
   const [render, setRender] = useState(open);
-  const { path } = useLocation();
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { path, navigate } = useLocation();
+  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+
+  async function handleSignOut() {
+    onClose();
+    await signOut();
+    navigate("/");
+  }
 
   useEffect(() => {
     if (open) setRender(true);
@@ -116,9 +122,63 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
               </div>
             )}
 
+            {!authLoading && (
+              <div
+                className={`drawer-link ${open ? "is-visible" : ""}`}
+                style={{ transitionDelay: open ? `${(navLinks.length + (isAdmin ? 1 : 0) + 1) * 45 + 50}ms` : "0ms" }}
+              >
+                {user ? (
+                  <div className="flex flex-col gap-2 mt-1">
+                    <Link
+                      href="/dashboard"
+                      onClick={onClose}
+                      className={`block px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
+                        path === "/dashboard"
+                          ? "text-brand-blue bg-brand-blue-soft"
+                          : "text-ink-900 hover:bg-brand-blue-soft"
+                      }`}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-3 text-base font-semibold rounded-xl text-ink-600 hover:bg-surface-soft transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 mt-1">
+                    <Link
+                      href="/login"
+                      onClick={onClose}
+                      className={`block px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
+                        path === "/login"
+                          ? "text-brand-blue bg-brand-blue-soft"
+                          : "text-ink-900 hover:bg-brand-blue-soft"
+                      }`}
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/signup"
+                      onClick={onClose}
+                      className={`block px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
+                        path === "/signup"
+                          ? "text-brand-blue bg-brand-blue-soft"
+                          : "text-ink-900 hover:bg-brand-blue-soft"
+                      }`}
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div
               className={`drawer-link ${open ? "is-visible" : ""}`}
-              style={{ transitionDelay: open ? `${(navLinks.length + 1) * 45 + 50}ms` : "0ms" }}
+              style={{ transitionDelay: open ? `${(navLinks.length + (isAdmin ? 1 : 0) + 2) * 45 + 50}ms` : "0ms" }}
             >
               <Link
                 href="/opportunities"
