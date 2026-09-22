@@ -15,8 +15,13 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [eggActive, setEggActive] = useState(false);
-  const { path } = useLocation();
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { path, navigate } = useLocation();
+  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    navigate("/");
+  }
 
   const triggerEasterEgg = () => {
     setEggActive(true);
@@ -170,6 +175,42 @@ export default function Navbar() {
                 <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
                 Admin
               </Link>
+            )}
+            {!authLoading && (
+              <>
+                {user ? (
+                  <div className="flex items-center gap-1.5">
+                    <Link
+                      href="/dashboard"
+                      className={`px-3 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-colors duration-200 ${
+                        path === "/dashboard"
+                          ? "text-brand-blue bg-brand-blue-soft"
+                          : "text-ink-600 hover:text-brand-blue"
+                      }`}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="px-3 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl text-ink-600 hover:text-brand-red transition-colors duration-200"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Link
+                      href="/login"
+                      className="px-3 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl text-ink-600 hover:text-brand-blue transition-colors duration-200"
+                    >
+                      Login
+                    </Link>
+                    <Link href="/signup" className="btn-outline-blue px-3.5 py-2 text-xs">
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
             <MagneticButton href="/opportunities" variant="primary">
               Opportunity Radar
