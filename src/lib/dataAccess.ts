@@ -24,6 +24,34 @@ export type {
 
 export type DataResult<T> = { data: T; error: string | null; configured: boolean };
 
+// ==========================================
+// STUDENT PROFILES
+// ==========================================
+// public.profiles already exists in production with RLS enforcing
+// user_id = auth.uid() ownership. This client never reads/writes user_id
+// from caller input — it is always taken from the authenticated session.
+export type ProfileRecord = {
+  id: string;
+  userId: string;
+  fullName: string;
+  collegeId: string;
+  course: string;
+  yearOfStudy: number;
+  graduationYear: number;
+  gender: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProfileInput = {
+  fullName: string;
+  collegeId: string;
+  course: string;
+  yearOfStudy: number;
+  graduationYear: number;
+  gender: string;
+};
+
 const localSuccess = <T>(data: T): DataResult<T> => ({
   data,
   error: null,
@@ -38,7 +66,12 @@ const remoteSuccess = <T>(data: T): DataResult<T> => ({
 
 const failure = <T>(data: T, error: unknown): DataResult<T> => ({
   data,
-  error: error instanceof Error ? error.message : "Unable to complete this request.",
+  error:
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "message" in error && typeof (error as { message: unknown }).message === "string"
+      ? (error as { message: string }).message
+      : "Unable to complete this request.",
   configured: isSupabaseConfigured,
 });
 
@@ -152,6 +185,19 @@ const mapOpportunity = (row: Record<string, unknown>): OpportunityRecord => ({
   featured: Boolean(row.featured),
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
+});
+
+const mapProfile = (row: Record<string, unknown>): ProfileRecord => ({
+  id: String(row.id),
+  userId: String(row.user_id),
+  fullName: String(row.full_name ?? ""),
+  collegeId: row.college_id ? String(row.college_id) : "",
+  course: String(row.course ?? ""),
+  yearOfStudy: Number(row.year_of_study ?? 0),
+  graduationYear: Number(row.graduation_year ?? 0),
+  gender: String(row.gender ?? ""),
+  createdAt: String(row.created_at ?? ""),
+  updatedAt: String(row.updated_at ?? row.created_at ?? ""),
 });
 
 // ==========================================
@@ -779,6 +825,110 @@ export async function submitGeneralApplication(email: string, file: File): Promi
   }
   const localSubmit = await LocalProvider.submitGeneralApplication(email, file);
   return localSuccess(localSubmit);
+}
+
+// ==========================================
+// PROFILE ACCESS (student accounts)
+// ==========================================
+// These functions never accept a user_id from the caller. The owning
+// user is always resolved from the live Supabase Auth session, matching
+// the production RLS policy (user_id = auth.uid()) already configured
+// on public.profiles.
+export async function getCurrentUserProfile(): Promise<DataResult<ProfileRecord | null>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Supabase authentication is not configured."));
+  }
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    const user = userRes?.user;
+    if (userErr || !user) {
+      return failure(null, new Error("You must be signed in to view your profile."));
+    }
+
+    const result = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (result.error) return failure(null, result.error);
+    if (!result.data) return remoteSuccess(null);
+    return remoteSuccess(mapProfile(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
+export async function createProfile(input: ProfileInput): Promise<DataResult<ProfileRecord | null>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Supabase authentication is not configured."));
+  }
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    const user = userRes?.user;
+    if (userErr || !user) {
+      return failure(null, new Error("You must be signed in to create a profile."));
+    }
+
+    const payload = {
+      user_id: user.id, // always the authenticated session's user id
+      full_name: input.fullName.trim(),
+      college_id: input.collegeId,
+      course: input.course.trim(),
+      year_of_study: input.yearOfStudy,
+      graduation_year: input.graduationYear,
+      gender: input.gender,
+    };
+
+    // upsert (rather than insert) makes this call idempotent: if the row
+    // was already written on a previous attempt but the client lost the
+    // response (network hiccup, crash, etc.), the retry merges cleanly
+    // instead of hitting the UNIQUE constraint on user_id.
+    const result = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "user_id" })
+      .select()
+      .single();
+    if (result.error) return failure(null, result.error);
+    return remoteSuccess(mapProfile(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
+export async function updateProfile(input: ProfileInput): Promise<DataResult<ProfileRecord | null>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Supabase authentication is not configured."));
+  }
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    const user = userRes?.user;
+    if (userErr || !user) {
+      return failure(null, new Error("You must be signed in to update your profile."));
+    }
+
+    // user_id is intentionally omitted from the payload — it can never be changed.
+    const payload = {
+      full_name: input.fullName.trim(),
+      college_id: input.collegeId,
+      course: input.course.trim(),
+      year_of_study: input.yearOfStudy,
+      graduation_year: input.graduationYear,
+      gender: input.gender,
+    };
+
+    const result = await supabase
+      .from("profiles")
+      .update(payload)
+      .eq("user_id", user.id)
+      .select()
+      .single();
+
+    if (result.error) return failure(null, result.error);
+    return remoteSuccess(mapProfile(result.data));
+  } catch (err) {
+    return failure(null, err);
+  }
 }
 
 // ==========================================
