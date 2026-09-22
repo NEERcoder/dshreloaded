@@ -1,4 +1,4 @@
-import { RouterProvider, useLocation } from "./lib/router";
+mport { RouterProvider, useLocation } from "./lib/router";
 import { CursorProvider } from "./context/CursorContext";
 import { AuthProvider } from "./context/AuthContext";
 import CustomCursor from "./components/CustomCursor";
@@ -13,6 +13,10 @@ import CollegePage from "./pages/CollegePage";
 import JoinPage from "./pages/JoinPage";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
 import AdminPage from "./pages/AdminPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import DashboardPage from "./pages/DashboardPage";
 
 function DuScienceHubHome() {
   return (
@@ -41,27 +45,3 @@ function AppRouter() {
 
   if (path === "/dot-grid") page = <InteractiveDotGrid />;
   else if (path === "/explore") page = <ExplorePage />;
-  else if (path.startsWith("/explore/")) page = <CollegePage slug={path.replace("/explore/", "").replace(/\/$/, "")} />;
-  else if (path === "/join") page = <JoinPage />;
-  else if (path.startsWith("/join/")) page = <JoinPage roleId={path.replace("/join/", "").replace(/\/$/, "")} />;
-  else if (path === "/opportunities" || path.startsWith("/opportunities/")) {
-    page = <OpportunitiesPage categoryId={path.replace("/opportunities", "").replace(/^\/|\/$/g, "") || undefined} />;
-  }
-  else if (path === "/admin") page = <AdminPage />;
-  else page = <DuScienceHubHome />;
-
-  return <PageTransition>{page}</PageTransition>;
-}
-
-export default function App() {
-  return (
-    <RouterProvider>
-      <AuthProvider>
-        <CursorProvider>
-          <CustomCursor />
-          <AppRouter />
-        </CursorProvider>
-      </AuthProvider>
-    </RouterProvider>
-  );
-}
