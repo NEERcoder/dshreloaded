@@ -138,7 +138,7 @@ const mapMentor = (row: Record<string, unknown>): MentorRecord => ({
   bio: row.bio ? String(row.bio) : null,
   role: row.designation ? String(row.designation) : null,
   expertise: row.expertise ? String(row.expertise) : null,
-  profileUrl: row.profile_url ? String(row.profile_url) : null,
+  profileUrl: row.contact_url ? String(row.contact_url) : null,
   contactUrl: row.contact_url ? String(row.contact_url) : null,
   active: row.active !== undefined ? Boolean(row.active) : true,
   sortOrder: Number(row.sort_order ?? 0),
