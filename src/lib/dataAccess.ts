@@ -420,7 +420,6 @@ export async function saveMentor(input: Omit<MentorRecord, "id">, id?: string): 
       bio: input.bio,
       designation: input.role,
       expertise: input.expertise,
-      profile_url: input.profileUrl,
       contact_url: input.contactUrl,
       active: input.active !== undefined ? input.active : true,
       sort_order: input.sortOrder !== undefined ? input.sortOrder : 0,
