@@ -99,6 +99,10 @@ export type OpportunityRecord = {
   imageUrl: string | null;
   status: "draft" | "published" | "closed" | "archived";
   featured: boolean;
+  // Phase 2: competition team formation (nullable/optional for backward compat)
+  teamFormationEnabled: boolean;
+  minTeamSize: number | null;
+  maxTeamSize: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -172,6 +176,9 @@ function getInitialOpportunities(): OpportunityRecord[] {
     imageUrl: null,
     status: "published",
     featured: i === 0,
+    teamFormationEnabled: false,
+    minTeamSize: null,
+    maxTeamSize: null,
     createdAt: new Date(Date.now() - (i + 1) * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - (i + 1) * 86400000).toISOString(),
   }));
