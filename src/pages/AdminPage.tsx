@@ -21,6 +21,9 @@ import {
   saveTeamMember,
   saveTeamRole,
   uploadMentorPhoto,
+  uploadOpportunityPoster,
+  uploadCollegeImage,
+  saveCollegeImage,
   type CollegeRecord,
   type OpportunityInput,
   type OpportunityRecord,
@@ -50,6 +53,9 @@ const blankOpportunity: OpportunityInput = {
   imageUrl: "",
   status: "published",
   featured: false,
+  teamFormationEnabled: false,
+  minTeamSize: null,
+  maxTeamSize: null,
 };
 
 const blankMentor: Omit<MentorRecord, "id"> = {
@@ -256,7 +262,7 @@ function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => 
   );
 }
 
-type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "team_roles" | "team_members";
+type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "team_roles" | "team_members" | "colleges";
 
 function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabType>("opportunities");
@@ -323,6 +329,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               { key: "videos" as TabType, label: "Videos (DU Unfiltered)", count: videos.length },
               { key: "team_roles" as TabType, label: "Team Roles", count: teamRoles.length },
               { key: "team_members" as TabType, label: "Team Members", count: teamMembers.length },
+              { key: "colleges" as TabType, label: "College Images", count: colleges.length },
             ].map(({ key, label, count }) => (
               <button
                 key={key}
@@ -387,6 +394,12 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
                 onSaved={(msg) => { setMessage(msg); refresh(); }}
               />
             )}
+            {tab === "colleges" && (
+              <CollegeImageManager
+                colleges={colleges}
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -399,6 +412,22 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
   const [form, setForm] = useState<OpportunityInput>(blankOpportunity);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [coursesText, setCoursesText] = useState("");
+  const [posterUploading, setPosterUploading] = useState(false);
+
+  async function handlePosterUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setPosterUploading(true);
+    const result = await uploadOpportunityPoster(file);
+    setPosterUploading(false);
+    if (result.data) {
+      setForm((prev) => ({ ...prev, imageUrl: result.data! }));
+      onSaved("Poster uploaded successfully.");
+    } else {
+      onSaved(result.error || "Failed to upload poster.");
+    }
+    event.target.value = "";
+  }
 
   function startEdit(item: OpportunityRecord) {
     setEditingId(item.id);
@@ -419,6 +448,9 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
       imageUrl: item.imageUrl || "",
       status: item.status,
       featured: item.featured,
+      teamFormationEnabled: item.teamFormationEnabled,
+      minTeamSize: item.minTeamSize,
+      maxTeamSize: item.maxTeamSize,
     });
     setCoursesText(item.eligibleCourses.join(", "));
   }
@@ -525,10 +557,87 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
         <label className="field-label mt-4">Description</label>
         <textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="field-input min-h-24" placeholder="Detailed description..." />
 
-        <label className="mt-4 flex items-center gap-2 text-sm font-semibold text-ink-700">
-          <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
-          Mark as Featured Opportunity
-        </label>
+        {/* Poster Upload */}
+        <div className="mt-5">
+          <p className="field-label">Opportunity Poster / Image</p>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start">
+            {form.imageUrl ? (
+              <div className="relative w-40 shrink-0">
+                <img src={form.imageUrl} alt="Poster preview" className="w-40 h-28 object-cover rounded-xl border border-surface-border shadow-soft" />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, imageUrl: "" })}
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-red text-white text-xs flex items-center justify-center shadow-soft"
+                  title="Remove image"
+                >✕</button>
+              </div>
+            ) : (
+              <div className="w-40 h-28 shrink-0 rounded-xl border-2 border-dashed border-surface-border bg-surface-soft flex items-center justify-center text-xs text-ink-400">
+                No poster
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              <label className={`btn-ghost cursor-pointer text-xs ${posterUploading ? "opacity-60 pointer-events-none" : ""}`}>
+                {posterUploading ? "Uploading…" : form.imageUrl ? "Replace Poster" : "Upload Poster"}
+                <input type="file" accept="image/*" className="sr-only" onChange={handlePosterUpload} disabled={posterUploading} />
+              </label>
+              <p className="text-xs text-ink-400">Or paste a URL below</p>
+              <input
+                type="url"
+                value={form.imageUrl || ""}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                className="field-input text-xs"
+                placeholder="https://... (optional)"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Featured + Team Formation */}
+        <div className="mt-5 flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+            <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
+            Mark as Featured Opportunity
+          </label>
+
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+            <input
+              type="checkbox"
+              checked={form.teamFormationEnabled}
+              onChange={(e) => setForm({ ...form, teamFormationEnabled: e.target.checked })}
+            />
+            Enable Team Formation (competitions only)
+          </label>
+
+          {form.teamFormationEnabled && (
+            <div className="ml-6 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="field-label">Min Team Size</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={form.minTeamSize ?? ""}
+                  onChange={(e) => setForm({ ...form, minTeamSize: e.target.value ? Number(e.target.value) : null })}
+                  className="field-input"
+                  placeholder="e.g. 2"
+                />
+              </div>
+              <div>
+                <label className="field-label">Max Team Size</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={form.maxTeamSize ?? ""}
+                  onChange={(e) => setForm({ ...form, maxTeamSize: e.target.value ? Number(e.target.value) : null })}
+                  className="field-input"
+                  placeholder="e.g. 5"
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
           <button className="btn-secondary">{editingId ? "Update Opportunity" : "Create Opportunity"}</button>
@@ -1247,6 +1356,93 @@ function TeamMemberManager({ members, onSaved }: { members: TeamMemberRecord[]; 
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// COLLEGE IMAGE MANAGER
+function CollegeImageManager({ colleges, onSaved }: { colleges: CollegeRecord[]; onSaved: (msg: string) => void }) {
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [localImages, setLocalImages] = useState<Record<string, string>>({});
+
+  async function handleImageUpload(college: CollegeRecord, event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadingId(college.id);
+    const uploadResult = await uploadCollegeImage(college.id, file);
+    if (!uploadResult.data) {
+      onSaved(uploadResult.error || "Failed to upload image.");
+      setUploadingId(null);
+      event.target.value = "";
+      return;
+    }
+    const saveResult = await saveCollegeImage(college.id, uploadResult.data);
+    setUploadingId(null);
+    event.target.value = "";
+    if (saveResult.error) {
+      onSaved(saveResult.error);
+    } else {
+      setLocalImages((prev) => ({ ...prev, [college.id]: uploadResult.data! }));
+      onSaved(`Image updated for ${college.name}.`);
+    }
+  }
+
+  async function handleRemoveImage(college: CollegeRecord) {
+    if (!window.confirm(`Remove the hero image for ${college.name}?`)) return;
+    const result = await saveCollegeImage(college.id, null);
+    if (result.error) {
+      onSaved(result.error);
+    } else {
+      setLocalImages((prev) => { const next = { ...prev }; delete next[college.id]; return next; });
+      onSaved(`Image removed for ${college.name}.`);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="eyebrow">College Media</p>
+          <h2 className="mt-2 text-2xl font-extrabold text-ink-900">College Images</h2>
+        </div>
+        <span className="text-sm text-ink-500">{colleges.length} colleges</span>
+      </div>
+      <p className="mt-2 text-sm text-ink-500">Upload hero images for each college. Images appear on college directory cards and individual college pages.</p>
+
+      <div className="mt-6 space-y-3">
+        {colleges.map((college) => {
+          const currentImage = localImages[college.id] ?? college.heroImageUrl;
+          const isUploading = uploadingId === college.id;
+          return (
+            <div key={college.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                {currentImage ? (
+                  <img src={currentImage} alt={college.name} className="w-16 h-12 object-cover rounded-lg border border-surface-border shrink-0" />
+                ) : (
+                  <div className="w-16 h-12 rounded-lg border-2 border-dashed border-surface-border bg-surface-soft flex items-center justify-center text-[10px] text-ink-400 shrink-0">
+                    No image
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-bold text-sm text-ink-900">{college.name}</h3>
+                  <p className="text-xs text-ink-400">{college.campus}{college.location ? ` · ${college.location}` : ""}</p>
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <label className={`btn-ghost px-3 py-2 text-xs cursor-pointer ${isUploading ? "opacity-60 pointer-events-none" : ""}`}>
+                  {isUploading ? "Uploading…" : currentImage ? "Replace" : "Upload"}
+                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleImageUpload(college, e)} disabled={isUploading} />
+                </label>
+                {currentImage && (
+                  <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => handleRemoveImage(college)} disabled={isUploading}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
