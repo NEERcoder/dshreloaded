@@ -1,15 +1,17 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
 import { useAuth } from "../context/AuthContext";
-import { useLocation } from "../lib/router";
+import { Link, useLocation } from "../lib/router";
 import {
   getColleges,
   getCurrentUserProfile,
   createProfile,
   updateProfile,
+  getMyCompetitionTeams,
   type CollegeRecord,
   type ProfileRecord,
   type ProfileInput,
+  type CompetitionTeamRecord,
 } from "../lib/dataAccess";
 
 const GENDER_OPTIONS = ["Female", "Male", "Non-binary", "Prefer not to say"];
@@ -51,6 +53,7 @@ export default function DashboardPage() {
   const [colleges, setColleges] = useState<CollegeRecord[]>([]);
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [myTeams, setMyTeams] = useState<CompetitionTeamRecord[]>([]);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
@@ -68,11 +71,13 @@ export default function DashboardPage() {
   async function loadData() {
     setDataLoading(true);
     setLoadError(null);
-    const [collegesResult, profileResult] = await Promise.all([
+    const [collegesResult, profileResult, teamsResult] = await Promise.all([
       getColleges(),
       getCurrentUserProfile(),
+      getMyCompetitionTeams(),
     ]);
     setColleges(collegesResult.data);
+    setMyTeams(teamsResult.data ?? []);
 
     if (profileResult.error) {
       setLoadError(profileResult.error);
@@ -430,6 +435,48 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : null}
+        </div>
+
+        {/* MY TEAMS */}
+        <div className="mt-10 max-w-2xl">
+          <h2 className="text-lg font-extrabold text-ink-900">My Teams</h2>
+          <p className="mt-1 text-sm text-ink-500">Competitions you're part of.</p>
+
+          {dataLoading ? (
+            <div className="mt-4 card p-6 text-sm text-ink-500 animate-pulse">Loading teams…</div>
+          ) : myTeams.length === 0 ? (
+            <div className="mt-4 card p-6 text-center border-dashed">
+              <p className="text-sm font-semibold text-ink-500">You haven't joined a competition team yet.</p>
+              <Link href="/opportunities" className="btn-secondary mt-4 inline-flex text-sm">
+                Explore Competitions
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {myTeams.map((team) => (
+                <Link
+                  key={team.id}
+                  href={`/teams/${team.id}`}
+                  className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between hover:shadow-lift hover:-translate-y-0.5 transition-all duration-200 block"
+                >
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-sm text-ink-900">{team.name}</h3>
+                      {team.captainUserId === user?.id && (
+                        <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red">Captain</span>
+                      )}
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${team.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-surface-border text-ink-500"}`}>
+                        {team.status}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-ink-500">{team.competitionTitle}</p>
+                    <p className="text-xs text-ink-400">{team.memberCount} member{team.memberCount !== 1 ? "s" : ""}</p>
+                  </div>
+                  <span className="text-xs font-bold text-brand-blue shrink-0">View team →</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </PageShell>
