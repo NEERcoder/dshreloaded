@@ -1,12 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Icon from "../components/Icon";
 import PageShell from "../components/PageShell";
 import SectionHeading from "../components/SectionHeading";
 import TiltCard from "../components/TiltCard";
 import DeadlineProgress from "../components/DeadlineProgress";
 import { SkeletonOpportunityGrid } from "../components/Skeleton";
-import { Link } from "../lib/router";
-import { getOpportunities, type OpportunityRecord } from "../lib/dataAccess";
+import { Link, useLocation } from "../lib/router";
+import { useAuth } from "../context/AuthContext";
+import {
+  getOpportunities,
+  getOpportunityById,
+  getCompetitionTeamsForCompetition,
+  createCompetitionTeam,
+  joinCompetitionTeamByCode,
+  type OpportunityRecord,
+  type CompetitionTeamRecord,
+} from "../lib/dataAccess";
 import { sanitizeExternalUrl } from "../lib/urlSafety";
 
 const categoryMap: Record<string, OpportunityRecord["category"]> = {
@@ -86,6 +95,7 @@ function OpportunityList({ category }: { category?: OpportunityRecord["category"
   const [paid, setPaid] = useState("");
   const [sort, setSort] = useState("featured");
   const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -193,7 +203,7 @@ function OpportunityList({ category }: { category?: OpportunityRecord["category"
         ) : filtered.length ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((item) => (
-              <OpportunityCard key={item.id} item={item} />
+              <OpportunityCard key={item.id} item={item} onSelect={setSelectedId} />
             ))}
           </div>
         ) : (
@@ -203,59 +213,360 @@ function OpportunityList({ category }: { category?: OpportunityRecord["category"
           </div>
         )}
       </div>
+
+      {/* Detail drawer */}
+      {selectedId && (
+        <OpportunityDetail
+          opportunityId={selectedId}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </div>
   );
 }
 
-function OpportunityCard({ item }: { item: OpportunityRecord }) {
+const CATEGORY_BADGE: Record<string, string> = {
+  internship: "bg-brand-blue-soft text-brand-blue",
+  competition: "bg-brand-red-soft text-brand-red",
+  research: "bg-brand-blue-soft text-brand-blue",
+  certification: "bg-brand-blue-soft text-brand-blue",
+  job: "bg-brand-blue-soft text-brand-blue",
+  fellowship: "bg-brand-red-soft text-brand-red",
+  scholarship: "bg-brand-red-soft text-brand-red",
+};
+
+function OpportunityCard({ item, onSelect }: { item: OpportunityRecord; onSelect: (id: string) => void }) {
   const safeUrl = sanitizeExternalUrl(item.applicationUrl);
 
   return (
     <TiltCard className="h-full">
       <article
         data-cursor="view"
-        className="card card-hover p-6 h-full flex flex-col justify-between bg-white border border-surface-border shadow-card"
+        className="card card-hover h-full flex flex-col bg-white border border-surface-border shadow-card overflow-hidden"
       >
-        <div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="rounded-md bg-brand-blue-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-blue">
-              {item.category}
-            </span>
-            {item.featured && (
-              <span className="rounded-full bg-brand-red-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-red">
-                Featured
-              </span>
-            )}
+        {/* Poster */}
+        {item.imageUrl ? (
+          <div className="h-36 w-full overflow-hidden bg-surface-soft cursor-pointer" onClick={() => onSelect(item.id)}>
+            <img
+              src={item.imageUrl}
+              alt={`${item.title} poster`}
+              className="h-full w-full object-cover hover:scale-105 transition-transform duration-500"
+            />
           </div>
-          <h3 className="mt-4 font-bold text-lg leading-snug text-ink-900">{item.title}</h3>
-          <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
-          <p className="mt-3 text-sm leading-relaxed text-ink-500 line-clamp-3">{item.description}</p>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-400">
-            {item.mode && <span className="font-semibold text-ink-600">{item.mode}</span>}
-            {item.field && <span>{item.field}</span>}
-            {item.stipend && <span className="font-bold text-emerald-600">{item.stipend}</span>}
-          </div>
-        </div>
+        ) : null}
 
-        <div className="mt-6 pt-4 border-t border-surface-border">
-          <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
-          {safeUrl ? (
-            <a
-              href={safeUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-outline-blue mt-4 w-full justify-center text-xs font-bold"
+        <div className="p-6 flex flex-col flex-1 justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <span className={`rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_BADGE[item.category] ?? "bg-surface-soft text-ink-600"}`}>
+                {item.category}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {item.teamFormationEnabled && (
+                  <span className="rounded-full bg-brand-blue-soft px-2 py-0.5 text-[11px] font-bold text-brand-blue">
+                    Teams
+                  </span>
+                )}
+                {item.featured && (
+                  <span className="rounded-full bg-brand-red-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-red">
+                    Featured
+                  </span>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => onSelect(item.id)}
+              className="mt-4 text-left font-bold text-lg leading-snug text-ink-900 hover:text-brand-blue transition-colors w-full"
             >
-              View Listing <Icon name="arrow" className="h-4 w-4" />
-            </a>
-          ) : (
-            <span className="mt-4 block text-center text-xs font-semibold text-ink-400">
-              Application details coming soon
-            </span>
-          )}
+              {item.title}
+            </button>
+            <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
+            <p className="mt-3 text-sm leading-relaxed text-ink-500 line-clamp-3">{item.description}</p>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-400">
+              {item.mode && <span className="font-semibold text-ink-600">{item.mode}</span>}
+              {item.field && <span>{item.field}</span>}
+              {item.stipend && <span className="font-bold text-emerald-600">{item.stipend}</span>}
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-surface-border">
+            <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => onSelect(item.id)}
+                className="btn-ghost flex-1 justify-center text-xs font-bold"
+              >
+                Details {item.teamFormationEnabled ? "& Teams" : ""}
+              </button>
+              {safeUrl && (
+                <a
+                  href={safeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-outline-blue flex-1 justify-center text-xs font-bold"
+                >
+                  Apply <Icon name="arrow" className="h-4 w-4" />
+                </a>
+              )}
+            </div>
+          </div>
         </div>
       </article>
     </TiltCard>
+  );
+}
+
+// -------------------------------------------------------
+// OPPORTUNITY DETAIL (slide-up panel with team formation)
+// -------------------------------------------------------
+function OpportunityDetail({ opportunityId, onClose }: { opportunityId: string; onClose: () => void }) {
+  const { user } = useAuth();
+  const { navigate } = useLocation();
+  const [opp, setOpp] = useState<OpportunityRecord | null>(null);
+  const [teams, setTeams] = useState<CompetitionTeamRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Team creation
+  const [teamName, setTeamName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  // Join by code
+  const [joinCode, setJoinCode] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getOpportunityById(opportunityId).then(async (res) => {
+      if (cancelled) return;
+      setOpp(res.data);
+      if (res.data?.teamFormationEnabled) {
+        const teamsRes = await getCompetitionTeamsForCompetition(opportunityId);
+        if (!cancelled) setTeams(teamsRes.data);
+      }
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [opportunityId]);
+
+  async function handleCreateTeam(e: FormEvent) {
+    e.preventDefault();
+    if (!teamName.trim()) return;
+    setCreating(true);
+    setCreateError(null);
+    const result = await createCompetitionTeam(opportunityId, teamName);
+    setCreating(false);
+    if (result.error || !result.data) {
+      setCreateError(result.error || "Failed to create team.");
+    } else {
+      navigate(`/teams/${result.data.id}`);
+    }
+  }
+
+  async function handleJoinTeam(e: FormEvent) {
+    e.preventDefault();
+    if (!joinCode.trim()) return;
+    setJoining(true);
+    setJoinError(null);
+    const result = await joinCompetitionTeamByCode(joinCode);
+    setJoining(false);
+    if (result.error || !result.data) {
+      setJoinError(result.error || "Could not join team.");
+    } else {
+      navigate(`/teams/${result.data.id}`);
+    }
+  }
+
+  const safeUrl = opp ? sanitizeExternalUrl(opp.applicationUrl) : null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Opportunity details"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Panel */}
+      <div className="relative z-10 w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white shadow-lift">
+        {loading ? (
+          <div className="p-8 text-center text-sm font-semibold text-ink-500 animate-pulse">Loading…</div>
+        ) : !opp ? (
+          <div className="p-8 text-center text-sm text-ink-500">Opportunity not found.</div>
+        ) : (
+          <>
+            {/* Header image */}
+            {opp.imageUrl && (
+              <div className="h-44 w-full overflow-hidden rounded-t-3xl sm:rounded-t-3xl bg-surface-soft">
+                <img src={opp.imageUrl} alt={opp.title} className="h-full w-full object-cover" />
+              </div>
+            )}
+
+            <div className="p-6 sm:p-8">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className={`inline-block rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_BADGE[opp.category] ?? "bg-surface-soft text-ink-600"}`}>
+                    {opp.category}
+                  </span>
+                  <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-ink-900">{opp.title}</h2>
+                  <p className="mt-1 text-base font-semibold text-ink-600">{opp.organization}</p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="shrink-0 h-9 w-9 rounded-xl border border-surface-border bg-surface-soft flex items-center justify-center text-ink-500 hover:bg-brand-red-soft hover:text-brand-red transition-colors"
+                  aria-label="Close"
+                >
+                  <Icon name="close" className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {opp.mode && (
+                  <div className="rounded-xl bg-surface-soft p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Mode</p>
+                    <p className="mt-1 text-sm font-semibold text-ink-800">{opp.mode}</p>
+                  </div>
+                )}
+                {opp.location && (
+                  <div className="rounded-xl bg-surface-soft p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Location</p>
+                    <p className="mt-1 text-sm font-semibold text-ink-800">{opp.location}</p>
+                  </div>
+                )}
+                {opp.deadline && (
+                  <div className="rounded-xl bg-surface-soft p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Deadline</p>
+                    <p className="mt-1 text-sm font-semibold text-ink-800">{opp.deadline}</p>
+                  </div>
+                )}
+                {opp.stipend && (
+                  <div className="rounded-xl bg-surface-soft p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Stipend</p>
+                    <p className="mt-1 text-sm font-semibold text-emerald-700">{opp.stipend}</p>
+                  </div>
+                )}
+                {opp.duration && (
+                  <div className="rounded-xl bg-surface-soft p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Duration</p>
+                    <p className="mt-1 text-sm font-semibold text-ink-800">{opp.duration}</p>
+                  </div>
+                )}
+                {opp.field && (
+                  <div className="rounded-xl bg-surface-soft p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Field</p>
+                    <p className="mt-1 text-sm font-semibold text-ink-800">{opp.field}</p>
+                  </div>
+                )}
+              </div>
+
+              <p className="mt-5 text-sm leading-relaxed text-ink-600">{opp.description}</p>
+
+              {opp.eligibility && (
+                <div className="mt-4 rounded-xl border border-surface-border bg-surface-soft p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-ink-400">Eligibility</p>
+                  <p className="mt-1 text-sm text-ink-700">{opp.eligibility}</p>
+                </div>
+              )}
+
+              {safeUrl && (
+                <a
+                  href={safeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-primary mt-6 w-full justify-center"
+                >
+                  Apply Now <Icon name="arrow" className="h-4 w-4" />
+                </a>
+              )}
+
+              {/* Team Formation Section */}
+              {opp.teamFormationEnabled && (
+                <div className="mt-8 border-t border-surface-border pt-6">
+                  <p className="eyebrow text-brand-red">TEAM COMPETITION</p>
+                  <h3 className="mt-2 text-lg font-extrabold text-ink-900">Form or join a team</h3>
+                  {opp.minTeamSize || opp.maxTeamSize ? (
+                    <p className="mt-1 text-sm text-ink-500">
+                      Team size:{" "}
+                      {opp.minTeamSize && opp.maxTeamSize
+                        ? `${opp.minTeamSize}–${opp.maxTeamSize} members`
+                        : opp.maxTeamSize
+                        ? `Up to ${opp.maxTeamSize} members`
+                        : `Min ${opp.minTeamSize} members`}
+                    </p>
+                  ) : null}
+
+                  {teams.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs font-bold uppercase tracking-wider text-ink-400">{teams.length} active team{teams.length !== 1 ? "s" : ""}</p>
+                      {teams.map((t) => (
+                        <Link
+                          key={t.id}
+                          href={`/teams/${t.id}`}
+                          className="flex items-center justify-between rounded-xl border border-surface-border p-3 hover:border-brand-blue/30 hover:bg-brand-blue-soft/30 transition-colors"
+                        >
+                          <div>
+                            <p className="text-sm font-bold text-ink-900">{t.name}</p>
+                            <p className="text-xs text-ink-400">{t.memberCount} member{t.memberCount !== 1 ? "s" : ""}</p>
+                          </div>
+                          <Icon name="arrow" className="h-4 w-4 text-ink-400" />
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {!user ? (
+                    <div className="mt-5 rounded-xl border border-surface-border bg-surface-soft p-4 text-center">
+                      <p className="text-sm text-ink-600">Sign in to create or join a team.</p>
+                      <Link href="/login" className="btn-secondary mt-3 w-full justify-center text-sm">
+                        Sign in
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      <form onSubmit={handleCreateTeam} className="rounded-xl border border-surface-border p-4">
+                        <p className="text-sm font-bold text-ink-900">Create a team</p>
+                        <input
+                          required
+                          value={teamName}
+                          onChange={(e) => setTeamName(e.target.value)}
+                          className="field-input mt-3 text-sm"
+                          placeholder="Team name"
+                          maxLength={80}
+                        />
+                        <button type="submit" disabled={creating} className="btn-secondary mt-3 w-full justify-center text-sm disabled:opacity-60">
+                          {creating ? "Creating…" : "Create Team"}
+                        </button>
+                        {createError && <p className="mt-2 text-xs font-bold text-brand-red">{createError}</p>}
+                      </form>
+
+                      <form onSubmit={handleJoinTeam} className="rounded-xl border border-surface-border p-4">
+                        <p className="text-sm font-bold text-ink-900">Join with team code</p>
+                        <input
+                          required
+                          value={joinCode}
+                          onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                          className="field-input mt-3 text-sm font-mono tracking-widest"
+                          placeholder="DSH-XXXXX"
+                          maxLength={9}
+                        />
+                        <button type="submit" disabled={joining} className="btn-outline-blue mt-3 w-full justify-center text-sm disabled:opacity-60">
+                          {joining ? "Joining…" : "Join Team"}
+                        </button>
+                        {joinError && <p className="mt-2 text-xs font-bold text-brand-red">{joinError}</p>}
+                      </form>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
