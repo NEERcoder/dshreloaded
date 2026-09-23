@@ -351,12 +351,32 @@
   }
 }
 
-/* Hide scrollbar for horizontal tab navigation */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+/* ============================================================
+   OPPORTUNITY TICKER
+   ============================================================ */
+.opportunity-ticker-carousel {
+  width: 100%;
+  padding: 0.75rem 0 1rem;
+  cursor: default;
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+@keyframes opportunity-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-50% - 0.5rem)); }
+}
+
+.opportunity-ticker-animate {
+  animation: opportunity-scroll 32s linear infinite;
+}
+
+.opportunity-ticker-carousel:hover .opportunity-ticker-animate,
+.opportunity-ticker-carousel:focus-within .opportunity-ticker-animate {
+  animation-duration: 80s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opportunity-ticker-animate {
+    animation: none !important;
+  }
 }
 
