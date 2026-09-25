@@ -915,20 +915,32 @@ function generateInviteCode(): string {
   return code;
 }
 
-/** Attempt to generate a code that doesn't already exist (up to 10 tries) */
-async function generateUniqueInviteCode(): Promise<string> {
-  if (!supabase) return generateInviteCode();
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const code = generateInviteCode();
-    const { data } = await supabase
-      .from("competition_teams")
-      .select("id")
-      .eq("invite_code", code)
-      .maybeSingle();
-    if (!data) return code;
-  }
-  // Fallback: append timestamp segment for uniqueness
-  return `DSH-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+// Columns every API role may read on competition_teams. invite_code is
+// deliberately absent — migration 004 revokes it from the API roles and
+// members fetch it through the get_team_invite_code RPC instead.
+const TEAM_SAFE_COLUMNS = "id, competition_id, name, captain_user_id, status, created_at, updated_at, opportunities(title)";
+
+/**
+ * Invite codes are protected by column-level grants: the API roles cannot
+ * select the invite_code column directly. Members retrieve it through the
+ * get_team_invite_code RPC, which authorises the caller against the member
+ * list server-side. If the RPC is unavailable (hardening migration not yet
+ * applied), fall back to reading the column directly so the UI keeps
+ * working during the rollout window.
+ */
+async function fetchInviteCodeForMember(teamId: string): Promise<string> {
+  if (!supabase) return "";
+  const { data, error } = await supabase.rpc("get_team_invite_code", {
+    p_team_id: teamId,
+  });
+  if (!error && typeof data === "string") return data;
+
+  const { data: legacy } = await supabase
+    .from("competition_teams")
+    .select("invite_code")
+    .eq("id", teamId)
+    .maybeSingle();
+  return legacy?.invite_code ?? "";
 }
 
 const mapCompetitionMember = (row: Record<string, unknown>): CompetitionTeamMemberRecord => ({
@@ -950,7 +962,7 @@ const mapTeam = (
   competitionId: String(row.competition_id),
   competitionTitle: (row.opportunities as { title?: string } | null)?.title ?? "",
   name: String(row.name),
-  inviteCode: String(row.invite_code),
+  inviteCode: row.invite_code != null ? String(row.invite_code) : "",
   captainUserId: String(row.captain_user_id),
   status: (row.status as CompetitionTeamRecord["status"]) ?? "active",
   memberCount: members.length,
@@ -990,21 +1002,35 @@ export async function createCompetitionTeam(
       .maybeSingle();
     if (existingMembership) return failure(null, new Error("You are already in a team for this competition."));
 
-    const inviteCode = await generateUniqueInviteCode();
-
-    // Insert team
-    const { data: team, error: teamErr } = await supabase
-      .from("competition_teams")
-      .insert({
-        competition_id: competitionId,
-        name: teamName.trim(),
-        invite_code: inviteCode,
-        captain_user_id: userId,
-        status: "active",
-      })
-      .select("*, opportunities(title)")
-      .single();
-    if (teamErr || !team) return failure(null, teamErr ?? new Error("Failed to create team."));
+    // Insert team. The invite code is generated client-side and the
+    // database's unique constraint is the real guard — on the rare
+    // collision we simply retry with a fresh code.
+    let team: Record<string, unknown> | null = null;
+    let teamError: unknown = null;
+    let inviteCode = "";
+    for (let attempt = 0; attempt < 3 && !team; attempt++) {
+      inviteCode = generateInviteCode();
+      const { data: inserted, error: err } = await supabase
+        .from("competition_teams")
+        .insert({
+          competition_id: competitionId,
+          name: teamName.trim(),
+          invite_code: inviteCode,
+          captain_user_id: userId,
+          status: "active",
+        })
+        .select(TEAM_SAFE_COLUMNS)
+        .single();
+      if (err) {
+        teamError = err;
+        if ((err as { code?: string }).code === "23505") continue;
+        return failure(null, err);
+      }
+      team = (inserted ?? null) as Record<string, unknown> | null;
+    }
+    if (!team) {
+      return failure(null, teamError ?? new Error("Failed to create team."));
+    }
 
     // Add captain as a member
     await supabase.from("competition_team_members").insert({
@@ -1020,7 +1046,10 @@ export async function createCompetitionTeam(
       .eq("team_id", team.id);
     const members = (membersRaw || []).map((r) => mapCompetitionMember(r as Record<string, unknown>));
 
-    return remoteSuccess(mapTeam(team as Record<string, unknown>, members));
+    // The creator just generated the code locally — no need to refetch it.
+    const mapped = mapTeam(team, members);
+    mapped.inviteCode = inviteCode;
+    return remoteSuccess(mapped);
   } catch (err) {
     return failure(null, err);
   }
@@ -1034,7 +1063,7 @@ export async function getCompetitionTeam(
   try {
     const { data: team, error } = await supabase
       .from("competition_teams")
-      .select("*, opportunities(title)")
+      .select(TEAM_SAFE_COLUMNS)
       .eq("id", teamId)
       .maybeSingle();
     if (error) return failure(null, error);
@@ -1061,10 +1090,9 @@ export async function getCompetitionTeam(
         members.some((m) => m.userId === callerId));
 
     const mapped = mapTeam(team as Record<string, unknown>, members);
-    // Strip invite code for non-members
-    if (!isMemberOrCaptain) {
-      mapped.inviteCode = "";
-    }
+    // Non-members never receive the code; members get it through the
+    // member-authorised RPC (server-side check, not frontend hiding).
+    mapped.inviteCode = isMemberOrCaptain ? await fetchInviteCodeForMember(teamId) : "";
 
     return remoteSuccess(mapped);
   } catch (err) {
@@ -1079,19 +1107,24 @@ export async function getCompetitionTeamsForCompetition(
   try {
     const { data: teams, error } = await supabase
       .from("competition_teams")
-      .select("*, opportunities(title)")
+      .select(TEAM_SAFE_COLUMNS)
       .eq("competition_id", competitionId)
       .eq("status", "active")
       .order("created_at", { ascending: true });
     if (error) return failure([], error);
     const result: CompetitionTeamRecord[] = [];
     for (const team of teams || []) {
-      const { data: membersRaw } = await supabase
+      // The listing only shows names and member counts — counting rows is
+      // cheaper than fetching every member (with profiles) per team and
+      // also works for signed-out visitors, whose profiles are not
+      // readable.
+      const { count } = await supabase
         .from("competition_team_members")
-        .select("*, profiles(full_name, course, college_id)")
+        .select("id", { count: "exact", head: true })
         .eq("team_id", team.id);
-      const members = (membersRaw || []).map((r) => mapCompetitionMember(r as Record<string, unknown>));
-      result.push(mapTeam(team as Record<string, unknown>, members));
+      const mapped = mapTeam(team as Record<string, unknown>, []);
+      mapped.memberCount = count ?? 0;
+      result.push(mapped);
     }
     return remoteSuccess(result);
   } catch (err) {
@@ -1116,19 +1149,21 @@ export async function getMyCompetitionTeams(): Promise<DataResult<CompetitionTea
     const teamIds = memberships.map((m: { team_id: string }) => m.team_id);
     const { data: teams, error: teamsErr } = await supabase
       .from("competition_teams")
-      .select("*, opportunities(title)")
+      .select(TEAM_SAFE_COLUMNS)
       .in("id", teamIds)
       .order("created_at", { ascending: false });
     if (teamsErr) return failure([], teamsErr);
 
     const result: CompetitionTeamRecord[] = [];
     for (const team of teams || []) {
-      const { data: membersRaw } = await supabase
+      // Dashboard cards only need the member count.
+      const { count } = await supabase
         .from("competition_team_members")
-        .select("*, profiles(full_name, course, college_id)")
+        .select("id", { count: "exact", head: true })
         .eq("team_id", team.id);
-      const members = (membersRaw || []).map((r) => mapCompetitionMember(r as Record<string, unknown>));
-      result.push(mapTeam(team as Record<string, unknown>, members));
+      const mapped = mapTeam(team as Record<string, unknown>, []);
+      mapped.memberCount = count ?? 0;
+      result.push(mapped);
     }
     return remoteSuccess(result);
   } catch (err) {
