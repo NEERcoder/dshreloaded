@@ -5,178 +5,245 @@ import TiltCard from "./TiltCard";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import { staggerDelay } from "../lib/motion";
 
-type ChoiceDoor = {
-  id: string;
-  categoryLabel: string;
-  headline: string;
-  description: string;
-  ctaText: string;
-  href: string;
-  accent: "blue" | "red";
-  icon: string;
-  cursorAction: "explore" | "join" | "view";
-};
-
-const doors: ChoiceDoor[] = [
+// Primary opportunity categories shown on homepage
+const opportunityCategories = [
   {
-    id: "colleges",
-    categoryLabel: "DU COLLEGES",
-    headline: "Explore DU Colleges",
-    description: "Explore all 91 Delhi University colleges, campus information, student reviews and real experiences.",
-    ctaText: "EXPLORE COLLEGES",
-    href: "/explore",
-    accent: "blue",
-    icon: "building",
-    cursorAction: "explore",
+    id: "internships",
+    tag: "INTERNSHIPS",
+    headline: "Find experience worth applying for.",
+    description: "Industry and startup roles for DU undergraduates.",
+    href: "/opportunities/internships",
+    icon: "briefcase",
+    accent: "blue" as const,
   },
   {
-    id: "team",
-    categoryLabel: "JOIN OUR TEAM",
-    headline: "Represent Your College",
-    description: "Become the DU Science Hub voice on your campus. Cover stories, create content and help build the platform.",
-    ctaText: "JOIN OUR TEAM",
-    href: "/join",
-    accent: "red",
-    icon: "users",
-    cursorAction: "join",
-  },
-  {
-    id: "opportunities",
-    categoryLabel: "INTERNSHIPS & COMPETITIONS",
-    headline: "Find Opportunities",
-    description: "Discover internships, competitions, research and certifications made for students.",
-    ctaText: "FIND OPPORTUNITIES",
-    href: "/opportunities",
-    accent: "blue",
+    id: "competitions",
+    tag: "COMPETITIONS",
+    headline: "Put your skills to work.",
+    description: "National hackathons, case challenges, and lab competitions.",
+    href: "/opportunities/competitions",
     icon: "target",
-    cursorAction: "view",
+    accent: "red" as const,
+  },
+  {
+    id: "research",
+    tag: "RESEARCH",
+    headline: "Learn and contribute.",
+    description: "Faculty lab attachments, fellowships, and co-authorship.",
+    href: "/opportunities/research",
+    icon: "flask",
+    accent: "blue" as const,
+  },
+  {
+    id: "certifications",
+    tag: "CERTIFICATIONS",
+    headline: "Skills for your next application.",
+    description: "Verified credentials in science and technology.",
+    href: "/opportunities/certifications",
+    icon: "award",
+    accent: "blue" as const,
   },
 ];
 
 export default function HomeChoices() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const { ref, isVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.08 });
+  const { ref: oppRef, isVisible: oppVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.06 });
+  const { ref: exploreRef, isVisible: exploreVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.06 });
 
   return (
-    <section className="pb-20 sm:pb-28 lg:pb-36">
-      <div className="container-px max-w-7xl mx-auto">
-        {/* Three Grand Doors */}
-        <div
-          ref={ref}
-          className="grid gap-6 lg:gap-8 lg:grid-cols-3 items-stretch"
-          onMouseLeave={() => setHoveredIdx(null)}
-        >
-          {doors.map((door, idx) => {
-            const isHovered = hoveredIdx === idx;
-            const isOtherHovered = hoveredIdx !== null && hoveredIdx !== idx;
-            const isRed = door.accent === "red";
-
-            return (
-              <div
-                key={door.id}
-                className={`reveal-stagger ${isVisible ? "is-visible" : ""}`}
-                style={{ transitionDelay: staggerDelay(idx, 80) }}
+    <>
+      {/* =====================================================
+          SECTION 1 — OPPORTUNITIES (PRIMARY / DOMINANT)
+          ===================================================== */}
+      <section className="pb-16 sm:pb-24">
+        <div className="container-px max-w-7xl mx-auto">
+          {/* Section heading */}
+          <div className="mb-8 sm:mb-10">
+            <p className="eyebrow text-brand-red">OPPORTUNITY RADAR</p>
+            <div className="mt-3 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-ink-900 leading-[1.1]">
+                Find things worth<br className="hidden sm:block" /> applying for.
+              </h2>
+              <Link
+                href="/opportunities"
+                className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark shrink-0"
               >
-                <TiltCard className="h-full">
-                <Link
-                  href={door.href}
-                  data-cursor={door.cursorAction}
-                  onMouseEnter={() => setHoveredIdx(idx)}
-                  className={`group relative flex flex-col justify-between rounded-3xl p-6 sm:p-10 lg:p-11 border bg-white/95 backdrop-blur-md transition-all duration-300 ease-out will-change-transform active:scale-[0.98] h-full min-h-[380px] sm:min-h-[460px] ${
-                    isHovered
-                      ? `scale-[1.03] z-20 shadow-lift ${
-                          isRed
-                            ? "border-brand-red ring-4 ring-brand-red/10"
-                            : "border-brand-blue ring-4 ring-brand-blue/10"
-                        }`
-                      : isOtherHovered
-                      ? "opacity-60 scale-[0.98] border-surface-border shadow-soft"
-                      : "opacity-100 border-surface-border shadow-card hover:shadow-lift"
-                  }`}
+                View all opportunities <Icon name="arrow" className="h-4 w-4" />
+              </Link>
+            </div>
+            <p className="mt-3 text-base text-ink-500 max-w-2xl">
+              Internships, competitions, research positions and certifications — verified and curated for Delhi University students.
+            </p>
+          </div>
+
+          {/* 4 category cards — large and prominent */}
+          <div
+            ref={oppRef}
+            className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            {opportunityCategories.map((cat, idx) => {
+              const isHovered = hoveredIdx === idx;
+              const isOtherHovered = hoveredIdx !== null && hoveredIdx !== idx;
+              const isRed = cat.accent === "red";
+
+              return (
+                <div
+                  key={cat.id}
+                  className={`reveal-stagger ${oppVisible ? "is-visible" : ""}`}
+                  style={{ transitionDelay: staggerDelay(idx, 70) }}
                 >
-                  {/* Top Solid Accent Bar */}
-                  <div
-                    className={`absolute top-0 left-6 right-6 sm:left-8 sm:right-8 h-1.5 rounded-b-full transition-all duration-300 ${
-                      isHovered
-                        ? isRed
-                          ? "bg-brand-red h-2"
-                          : "bg-brand-blue h-2"
-                        : isRed
-                        ? "bg-brand-red/40"
-                        : "bg-brand-blue/40"
-                    }`}
-                  />
-
-                  {/* Upper Content Area */}
-                  <div>
-                    {/* Visual Category Label Badge */}
-                    <div className="flex items-center justify-between gap-3">
-                      <span
-                        className={`inline-block rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-black tracking-wider uppercase ${
-                          isRed
-                            ? "bg-brand-red text-white shadow-sm"
-                            : "bg-brand-blue text-white shadow-sm"
-                        }`}
-                      >
-                        {door.categoryLabel}
-                      </span>
-                      <div
-                        className={`h-11 w-11 sm:h-12 sm:w-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                          isHovered
-                            ? isRed
-                              ? "bg-brand-red text-white scale-110 shadow-soft"
-                              : "bg-brand-blue text-white scale-110 shadow-soft"
-                            : isRed
-                            ? "bg-brand-red-soft text-brand-red"
-                            : "bg-brand-blue-soft text-brand-blue"
-                        }`}
-                      >
-                        <Icon name={door.icon} className="h-5 w-5 sm:h-6 sm:w-6" />
-                      </div>
-                    </div>
-
-                    {/* Prominent Large Headline */}
-                    <h2 className="mt-6 sm:mt-8 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink-900 leading-snug group-hover:text-brand-blue transition-colors">
-                      {door.headline}
-                    </h2>
-
-                    {/* Clear, Plain-Language Description */}
-                    <p className="mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed text-ink-600 font-normal">
-                      {door.description}
-                    </p>
-                  </div>
-
-                  {/* Obvious Action CTA */}
-                  <div className="mt-8 sm:mt-10 pt-5 sm:pt-6 border-t border-surface-border flex items-center justify-between">
-                    <span
-                      className={`text-sm sm:text-base font-extrabold tracking-wide uppercase transition-colors ${
-                        isRed ? "text-brand-red" : "text-brand-blue"
-                      }`}
-                    >
-                      {door.ctaText} →
-                    </span>
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-300 ${
+                  <TiltCard className="h-full">
+                    <Link
+                      href={cat.href}
+                      data-cursor="view"
+                      onMouseEnter={() => setHoveredIdx(idx)}
+                      className={`group relative flex flex-col justify-between rounded-2xl p-6 sm:p-7 border bg-white transition-all duration-300 h-full min-h-[260px] sm:min-h-[300px] ${
                         isHovered
-                          ? isRed
-                            ? "bg-brand-red text-white translate-x-1.5 shadow-soft"
-                            : "bg-brand-blue text-white translate-x-1.5 shadow-soft"
-                          : "bg-surface-soft text-ink-600 group-hover:bg-brand-blue-soft group-hover:text-brand-blue"
+                          ? `scale-[1.03] z-20 shadow-lift ${isRed ? "border-brand-red ring-2 ring-brand-red/10" : "border-brand-blue ring-2 ring-brand-blue/10"}`
+                          : isOtherHovered
+                          ? "opacity-60 scale-[0.98] border-surface-border shadow-soft"
+                          : "border-surface-border shadow-card hover:shadow-lift"
                       }`}
                     >
-                      <Icon
-                        name="arrow"
-                        className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5"
-                      />
-                    </div>
-                  </div>
-                </Link>
-              </TiltCard>
-              </div>
-            );
-          })}
+                      {/* Accent top bar */}
+                      <div className={`absolute top-0 left-5 right-5 h-1.5 rounded-b-full transition-all duration-300 ${isHovered ? (isRed ? "bg-brand-red h-2" : "bg-brand-blue h-2") : isRed ? "bg-brand-red/40" : "bg-brand-blue/40"}`} />
+
+                      <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`inline-block rounded-lg px-3 py-1 text-[11px] font-black uppercase tracking-wider ${isRed ? "bg-brand-red text-white" : "bg-brand-blue text-white"}`}>
+                            {cat.tag}
+                          </span>
+                          <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isHovered ? (isRed ? "bg-brand-red text-white scale-110" : "bg-brand-blue text-white scale-110") : isRed ? "bg-brand-red-soft text-brand-red" : "bg-brand-blue-soft text-brand-blue"}`}>
+                            <Icon name={cat.icon} className="h-5 w-5" />
+                          </div>
+                        </div>
+                        <h3 className="mt-5 text-lg sm:text-xl font-extrabold text-ink-900 leading-snug group-hover:text-brand-blue transition-colors">
+                          {cat.headline}
+                        </h3>
+                        <p className="mt-2 text-sm text-ink-500 leading-relaxed">{cat.description}</p>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-surface-border flex items-center justify-between">
+                        <span className={`text-xs font-extrabold uppercase tracking-wider ${isRed ? "text-brand-red" : "text-brand-blue"}`}>
+                          Explore →
+                        </span>
+                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-300 ${isHovered ? (isRed ? "bg-brand-red text-white translate-x-1" : "bg-brand-blue text-white translate-x-1") : "bg-surface-soft text-ink-500"}`}>
+                          <Icon name="arrow" className="h-3.5 w-3.5" />
+                        </div>
+                      </div>
+                    </Link>
+                  </TiltCard>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* =====================================================
+          SECTION 2 — EXPLORE DU (SECONDARY)
+          ===================================================== */}
+      <section className="pb-16 sm:pb-24 border-t border-surface-border pt-16 sm:pt-24 bg-brand-blue-pale/40">
+        <div ref={exploreRef} className="container-px max-w-7xl mx-auto">
+          <div className="mb-8">
+            <p className="eyebrow text-brand-blue">EXPLORE DU</p>
+            <div className="mt-3 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink-900">
+                Know your university.
+              </h2>
+              <Link href="/explore" className="text-sm font-extrabold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark shrink-0">
+                Explore all colleges →
+              </Link>
+            </div>
+          </div>
+
+          <div className={`grid gap-5 sm:grid-cols-2 reveal-stagger ${exploreVisible ? "is-visible" : ""}`}>
+            {/* College Directory */}
+            <TiltCard className="h-full">
+              <Link
+                href="/explore"
+                data-cursor="explore"
+                className="group card card-hover flex flex-col gap-4 p-7 h-full bg-white border border-surface-border shadow-card"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-brand-blue-soft flex items-center justify-center shrink-0 group-hover:bg-brand-blue group-hover:text-white transition-colors">
+                    <Icon name="building" className="h-6 w-6 text-brand-blue group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-brand-blue">DU COLLEGES</span>
+                    <h3 className="mt-0.5 text-xl font-extrabold text-ink-900 group-hover:text-brand-blue transition-colors">
+                      College Directory
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-ink-500 leading-relaxed">
+                  Profiles, campus info, student reviews and real experiences across all 91 Delhi University colleges.
+                </p>
+                <div className="mt-auto pt-4 border-t border-surface-border flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-brand-blue">Browse colleges →</span>
+                </div>
+              </Link>
+            </TiltCard>
+
+            {/* College Reviews */}
+            <TiltCard className="h-full">
+              <Link
+                href="/explore"
+                data-cursor="explore"
+                className="group card card-hover flex flex-col gap-4 p-7 h-full bg-white border border-surface-border shadow-card"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-brand-red-soft flex items-center justify-center shrink-0 group-hover:bg-brand-red transition-colors">
+                    <Icon name="star" className="h-6 w-6 text-brand-red group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-brand-red">STUDENT REVIEWS</span>
+                    <h3 className="mt-0.5 text-xl font-extrabold text-ink-900 group-hover:text-brand-blue transition-colors">
+                      College Reviews
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-ink-500 leading-relaxed">
+                  Real experiences from students across DU campuses — academics, facilities, faculty and culture.
+                </p>
+                <div className="mt-auto pt-4 border-t border-surface-border flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-brand-red">Read reviews →</span>
+                </div>
+              </Link>
+            </TiltCard>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          SECTION 3 — JOIN OUR TEAM (COMPACT / TERTIARY)
+          ===================================================== */}
+      <section className="py-12 sm:py-16 border-t border-surface-border">
+        <div className="container-px max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 rounded-2xl border border-surface-border bg-white p-6 sm:p-8 shadow-soft">
+            <div className="flex items-center gap-5">
+              <div className="h-12 w-12 rounded-2xl bg-brand-red-soft flex items-center justify-center shrink-0">
+                <Icon name="users" className="h-6 w-6 text-brand-red" />
+              </div>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-wider text-brand-red">JOIN OUR TEAM</p>
+                <h3 className="mt-0.5 text-lg font-extrabold text-ink-900">Want to represent your college?</h3>
+                <p className="mt-0.5 text-sm text-ink-500">
+                  Join the DU Science Hub student network and help build the platform.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/join"
+              data-cursor="join"
+              className="btn-primary shrink-0 whitespace-nowrap"
+            >
+              Join Our Team
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
