@@ -13,6 +13,7 @@ import {
   getCompetitionTeamsForCompetition,
   createCompetitionTeam,
   joinCompetitionTeamByCode,
+  requestToJoinCompetitionTeam,
   type OpportunityRecord,
   type CompetitionTeamRecord,
 } from "../lib/dataAccess";
@@ -331,10 +332,14 @@ function OpportunityDetail({ opportunityId, onClose }: { opportunityId: string; 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // Join by code
+  // Join by code (instant)
   const [joinCode, setJoinCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+
+  // Join by request (captain approval)
+  const [requestingTeamId, setRequestingTeamId] = useState<string | null>(null);
+  const [requestStatus, setRequestStatus] = useState<Record<string, "none" | "pending" | "sent">>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -344,7 +349,7 @@ function OpportunityDetail({ opportunityId, onClose }: { opportunityId: string; 
       setOpp(res.data);
       if (res.data?.teamFormationEnabled) {
         const teamsRes = await getCompetitionTeamsForCompetition(opportunityId);
-        if (!cancelled) setTeams(teamsRes.data);
+        if (!cancelled) setTeams(teamsRes.data ?? []);
       }
       setLoading(false);
     });
@@ -503,17 +508,46 @@ function OpportunityDetail({ opportunityId, onClose }: { opportunityId: string; 
                     <div className="mt-4 space-y-2">
                       <p className="text-xs font-bold uppercase tracking-wider text-ink-400">{teams.length} active team{teams.length !== 1 ? "s" : ""}</p>
                       {teams.map((t) => (
-                        <Link
+                        <div
                           key={t.id}
-                          href={`/teams/${t.id}`}
-                          className="flex items-center justify-between rounded-xl border border-surface-border p-3 hover:border-brand-blue/30 hover:bg-brand-blue-soft/30 transition-colors"
+                          className="flex items-center justify-between rounded-xl border border-surface-border p-3 gap-3"
                         >
-                          <div>
+                          <Link
+                            href={`/teams/${t.id}`}
+                            className="flex-1 min-w-0 hover:text-brand-blue transition-colors"
+                          >
                             <p className="text-sm font-bold text-ink-900">{t.name}</p>
                             <p className="text-xs text-ink-400">{t.memberCount} member{t.memberCount !== 1 ? "s" : ""}</p>
-                          </div>
-                          <Icon name="arrow" className="h-4 w-4 text-ink-400" />
-                        </Link>
+                          </Link>
+                          {user && (
+                            <div className="shrink-0">
+                              {requestStatus[t.id] === "pending" || requestStatus[t.id] === "sent" ? (
+                                <span className="text-xs font-semibold text-brand-blue bg-brand-blue-soft px-2.5 py-1 rounded-lg">
+                                  Request sent
+                                </span>
+                              ) : (
+                                <button
+                                  disabled={requestingTeamId === t.id}
+                                  onClick={async () => {
+                                    setRequestingTeamId(t.id);
+                                    const res = await requestToJoinCompetitionTeam(t.id);
+                                    setRequestingTeamId(null);
+                                    if (res.data?.status === "sent") {
+                                      setRequestStatus((prev) => ({ ...prev, [t.id]: "sent" }));
+                                    } else if (res.data?.status === "already_pending") {
+                                      setRequestStatus((prev) => ({ ...prev, [t.id]: "pending" }));
+                                    } else if (res.data?.status === "already_member") {
+                                      navigate(`/teams/${t.id}`);
+                                    }
+                                  }}
+                                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-brand-blue text-white hover:bg-brand-blue-dark transition-colors disabled:opacity-60"
+                                >
+                                  {requestingTeamId === t.id ? "…" : "Join Team"}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   )}
