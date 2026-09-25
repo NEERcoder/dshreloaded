@@ -138,7 +138,7 @@ const mapMentor = (row: Record<string, unknown>): MentorRecord => ({
   bio: row.bio ? String(row.bio) : null,
   role: row.designation ? String(row.designation) : null,
   expertise: row.expertise ? String(row.expertise) : null,
-  profileUrl: row.contact_url ? String(row.contact_url) : null,
+  profileUrl: row.profile_url ? String(row.profile_url) : null,
   contactUrl: row.contact_url ? String(row.contact_url) : null,
   active: row.active !== undefined ? Boolean(row.active) : true,
   sortOrder: Number(row.sort_order ?? 0),
@@ -420,6 +420,7 @@ export async function saveMentor(input: Omit<MentorRecord, "id">, id?: string): 
       bio: input.bio,
       designation: input.role,
       expertise: input.expertise,
+      profile_url: input.profileUrl,
       contact_url: input.contactUrl,
       active: input.active !== undefined ? input.active : true,
       sort_order: input.sortOrder !== undefined ? input.sortOrder : 0,
@@ -1025,7 +1026,10 @@ export async function createCompetitionTeam(
   }
 }
 
-export async function getCompetitionTeam(teamId: string): Promise<DataResult<CompetitionTeamRecord | null>> {
+export async function getCompetitionTeam(
+  teamId: string,
+  requestingUserId?: string
+): Promise<DataResult<CompetitionTeamRecord | null>> {
   if (!supabase) return failure(null, new Error("Not connected."));
   try {
     const { data: team, error } = await supabase
@@ -1036,12 +1040,33 @@ export async function getCompetitionTeam(teamId: string): Promise<DataResult<Com
     if (error) return failure(null, error);
     if (!team) return remoteSuccess(null);
 
-    const { data: membersRaw } = await supabase
+    // Fetch members — use left join on profiles so missing profiles don't drop rows
+    const { data: membersRaw, error: membErr } = await supabase
       .from("competition_team_members")
-      .select("*, profiles(full_name, course, college_id)")
+      .select("id, team_id, user_id, role, joined_at, profiles(full_name, course, college_id)")
       .eq("team_id", teamId);
+
+    if (membErr) {
+      // Return team with 0 members rather than failing completely
+      console.error("members fetch error", membErr);
+    }
+
     const members = (membersRaw || []).map((r) => mapCompetitionMember(r as Record<string, unknown>));
-    return remoteSuccess(mapTeam(team as Record<string, unknown>, members));
+
+    // Determine if the requesting user is a member so we can decide whether to expose invite_code
+    const callerId = requestingUserId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+    const isMemberOrCaptain =
+      callerId != null &&
+      (team.captain_user_id === callerId ||
+        members.some((m) => m.userId === callerId));
+
+    const mapped = mapTeam(team as Record<string, unknown>, members);
+    // Strip invite code for non-members
+    if (!isMemberOrCaptain) {
+      mapped.inviteCode = "";
+    }
+
+    return remoteSuccess(mapped);
   } catch (err) {
     return failure(null, err);
   }
@@ -1122,17 +1147,21 @@ export async function joinCompetitionTeamByCode(
     if (userErr || !userRes.user) return failure(null, new Error("You must be signed in to join a team."));
     const userId = userRes.user.id;
 
-    // Find team by code
-    const { data: team, error: teamErr } = await supabase
-      .from("competition_teams")
-      .select("*, opportunities(title, team_formation_enabled, max_team_size, status)")
-      .eq("invite_code", inviteCode.trim().toUpperCase())
-      .maybeSingle();
-    if (teamErr) return failure(null, teamErr);
+    // Use security-definer RPC — does not expose invite_code in response
+    const { data: teamRows, error: rpcErr } = await supabase.rpc("find_team_by_invite_code", {
+      p_code: inviteCode.trim().toUpperCase(),
+    });
+    if (rpcErr) return failure(null, rpcErr);
+    const team = Array.isArray(teamRows) ? teamRows[0] : null;
     if (!team) return failure(null, new Error("Team code not found. Check the code and try again."));
     if (team.status !== "active") return failure(null, new Error("This team is no longer accepting members."));
 
-    const opp = team.opportunities as { title: string; team_formation_enabled: boolean; max_team_size: number | null; status: string } | null;
+    // Fetch competition details
+    const { data: opp } = await supabase
+      .from("opportunities")
+      .select("team_formation_enabled, max_team_size, status")
+      .eq("id", team.competition_id)
+      .maybeSingle();
     if (!opp?.team_formation_enabled) return failure(null, new Error("Team formation is not enabled for this competition."));
     if (opp?.status !== "published") return failure(null, new Error("This competition is no longer active."));
 
@@ -1145,7 +1174,7 @@ export async function joinCompetitionTeamByCode(
       .maybeSingle();
     if (existingMembership) return failure(null, new Error("You are already in a team for this competition."));
 
-    // Check team capacity
+    // Check team capacity — count actual members
     const { count } = await supabase
       .from("competition_team_members")
       .select("id", { count: "exact", head: true })
@@ -1162,7 +1191,8 @@ export async function joinCompetitionTeamByCode(
     });
     if (joinErr) return failure(null, joinErr);
 
-    return getCompetitionTeam(team.id);
+    // Pass userId so the new member sees the invite code
+    return getCompetitionTeam(team.id, userId);
   } catch (err) {
     return failure(null, err);
   }
@@ -1302,6 +1332,254 @@ export async function closeCompetitionTeam(teamId: string): Promise<DataResult<b
       .update({ status: "disbanded" })
       .eq("id", teamId);
     if (error) return failure(false, error);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
+}
+
+// ==========================================
+// TEAM JOIN REQUESTS (captain-approval flow)
+// ==========================================
+
+export type CompetitionTeamJoinRequestRecord = {
+  id: string;
+  teamId: string;
+  userId: string;
+  fullName: string;
+  college: string | null;
+  course: string | null;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+};
+
+const mapJoinRequest = (row: Record<string, unknown>): CompetitionTeamJoinRequestRecord => ({
+  id: String(row.id),
+  teamId: String(row.team_id),
+  userId: String(row.user_id),
+  fullName: (row.profiles as { full_name?: string } | null)?.full_name ?? "Student",
+  college: (row.profiles as { college_id?: string } | null)?.college_id ?? null,
+  course: (row.profiles as { course?: string } | null)?.course ?? null,
+  status: (row.status as CompetitionTeamJoinRequestRecord["status"]) ?? "pending",
+  createdAt: String(row.created_at),
+});
+
+export async function requestToJoinCompetitionTeam(
+  teamId: string
+): Promise<DataResult<{ status: "sent" | "already_pending" | "already_member" } | null>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Authentication required."));
+  }
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userRes.user) return failure(null, new Error("You must be signed in."));
+    const userId = userRes.user.id;
+
+    // Check not already a member
+    const { data: member } = await supabase
+      .from("competition_team_members")
+      .select("id")
+      .eq("team_id", teamId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (member) return remoteSuccess({ status: "already_member" });
+
+    // Check for existing pending request
+    const { data: existing } = await supabase
+      .from("competition_team_join_requests")
+      .select("id, status")
+      .eq("team_id", teamId)
+      .eq("user_id", userId)
+      .eq("status", "pending")
+      .maybeSingle();
+    if (existing) return remoteSuccess({ status: "already_pending" });
+
+    // Check team + competition validity
+    const { data: team } = await supabase
+      .from("competition_teams")
+      .select("status, competition_id, captain_user_id, opportunities(team_formation_enabled, max_team_size, status)")
+      .eq("id", teamId)
+      .maybeSingle();
+    if (!team || team.status !== "active") return failure(null, new Error("This team is not accepting requests."));
+
+    const opp = (Array.isArray(team.opportunities) ? team.opportunities[0] : team.opportunities) as { team_formation_enabled: boolean; max_team_size: number | null; status: string } | null;
+    if (!opp?.team_formation_enabled) return failure(null, new Error("Team formation is not enabled."));
+    if (opp?.status !== "published") return failure(null, new Error("This competition is no longer active."));
+
+    // Check competition-level: not already in another team for this competition
+    const { data: competitionMembership } = await supabase
+      .from("competition_team_members")
+      .select("team_id, competition_teams!inner(competition_id)")
+      .eq("user_id", userId)
+      .eq("competition_teams.competition_id", team.competition_id)
+      .maybeSingle();
+    if (competitionMembership) return failure(null, new Error("You are already in a team for this competition."));
+
+    // Check capacity
+    const { count } = await supabase
+      .from("competition_team_members")
+      .select("id", { count: "exact", head: true })
+      .eq("team_id", teamId);
+    if (opp?.max_team_size && (count ?? 0) >= opp.max_team_size) {
+      return failure(null, new Error("This team is already full."));
+    }
+
+    const { error: insertErr } = await supabase.from("competition_team_join_requests").insert({
+      team_id: teamId,
+      user_id: userId,
+      status: "pending",
+    });
+    if (insertErr) return failure(null, insertErr);
+    return remoteSuccess({ status: "sent" });
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
+export async function getMyJoinRequestStatus(
+  teamId: string
+): Promise<DataResult<"none" | "pending" | "approved" | "rejected" | "member">> {
+  if (!supabase || !isSupabaseConfigured) return remoteSuccess("none");
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    if (!userRes.user) return remoteSuccess("none");
+    const userId = userRes.user.id;
+
+    const { data: member } = await supabase
+      .from("competition_team_members")
+      .select("id")
+      .eq("team_id", teamId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (member) return remoteSuccess("member");
+
+    const { data: req } = await supabase
+      .from("competition_team_join_requests")
+      .select("status")
+      .eq("team_id", teamId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!req) return remoteSuccess("none");
+    return remoteSuccess(req.status as "pending" | "approved" | "rejected");
+  } catch {
+    return remoteSuccess("none");
+  }
+}
+
+export async function getPendingTeamJoinRequests(
+  teamId: string
+): Promise<DataResult<CompetitionTeamJoinRequestRecord[]>> {
+  if (!supabase || !isSupabaseConfigured) return remoteSuccess([]);
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    if (!userRes.user) return remoteSuccess([]);
+
+    const { data, error } = await supabase
+      .from("competition_team_join_requests")
+      .select("*, profiles(full_name, course, college_id)")
+      .eq("team_id", teamId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+    if (error) return failure([], error);
+    return remoteSuccess((data || []).map((r) => mapJoinRequest(r as Record<string, unknown>)));
+  } catch (err) {
+    return failure([], err);
+  }
+}
+
+export async function approveCompetitionTeamJoinRequest(
+  requestId: string
+): Promise<DataResult<boolean>> {
+  if (!supabase || !isSupabaseConfigured) return failure(false, new Error("Authentication required."));
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userRes.user) return failure(false, new Error("Not authenticated."));
+    const captainId = userRes.user.id;
+
+    // Fetch the request
+    const { data: req } = await supabase
+      .from("competition_team_join_requests")
+      .select("id, team_id, user_id, status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (!req || req.status !== "pending") return failure(false, new Error("Request not found or already processed."));
+
+    // Verify caller is captain
+    const { data: team } = await supabase
+      .from("competition_teams")
+      .select("captain_user_id, competition_id, opportunities(max_team_size)")
+      .eq("id", req.team_id)
+      .maybeSingle();
+    if (!team || team.captain_user_id !== captainId) {
+      return failure(false, new Error("Only the team captain can approve requests."));
+    }
+
+    // Check not already a member (race condition guard)
+    const { data: existingMember } = await supabase
+      .from("competition_team_members")
+      .select("id")
+      .eq("team_id", req.team_id)
+      .eq("user_id", req.user_id)
+      .maybeSingle();
+    if (existingMember) {
+      await supabase.from("competition_team_join_requests").update({ status: "approved" }).eq("id", requestId);
+      return remoteSuccess(true);
+    }
+
+    // Check capacity again at approval time
+    const { count } = await supabase
+      .from("competition_team_members")
+      .select("id", { count: "exact", head: true })
+      .eq("team_id", req.team_id);
+    const opp = (Array.isArray(team.opportunities) ? team.opportunities[0] : team.opportunities) as { max_team_size: number | null } | null;
+    if (opp?.max_team_size && (count ?? 0) >= opp.max_team_size) {
+      return failure(false, new Error("The team is now full. Cannot approve this request."));
+    }
+
+    // Add as member
+    const { error: memberErr } = await supabase.from("competition_team_members").insert({
+      team_id: req.team_id,
+      user_id: req.user_id,
+      role: "member",
+    });
+    if (memberErr) return failure(false, memberErr);
+
+    // Mark approved
+    await supabase.from("competition_team_join_requests").update({ status: "approved" }).eq("id", requestId);
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
+}
+
+export async function rejectCompetitionTeamJoinRequest(
+  requestId: string
+): Promise<DataResult<boolean>> {
+  if (!supabase || !isSupabaseConfigured) return failure(false, new Error("Authentication required."));
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userRes.user) return failure(false, new Error("Not authenticated."));
+    const captainId = userRes.user.id;
+
+    const { data: req } = await supabase
+      .from("competition_team_join_requests")
+      .select("id, team_id, status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (!req || req.status !== "pending") return failure(false, new Error("Request not found or already processed."));
+
+    const { data: team } = await supabase
+      .from("competition_teams")
+      .select("captain_user_id")
+      .eq("id", req.team_id)
+      .maybeSingle();
+    if (!team || team.captain_user_id !== captainId) {
+      return failure(false, new Error("Only the team captain can reject requests."));
+    }
+
+    await supabase.from("competition_team_join_requests").update({ status: "rejected" }).eq("id", requestId);
     return remoteSuccess(true);
   } catch (err) {
     return failure(false, err);
