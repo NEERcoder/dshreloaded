@@ -31,11 +31,11 @@ function DuScienceHubHome() {
           {/* 1. SIMPLE HERO — THE FRONT DOOR */}
           <Hero />
 
-          {/* 2. THREE GRAND DOORS — CHOOSE WHAT YOU CAME HERE FOR */}
-          <HomeChoices />
-
-          {/* 3. FEATURED OPPORTUNITIES TICKER */}
+          {/* 2. FEATURED OPPORTUNITIES — LEAD WITH OPPORTUNITIES */}
           <FeaturedOpportunityTicker />
+
+          {/* 3. HOME CHOICES — Opportunities primary, Explore secondary, Join compact */}
+          <HomeChoices />
         </main>
         <Footer />
       </div>
