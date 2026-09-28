@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { useUnreadNotificationCount } from "./NotificationBell";
+import Icon from "./Icon";
 
 /**
  * The account area of the navbar. Everything here is derived from the real
@@ -70,13 +71,10 @@ export default function AccountMenu() {
           {initialsFrom(user.email ?? null)}
         </span>
         <span>Profile</span>
-        <svg
-          viewBox="0 0 12 12"
-          aria-hidden="true"
-          className={`h-2.5 w-2.5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        >
-          <path d="M2 4.5 6 8.5 10 4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <Icon
+          name="chevron-down"
+          className={`h-3 w-3 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open && (
@@ -95,14 +93,20 @@ export default function AccountMenu() {
             role="menuitem"
             className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-900 transition-colors hover:bg-brand-blue-soft hover:text-brand-blue"
           >
-            My profile
+            <span className="flex items-center gap-2.5">
+              <Icon name="user" className="h-4 w-4 shrink-0" />
+              My profile
+            </span>
           </Link>
           <Link
             href="/notifications"
             role="menuitem"
             className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-900 transition-colors hover:bg-brand-blue-soft hover:text-brand-blue"
           >
-            Notifications
+            <span className="flex items-center gap-2.5">
+              <Icon name="bell" className="h-4 w-4 shrink-0" />
+              Notifications
+            </span>
             {unread > 0 && (
               <span className="rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-black text-white">
                 {unread > 9 ? "9+" : unread}
@@ -114,15 +118,19 @@ export default function AccountMenu() {
             role="menuitem"
             className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-900 transition-colors hover:bg-brand-blue-soft hover:text-brand-blue"
           >
-            Connections
+            <span className="flex items-center gap-2.5">
+              <Icon name="link" className="h-4 w-4 shrink-0" />
+              Connections
+            </span>
           </Link>
           <div className="my-1 h-px bg-surface-border" />
           <button
             type="button"
             role="menuitem"
             onClick={handleSignOut}
-            className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-ink-600 transition-colors hover:bg-brand-red-soft hover:text-brand-red"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-ink-600 transition-colors hover:bg-brand-red-soft hover:text-brand-red"
           >
+            <Icon name="logout" className="h-4 w-4 shrink-0" />
             Sign out
           </button>
         </div>

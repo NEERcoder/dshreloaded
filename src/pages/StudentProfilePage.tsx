@@ -113,7 +113,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
           href="/circle"
           className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark"
         >
-          ← Back to CIRCLE
+          <Icon name="arrow-left" className="h-4 w-4" /> Back to CIRCLE
         </Link>
 
         <div className="mt-6 animate-fade-up">

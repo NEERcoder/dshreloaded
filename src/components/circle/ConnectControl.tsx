@@ -62,6 +62,7 @@ export default function ConnectControl({ peerUserId, connection, onChanged }: Co
         {state === "outgoing_pending" && (
           <>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue-soft px-3 py-1 text-xs font-bold text-brand-blue">
+              <Icon name="clock" className="h-3.5 w-3.5" />
               Request sent
             </span>
             <button
@@ -83,7 +84,15 @@ export default function ConnectControl({ peerUserId, connection, onChanged }: Co
               onClick={() => run("accept", () => acceptConnectionRequest(id as string))}
               disabled={busy !== null}
             >
-              {busy === "accept" ? "Accepting…" : "Accept"}
+              {busy === "accept" ? (
+                <>
+                  <Icon name="loader" className="h-4 w-4 animate-spin" /> Accepting…
+                </>
+              ) : (
+                <>
+                  <Icon name="check" className="h-4 w-4" /> Accept
+                </>
+              )}
             </button>
             <button
               type="button"
@@ -91,7 +100,15 @@ export default function ConnectControl({ peerUserId, connection, onChanged }: Co
               onClick={() => run("reject", () => rejectConnectionRequest(id as string))}
               disabled={busy !== null}
             >
-              {busy === "reject" ? "Rejecting…" : "Reject"}
+              {busy === "reject" ? (
+                <>
+                  <Icon name="loader" className="h-4 w-4 animate-spin" /> Rejecting…
+                </>
+              ) : (
+                <>
+                  <Icon name="close" className="h-4 w-4" /> Reject
+                </>
+              )}
             </button>
           </>
         )}

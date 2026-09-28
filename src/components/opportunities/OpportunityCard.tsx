@@ -2,6 +2,7 @@ import TiltCard from "../TiltCard";
 import Icon from "../Icon";
 import DeadlineProgress from "../DeadlineProgress";
 import { sanitizeExternalUrl } from "../../lib/urlSafety";
+import { opportunityCategoryIcon } from "../../data/opportunityCategories";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
 export const CATEGORY_BADGE: Record<string, string> = {
@@ -44,17 +45,20 @@ export default function OpportunityCard({
         <div className="p-6 flex flex-col flex-1 justify-between">
           <div>
             <div className="flex items-center justify-between gap-2">
-              <span className={`rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_BADGE[item.category] ?? "bg-surface-soft text-ink-600"}`}>
+              <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_BADGE[item.category] ?? "bg-surface-soft text-ink-600"}`}>
+                <Icon name={opportunityCategoryIcon(item.category)} className="h-3.5 w-3.5" />
                 {item.category}
               </span>
               <div className="flex items-center gap-1.5">
                 {isTeamCompetition && (
-                  <span className="rounded-full bg-brand-blue-soft px-2 py-0.5 text-[11px] font-bold text-brand-blue">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-blue-soft px-2 py-0.5 text-[11px] font-bold text-brand-blue">
+                    <Icon name="users" className="h-3 w-3" />
                     Teams
                   </span>
                 )}
                 {item.featured && (
-                  <span className="rounded-full bg-brand-red-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-red">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-red">
+                    <Icon name="star" className="h-3 w-3" fill="currentColor" />
                     Featured
                   </span>
                 )}
@@ -69,9 +73,24 @@ export default function OpportunityCard({
             <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
             <p className="mt-3 text-sm leading-relaxed text-ink-500 line-clamp-3">{item.description}</p>
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-400">
-              {item.mode && <span className="font-semibold text-ink-600">{item.mode}</span>}
-              {item.field && <span>{item.field}</span>}
-              {item.stipend && <span className="font-bold text-emerald-600">{item.stipend}</span>}
+              {item.mode && (
+                <span className="inline-flex items-center gap-1 font-semibold text-ink-600">
+                  <Icon name="monitor" className="h-3.5 w-3.5" />
+                  {item.mode}
+                </span>
+              )}
+              {item.field && (
+                <span className="inline-flex items-center gap-1">
+                  <Icon name="target" className="h-3.5 w-3.5" />
+                  {item.field}
+                </span>
+              )}
+              {item.stipend && (
+                <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                  <Icon name="wallet" className="h-3.5 w-3.5" />
+                  {item.stipend}
+                </span>
+              )}
             </div>
           </div>
 
@@ -91,7 +110,7 @@ export default function OpportunityCard({
                   rel="noreferrer"
                   className="btn-outline-blue flex-1 justify-center text-xs font-bold"
                 >
-                  Apply <Icon name="arrow" className="h-4 w-4" />
+                  Apply <Icon name="external" className="h-4 w-4" />
                 </a>
               )}
             </div>

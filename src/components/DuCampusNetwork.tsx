@@ -155,7 +155,7 @@ export default function DuCampusNetwork() {
                   <span className="rounded-full bg-brand-blue-soft px-2.5 py-0.5 text-[10px] font-bold text-brand-blue uppercase tracking-wider">
                     {hoveredCollege.campus}
                   </span>
-                  <span className="text-[11px] font-semibold text-brand-red">Click to enter →</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-red">Click to enter <Icon name="arrow" className="h-3 w-3" /></span>
                 </div>
                 <h4 className="mt-2 font-bold text-ink-900 text-sm leading-snug">{hoveredCollege.name}</h4>
                 <p className="mt-1 text-xs text-ink-500 line-clamp-2">{hoveredCollege.vibe}</p>

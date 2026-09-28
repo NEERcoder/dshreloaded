@@ -121,7 +121,7 @@ export default function ConnectionsPage() {
             href="/circle"
             className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark"
           >
-            ← Back to CIRCLE
+            <Icon name="arrow-left" className="h-4 w-4" /> Back to CIRCLE
           </Link>
           <h1 className="font-display mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900 leading-tight">
             Your connections.

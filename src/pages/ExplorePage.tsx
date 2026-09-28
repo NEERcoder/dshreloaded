@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
+import StarRating from "../components/StarRating";
 import SectionHeading from "../components/SectionHeading";
 import TiltCard from "../components/TiltCard";
 import { SkeletonCollegeGrid } from "../components/Skeleton";
@@ -115,8 +116,8 @@ function CollegeCard({ college }: { college: CollegeRecord }) {
         </div>
 
         <div className="mt-5 pt-3 border-t border-surface-border/80 flex items-center justify-between text-xs">
-          <span className="font-bold text-ink-400 group-hover:text-brand-red transition-colors">
-            View College Take →
+          <span className="inline-flex items-center gap-1 font-bold text-ink-400 group-hover:text-brand-red transition-colors">
+            View College Take <Icon name="arrow" className="h-3.5 w-3.5" />
           </span>
           {college.type && (
             <span className="rounded-full bg-surface-soft px-2.5 py-0.5 font-medium text-ink-500">
@@ -277,8 +278,8 @@ function VideoDiscovery({
                         <div className="h-full w-full flex items-center justify-center text-white text-xs font-bold">DU Story</div>
                       )}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10">
-                        <span className="h-7 w-7 rounded-full bg-white/90 text-brand-red flex items-center justify-center text-xs font-black shadow-sm">
-                          ▶
+                        <span className="h-7 w-7 rounded-full bg-white/90 text-brand-red flex items-center justify-center shadow-sm">
+                          <Icon name="play" className="h-4 w-4" />
                         </span>
                       </div>
                     </div>
@@ -363,10 +364,10 @@ function WriteReviewModal({
       <div className="card w-full max-w-lg max-h-[90dvh] overflow-y-auto p-5 sm:p-8 bg-white shadow-lift border border-surface-border relative">
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 text-ink-400 hover:text-ink-700 text-xl font-bold p-2 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
+          className="absolute top-3.5 right-3.5 text-ink-400 hover:text-ink-700 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
           aria-label="Close"
         >
-          ✕
+          <Icon name="close" className="h-5 w-5" />
         </button>
         <span className="eyebrow text-brand-red">STUDENT REVIEWS</span>
         <h2 className="mt-2 text-2xl font-extrabold text-ink-900">Write an Anonymous Review</h2>
@@ -419,12 +420,16 @@ function WriteReviewModal({
                   onClick={() => setRating(val)}
                   onMouseEnter={() => setHoverRating(val)}
                   onMouseLeave={() => setHoverRating(0)}
-                  className={`text-2xl min-h-[44px] min-w-[36px] flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${
+                  className={`min-h-[44px] min-w-[36px] flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${
                     val <= (hoverRating || rating) ? "text-brand-red" : "text-ink-400/40"
                   }`}
                   aria-label={`${val} star${val > 1 ? "s" : ""}`}
                 >
-                  ★
+                  <Icon
+                    name="star"
+                    className="h-6 w-6"
+                    fill={val <= (hoverRating || rating) ? "currentColor" : "none"}
+                  />
                 </button>
               ))}
               <span className="ml-2 text-xs font-bold text-ink-500">
@@ -455,18 +460,30 @@ function WriteReviewModal({
             disabled={submitting}
             className="btn-primary w-full justify-center py-3 text-sm font-extrabold shadow-card disabled:opacity-60"
           >
-            {submitting ? "Submitting…" : "Post Anonymous Review →"}
+            {submitting ? (
+              <>
+                <Icon name="loader" className="h-4 w-4 animate-spin" /> Submitting…
+              </>
+            ) : (
+              <>
+                Post Anonymous Review <Icon name="send" className="h-4 w-4" />
+              </>
+            )}
           </button>
 
           {message && (
             <p
-              className={`text-xs font-bold p-3 rounded-xl border text-center ${
+              className={`inline-flex w-full items-center justify-center gap-1.5 text-xs font-bold p-3 rounded-xl border text-center ${
                 message.isError
                   ? "border-brand-red/20 bg-brand-red-soft text-brand-red"
                   : "text-emerald-700 bg-emerald-50 border-emerald-200"
               }`}
               role={message.isError ? "alert" : "status"}
             >
+              <Icon
+                name={message.isError ? "alert-circle" : "check-circle"}
+                className="h-4 w-4 shrink-0"
+              />
               {message.text}
             </p>
           )}
@@ -588,7 +605,7 @@ export default function ExplorePage() {
                   </p>
                 </div>
                 <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-brand-blue">
-                  EXPLORE COLLEGES →
+                  EXPLORE COLLEGES <Icon name="arrow" className="h-3.5 w-3.5" />
                 </span>
               </a>
             </TiltCard>
@@ -610,15 +627,15 @@ export default function ExplorePage() {
                 <div className="mt-6 flex flex-col gap-2">
                   <a
                     href="#reviews"
-                    className="text-xs font-black uppercase tracking-wider text-brand-red hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-brand-red hover:underline"
                   >
-                    READ REVIEWS →
+                    READ REVIEWS <Icon name="arrow" className="h-3.5 w-3.5" />
                   </a>
                   <button
                     onClick={() => setIsReviewModalOpen(true)}
                     className="btn-primary py-1.5 px-3 text-xs font-black text-center shadow-soft"
                   >
-                    WRITE A REVIEW →
+                    WRITE A REVIEW <Icon name="arrow" className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -642,7 +659,7 @@ export default function ExplorePage() {
                   </p>
                 </div>
                 <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-brand-blue">
-                  WATCH UNFILTERED →
+                  WATCH UNFILTERED <Icon name="arrow" className="h-3.5 w-3.5" />
                 </span>
               </a>
             </TiltCard>
@@ -665,7 +682,7 @@ export default function ExplorePage() {
                   </p>
                 </div>
                 <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-brand-blue">
-                  MEET THE MENTORS →
+                  MEET THE MENTORS <Icon name="arrow" className="h-3.5 w-3.5" />
                 </span>
               </a>
             </TiltCard>
@@ -691,7 +708,7 @@ export default function ExplorePage() {
                 onClick={() => setIsReviewModalOpen(true)}
                 className="btn-primary py-3.5 px-6 text-sm font-black shadow-lift active:scale-95"
               >
-                WRITE A REVIEW →
+                WRITE A REVIEW <Icon name="arrow" className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -706,9 +723,7 @@ export default function ExplorePage() {
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-black text-brand-red">
-                        {"★".repeat(r.rating)}{"☆".repeat(Math.max(0, 5 - r.rating))}
-                      </span>
+                      <StarRating value={r.rating} className="text-brand-red" />
                       {r.collegeName && (
                         <span className="rounded-full bg-brand-blue-soft text-brand-blue px-2.5 py-0.5 text-[11px] font-extrabold truncate max-w-[170px]">
                           {r.collegeName}
@@ -724,9 +739,9 @@ export default function ExplorePage() {
                     {r.collegeSlug ? (
                       <Link
                         href={`/explore/${r.collegeSlug}`}
-                        className="text-brand-blue font-bold hover:underline"
+                        className="inline-flex items-center gap-1 text-brand-blue font-bold hover:underline"
                       >
-                        View College →
+                        View College <Icon name="arrow" className="h-3.5 w-3.5" />
                       </Link>
                     ) : null}
                   </div>
@@ -734,13 +749,14 @@ export default function ExplorePage() {
               ))
             ) : (
               <div className="col-span-full card border-dashed p-10 text-center bg-white">
-                <p className="text-base font-bold text-ink-900">Be the first to share your college take.</p>
+                <Icon name="message" className="mx-auto h-8 w-8 text-ink-400" />
+                <p className="mt-3 text-base font-bold text-ink-900">Be the first to share your college take.</p>
                 <p className="mt-1 text-sm text-ink-500">Reviews help incoming first-years discover what each campus is really like.</p>
                 <button
                   onClick={() => setIsReviewModalOpen(true)}
                   className="btn-secondary mt-6"
                 >
-                  Write the First Review →
+                  Write the First Review <Icon name="arrow" className="h-4 w-4" />
                 </button>
               </div>
             )}

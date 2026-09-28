@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import Icon from "../components/Icon";
+import StarRating from "../components/StarRating";
 import PageShell from "../components/PageShell";
 import SectionHeading from "../components/SectionHeading";
 import DeadlineProgress from "../components/DeadlineProgress";
@@ -134,8 +135,8 @@ export default function CollegePage({ slug }: { slug: string }) {
     return (
       <PageShell title="College profile coming soon | JAVLIN" backgroundPreset="college">
         <section className="container-px py-20 sm:py-28">
-          <Link href="/explore" className="text-sm font-semibold text-brand-blue hover:underline">
-            ← Back to Explore DU
+          <Link href="/explore" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:underline">
+            <Icon name="arrow-left" className="h-4 w-4" /> Back to Explore DU
           </Link>
           <div className="mt-8 max-w-2xl">
             <p className="eyebrow">COLLEGE PROFILE</p>
@@ -188,7 +189,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border">
         <div className="container-px py-10 sm:py-16">
           <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider">
-            ← Back to Explore DU
+            <Icon name="arrow-left" className="h-4 w-4" /> Back to Explore DU
           </Link>
           <div className="mt-6 grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
@@ -218,15 +219,15 @@ export default function CollegePage({ slug }: { slug: string }) {
                   </span>
                 )}
                 {avgRating && (
-                  <span className="rounded-full bg-brand-red-soft px-3 py-1 text-xs font-bold text-brand-red">
-                    ★ {avgRating} / 5 ({reviews.length} {reviews.length === 1 ? "student take" : "student takes"})
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-3 py-1 text-xs font-bold text-brand-red">
+                    <Icon name="star" className="h-3.5 w-3.5" fill="currentColor" /> {avgRating} / 5 ({reviews.length} {reviews.length === 1 ? "student take" : "student takes"})
                   </span>
                 )}
                 <a
                   href="#write-review"
                   className="inline-flex items-center gap-1 rounded-full bg-brand-red hover:bg-brand-red-dark text-white px-3.5 py-1.5 text-xs font-extrabold transition-all shadow-sm active:scale-95 min-h-[32px]"
                 >
-                  Write a Review →
+                  Write a Review <Icon name="arrow" className="h-3.5 w-3.5" />
                 </a>
               </div>
 
@@ -341,8 +342,8 @@ export default function CollegePage({ slug }: { slug: string }) {
                 description="Anonymous, student-verified perspectives on faculty, societies, exams, and campus vibe."
               />
               {avgRating && (
-                <span className="rounded-full bg-brand-red-soft px-4 py-1.5 text-xs font-extrabold text-brand-red shadow-soft">
-                  ★ {avgRating} / 5 ({reviews.length} {reviews.length === 1 ? "student take" : "student takes"})
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-4 py-1.5 text-xs font-extrabold text-brand-red shadow-soft">
+                  <Icon name="star" className="h-3.5 w-3.5" fill="currentColor" /> {avgRating} / 5 ({reviews.length} {reviews.length === 1 ? "student take" : "student takes"})
                 </span>
               )}
             </div>
@@ -564,7 +565,7 @@ function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
         <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
         {safeAppUrl ? (
           <a href={safeAppUrl} target="_blank" rel="noreferrer" className="btn-outline-blue mt-4 w-full justify-center">
-            View Details <Icon name="arrow" className="h-4 w-4" />
+            View Details <Icon name="external" className="h-4 w-4" />
           </a>
         ) : (
           <Link href="/opportunities" className="btn-ghost mt-4 w-full justify-center">
@@ -601,10 +602,7 @@ function ReviewItem({ review }: { review: ReviewRecord }) {
           <div>
             <h3 className="font-bold text-ink-900 text-sm">{review.name}</h3>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-400">
-              <span className="text-brand-red font-bold" aria-label={`${review.rating} out of 5 stars`}>
-                {"★".repeat(review.rating)}
-                {"☆".repeat(5 - review.rating)}
-              </span>
+              <StarRating value={review.rating} className="text-brand-red" />
               <span>•</span>
               <time dateTime={review.createdAt}>{new Date(review.createdAt).toLocaleDateString()}</time>
             </div>
@@ -676,12 +674,16 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
             onClick={() => setRating(value)}
             onMouseEnter={() => setHoverRating(value)}
             onMouseLeave={() => setHoverRating(0)}
-            className={`text-2xl transition-transform hover:scale-110 ${
+            className={`transition-transform hover:scale-110 ${
               value <= (hoverRating || rating) ? "text-brand-red" : "text-ink-400/40"
             }`}
             aria-label={`${value} star${value > 1 ? "s" : ""}`}
           >
-            ★
+            <Icon
+              name="star"
+              className="h-6 w-6"
+              fill={value <= (hoverRating || rating) ? "currentColor" : "none"}
+            />
           </button>
         ))}
         <span className="ml-2 text-xs font-bold text-ink-500">

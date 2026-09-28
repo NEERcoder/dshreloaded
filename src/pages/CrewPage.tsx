@@ -238,9 +238,14 @@ export default function CrewPage() {
 
       <section className="container-px py-8 sm:py-10 space-y-10">
         {loadError && (
-          <div className="rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
-            We couldn't reach the team board. {loadError}
-            <button onClick={() => setLoadError(null)} className="ml-3 text-xs font-black">✕</button>
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
+            <span className="inline-flex items-center gap-2">
+              <Icon name="alert-circle" className="h-4 w-4 shrink-0" />
+              We couldn't reach the team board. {loadError}
+            </span>
+            <button onClick={() => setLoadError(null)} className="shrink-0 text-xs font-black" aria-label="Dismiss">
+              <Icon name="close" className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
 
@@ -489,14 +494,27 @@ export default function CrewPage() {
                 maxLength={60}
               />
               {createError && (
-                <p className="text-xs font-bold text-brand-red">{createError}</p>
+                <p className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-red">
+                  <Icon name="alert-circle" className="h-3.5 w-3.5 shrink-0" />
+                  {createError}
+                </p>
               )}
               <button
                 type="submit"
                 disabled={creating || competitions.length === 0}
                 className="btn-primary w-full justify-center disabled:opacity-60"
               >
-                {creating ? "Creating…" : user ? "Create Team" : "Sign in to create a team"}
+                {creating ? (
+                  <>
+                    <Icon name="loader" className="h-4 w-4 animate-spin" /> Creating…
+                  </>
+                ) : user ? (
+                  <>
+                    <Icon name="plus" className="h-4 w-4" /> Create Team
+                  </>
+                ) : (
+                  "Sign in to create a team"
+                )}
               </button>
               {competitions.length === 0 && !loading && (
                 <p className="text-xs text-ink-500">

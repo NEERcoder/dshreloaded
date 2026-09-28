@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
+import Icon from "../components/Icon";
 import { useUnreadNotificationCount } from "../components/NotificationBell";
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation } from "../lib/router";
@@ -252,7 +253,7 @@ export default function DashboardPage() {
             className="btn-ghost self-start text-xs font-bold text-ink-600 hover:text-brand-red"
             onClick={handleSignOut}
           >
-            Sign out →
+            <Icon name="logout" className="h-4 w-4" /> Sign out
           </button>
         </div>
 
@@ -382,7 +383,15 @@ export default function DashboardPage() {
 
               <div className="mt-6 flex gap-2">
                 <button type="submit" disabled={saving} className="btn-primary disabled:opacity-60">
-                  {saving ? "Saving…" : profile ? "Save changes" : "Save and continue"}
+                  {saving ? (
+                    <>
+                      <Icon name="loader" className="h-4 w-4 animate-spin" /> Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="check" className="h-4 w-4" /> {profile ? "Save changes" : "Save and continue"}
+                    </>
+                  )}
                 </button>
                 {profile && (
                   <button type="button" onClick={cancelEdit} disabled={saving} className="btn-ghost">
@@ -483,7 +492,7 @@ export default function DashboardPage() {
                     <p className="mt-0.5 text-xs text-ink-500">{team.competitionTitle}</p>
                     <p className="text-xs text-ink-400">{team.memberCount} member{team.memberCount !== 1 ? "s" : ""}</p>
                   </div>
-                  <span className="text-xs font-bold text-brand-blue shrink-0">View team →</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-blue shrink-0">View team <Icon name="arrow" className="h-3.5 w-3.5" /></span>
                 </Link>
               ))}
             </div>

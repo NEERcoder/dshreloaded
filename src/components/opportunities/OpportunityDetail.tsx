@@ -13,6 +13,7 @@ import {
 } from "../../lib/dataAccess";
 import { sanitizeExternalUrl } from "../../lib/urlSafety";
 import { CATEGORY_BADGE } from "./OpportunityCard";
+import { opportunityCategoryIcon } from "../../data/opportunityCategories";
 
 // "manage"  — team creation/join tools (Opportunity Radar / competitions list)
 // "discover"— discovery only, points to CREW for team formation (FIELD)
@@ -109,9 +110,15 @@ export default function OpportunityDetail({
       {/* Panel */}
       <div className="relative z-10 w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white shadow-lift">
         {loading ? (
-          <div className="p-8 text-center text-sm font-semibold text-ink-500 animate-pulse">Loading…</div>
+          <div className="flex items-center justify-center gap-2 p-8 text-sm font-semibold text-ink-500">
+            <Icon name="loader" className="h-4 w-4 animate-spin" />
+            Loading…
+          </div>
         ) : !opp ? (
-          <div className="p-8 text-center text-sm text-ink-500">Opportunity not found.</div>
+          <div className="flex items-center justify-center gap-2 p-8 text-sm text-ink-500">
+            <Icon name="alert-circle" className="h-4 w-4" />
+            Opportunity not found.
+          </div>
         ) : (
           <>
             {/* Header image */}
@@ -124,7 +131,8 @@ export default function OpportunityDetail({
             <div className="p-6 sm:p-8">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className={`inline-block rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_BADGE[opp.category] ?? "bg-surface-soft text-ink-600"}`}>
+                  <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_BADGE[opp.category] ?? "bg-surface-soft text-ink-600"}`}>
+                    <Icon name={opportunityCategoryIcon(opp.category)} className="h-3.5 w-3.5" />
                     {opp.category}
                   </span>
                   <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-ink-900">{opp.title}</h2>
@@ -142,37 +150,49 @@ export default function OpportunityDetail({
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {opp.mode && (
                   <div className="rounded-xl bg-surface-soft p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Mode</p>
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <Icon name="monitor" className="h-3.5 w-3.5" /> Mode
+                    </p>
                     <p className="mt-1 text-sm font-semibold text-ink-800">{opp.mode}</p>
                   </div>
                 )}
                 {opp.location && (
                   <div className="rounded-xl bg-surface-soft p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Location</p>
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <Icon name="map-pin" className="h-3.5 w-3.5" /> Location
+                    </p>
                     <p className="mt-1 text-sm font-semibold text-ink-800">{opp.location}</p>
                   </div>
                 )}
                 {opp.deadline && (
                   <div className="rounded-xl bg-surface-soft p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Deadline</p>
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <Icon name="calendar" className="h-3.5 w-3.5" /> Deadline
+                    </p>
                     <p className="mt-1 text-sm font-semibold text-ink-800">{opp.deadline}</p>
                   </div>
                 )}
                 {opp.stipend && (
                   <div className="rounded-xl bg-surface-soft p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Stipend</p>
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <Icon name="wallet" className="h-3.5 w-3.5" /> Stipend
+                    </p>
                     <p className="mt-1 text-sm font-semibold text-emerald-700">{opp.stipend}</p>
                   </div>
                 )}
                 {opp.duration && (
                   <div className="rounded-xl bg-surface-soft p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Duration</p>
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <Icon name="clock" className="h-3.5 w-3.5" /> Duration
+                    </p>
                     <p className="mt-1 text-sm font-semibold text-ink-800">{opp.duration}</p>
                   </div>
                 )}
                 {opp.field && (
                   <div className="rounded-xl bg-surface-soft p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Field</p>
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <Icon name="target" className="h-3.5 w-3.5" /> Field
+                    </p>
                     <p className="mt-1 text-sm font-semibold text-ink-800">{opp.field}</p>
                   </div>
                 )}
@@ -192,7 +212,9 @@ export default function OpportunityDetail({
 
               {opp.eligibility && (
                 <div className="mt-4 rounded-xl border border-surface-border bg-surface-soft p-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-ink-400">Eligibility</p>
+                  <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-400">
+                    <Icon name="info" className="h-3.5 w-3.5" /> Eligibility
+                  </p>
                   <p className="mt-1 text-sm text-ink-700">{opp.eligibility}</p>
                 </div>
               )}
@@ -204,7 +226,7 @@ export default function OpportunityDetail({
                   rel="noreferrer"
                   className="btn-primary mt-6 w-full justify-center"
                 >
-                  Apply Now <Icon name="arrow" className="h-4 w-4" />
+                  Apply Now <Icon name="external" className="h-4 w-4" />
                 </a>
               )}
 
@@ -317,7 +339,15 @@ export default function OpportunityDetail({
                           maxLength={80}
                         />
                         <button type="submit" disabled={creating} className="btn-secondary mt-3 w-full justify-center text-sm disabled:opacity-60">
-                          {creating ? "Creating…" : "Create Team"}
+                          {creating ? (
+                            <>
+                              <Icon name="loader" className="h-4 w-4 animate-spin" /> Creating…
+                            </>
+                          ) : (
+                            <>
+                              <Icon name="plus" className="h-4 w-4" /> Create Team
+                            </>
+                          )}
                         </button>
                         {createError && <p className="mt-2 text-xs font-bold text-brand-red">{createError}</p>}
                       </form>

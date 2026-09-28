@@ -63,7 +63,7 @@ const mainCategories = [
     description: "National hackathons, case challenges, and lab competitions.",
     cta: "EXPLORE COMPETITIONS",
     accent: "red",
-    icon: "target",
+    icon: "trophy",
   },
   {
     id: "research",
@@ -72,7 +72,7 @@ const mainCategories = [
     description: "Faculty lab attachments, fellowships, and academic paper co-authorship.",
     cta: "EXPLORE RESEARCH",
     accent: "blue",
-    icon: "book",
+    icon: "flask",
   },
   {
     id: "certifications",
@@ -148,14 +148,17 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
 
                       <div className="mt-6 pt-4 border-t border-surface-border flex items-center justify-between">
                         <span
-                          className={`text-xs font-black uppercase tracking-wider ${
+                          className={`inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider ${
                             isRed ? "text-brand-red" : "text-brand-blue"
                           }`}
                         >
-                          {cat.cta} →
+                          {cat.cta} <Icon name="arrow" className="h-3.5 w-3.5" />
                         </span>
-                        <div className="h-8 w-8 rounded-xl bg-surface-soft flex items-center justify-center text-ink-600 group-hover:bg-brand-blue-soft group-hover:text-brand-blue transition-colors">
-                          <Icon name="arrow" className="h-3.5 w-3.5" />
+                        <div
+                          className="h-8 w-8 rounded-xl bg-surface-soft flex items-center justify-center text-ink-600 group-hover:bg-brand-blue-soft group-hover:text-brand-blue transition-colors"
+                          aria-hidden="true"
+                        >
+                          <Icon name={cat.icon} className="h-4 w-4" />
                         </div>
                       </div>
                     </Link>
@@ -176,7 +179,7 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
                 href="/opportunities"
                 className="inline-flex items-center gap-2 text-xs font-black text-brand-blue hover:underline uppercase tracking-wider"
               >
-                ← Back to All 4 Categories
+                <Icon name="arrow-left" className="h-4 w-4" /> Back to All 4 Categories
               </Link>
               <span className="text-xs font-bold text-ink-500 uppercase tracking-wider">
                 Showing {category} listings

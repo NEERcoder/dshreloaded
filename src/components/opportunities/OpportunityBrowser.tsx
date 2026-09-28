@@ -4,6 +4,7 @@ import { SkeletonOpportunityGrid } from "../Skeleton";
 import OpportunityCard from "./OpportunityCard";
 import OpportunityDetail, { type TeamMode } from "./OpportunityDetail";
 import { getOpportunities, type OpportunityRecord } from "../../lib/dataAccess";
+import { opportunityCategoryIcon } from "../../data/opportunityCategories";
 
 export type CategoryChip = {
   id: string;
@@ -222,12 +223,13 @@ export default function OpportunityBrowser({
                 key={c.id}
                 onClick={() => setChip(c.id)}
                 aria-pressed={chip === c.id}
-                className={`rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[40px] ${
+                className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[40px] ${
                   chip === c.id
                     ? "bg-brand-blue text-white shadow-soft"
                     : "bg-white text-ink-600 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
                 }`}
               >
+                {c.category && <Icon name={opportunityCategoryIcon(c.category)} className="h-3.5 w-3.5" />}
                 {c.label}
               </button>
             ))}
@@ -250,14 +252,22 @@ export default function OpportunityBrowser({
           {controls}
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-ink-400" aria-live="polite">
-            {loading ? "Loading…" : `${filtered.length} listing${filtered.length === 1 ? "" : "s"}`}
+          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-400" aria-live="polite">
+            {loading ? (
+              <>
+                <Icon name="loader" className="h-3.5 w-3.5 animate-spin" />
+                Loading…
+              </>
+            ) : (
+              `${filtered.length} listing${filtered.length === 1 ? "" : "s"}`
+            )}
           </p>
           {filtersActive && (
             <button
               onClick={clearFilters}
-              className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[40px]"
+              className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[40px]"
             >
+              <Icon name="close" className="h-3.5 w-3.5" />
               Clear filters
             </button>
           )}
@@ -269,12 +279,14 @@ export default function OpportunityBrowser({
           <SkeletonOpportunityGrid count={6} />
         ) : error && items.length === 0 ? (
           <div className="card border-dashed p-10 text-center bg-white">
-            <p className="text-base font-bold text-ink-900">This feed needs attention</p>
+            <Icon name="alert-triangle" className="mx-auto h-8 w-8 text-brand-red" />
+            <p className="mt-3 text-base font-bold text-ink-900">This feed needs attention</p>
             <p className="mt-1 text-sm text-ink-500">{error}</p>
           </div>
         ) : items.length === 0 ? (
           <div className="card border-dashed p-10 text-center bg-white">
-            <p className="text-base font-bold text-ink-900">{emptyTitle}</p>
+            <Icon name="flag" className="mx-auto h-8 w-8 text-ink-400" />
+            <p className="mt-3 text-base font-bold text-ink-900">{emptyTitle}</p>
             <p className="mt-1 text-sm text-ink-500">{emptyDescription}</p>
           </div>
         ) : filtered.length ? (
@@ -285,7 +297,8 @@ export default function OpportunityBrowser({
           </div>
         ) : (
           <div className="card border-dashed p-10 text-center bg-white">
-            <p className="text-base font-bold text-ink-900">{noResultsTitle}</p>
+            <Icon name="filter" className="mx-auto h-8 w-8 text-ink-400" />
+            <p className="mt-3 text-base font-bold text-ink-900">{noResultsTitle}</p>
             <p className="mt-1 text-sm text-ink-500">{noResultsDescription}</p>
           </div>
         )}

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "../lib/router";
 import { getFeaturedOpportunities, type OpportunityRecord } from "../lib/dataAccess";
 import { useScrollReveal } from "../hooks/useScrollReveal";
+import { opportunityCategoryIcon } from "../data/opportunityCategories";
+import Icon from "./Icon";
 
 const CATEGORY_COLOR: Record<string, string> = {
   internship: "bg-brand-blue-soft text-brand-blue",
@@ -32,13 +34,14 @@ function TickerCard({ item }: { item: OpportunityRecord }) {
         </div>
       ) : (
         <div className="h-32 w-full bg-gradient-to-br from-brand-blue-pale to-brand-blue-soft flex items-center justify-center">
-          <span className="text-3xl opacity-30">🎯</span>
+          <Icon name={opportunityCategoryIcon(item.category)} className="h-8 w-8 opacity-30" />
         </div>
       )}
 
       {/* Content */}
       <div className="p-4">
-        <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_COLOR[item.category] ?? "bg-surface-soft text-ink-600"}`}>
+        <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_COLOR[item.category] ?? "bg-surface-soft text-ink-600"}`}>
+          <Icon name={opportunityCategoryIcon(item.category)} className="h-3 w-3" />
           {item.category}
         </span>
         <h3 className="mt-2 text-sm font-bold leading-snug text-ink-900 line-clamp-2 group-hover:text-brand-blue transition-colors">
@@ -106,9 +109,9 @@ export default function FeaturedOpportunityTicker() {
           </h2>
           <Link
             href="/opportunities"
-            className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark shrink-0"
           >
-            View all opportunities →
+            View all opportunities <Icon name="arrow" className="h-3.5 w-3.5" />
           </Link>
         </div>
         <p className="mt-2 text-sm text-ink-500">

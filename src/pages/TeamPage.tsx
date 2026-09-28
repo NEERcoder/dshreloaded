@@ -227,7 +227,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
     >
       <div className="container-px py-10 sm:py-14 max-w-3xl mx-auto">
         <Link href="/crew" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark">
-          ← Back to CREW
+          <Icon name="arrow-left" className="h-4 w-4" /> Back to CREW
         </Link>
 
         {/* Header */}
@@ -242,23 +242,33 @@ export default function TeamPage({ teamId }: { teamId: string }) {
             <span className="text-xs text-ink-400">
               {team.memberCount} member{team.memberCount !== 1 ? "s" : ""}
             </span>
-            <Link href="/field" className="text-xs font-bold text-brand-blue hover:text-brand-blue-dark">
-              Competition details on FIELD →
+            <Link href="/field" className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:text-brand-blue-dark">
+              Competition details on FIELD <Icon name="arrow" className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
 
         {/* Notifications */}
         {actionSuccess && (
-          <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 flex items-center justify-between">
-            {actionSuccess}
-            <button onClick={() => setActionSuccess(null)} className="text-xs font-bold ml-3">✕</button>
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+            <span className="inline-flex items-center gap-2">
+              <Icon name="check-circle" className="h-4 w-4 shrink-0" />
+              {actionSuccess}
+            </span>
+            <button onClick={() => setActionSuccess(null)} className="shrink-0 text-xs font-bold" aria-label="Dismiss">
+              <Icon name="close" className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
         {actionError && (
-          <div className="mt-5 rounded-xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red flex items-center justify-between">
-            {actionError}
-            <button onClick={() => setActionError(null)} className="text-xs font-bold ml-3">✕</button>
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
+            <span className="inline-flex items-center gap-2">
+              <Icon name="alert-circle" className="h-4 w-4 shrink-0" />
+              {actionError}
+            </span>
+            <button onClick={() => setActionError(null)} className="shrink-0 text-xs font-bold" aria-label="Dismiss">
+              <Icon name="close" className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
 
@@ -319,8 +329,9 @@ export default function TeamPage({ teamId }: { teamId: string }) {
               <div className="card p-6">
                 <h2 className="text-base font-extrabold text-ink-900">Join this team</h2>
                 {myRequestStatus === "pending" ? (
-                  <div className="mt-3 rounded-xl bg-brand-blue-soft px-4 py-3 text-sm font-semibold text-brand-blue">
-                    ⏳ Request sent — waiting for captain approval.
+                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-brand-blue-soft px-3 py-2 text-sm font-semibold text-brand-blue">
+                    <Icon name="clock" className="h-4 w-4 shrink-0" />
+                    Request sent — waiting for captain approval.
                   </div>
                 ) : myRequestStatus === "rejected" ? (
                   <div className="mt-3 space-y-3">

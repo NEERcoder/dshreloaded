@@ -57,3 +57,18 @@ export const opportunityCategories: OpportunityCategory[] = [
     available: false,
   },
 ];
+
+/** Glyph per listing category slug (the singular values stored on an opportunity). */
+export const OPPORTUNITY_CATEGORY_ICONS: Record<string, string> = {
+  internship: "briefcase",
+  job: "briefcase",
+  competition: "trophy",
+  research: "flask",
+  certification: "award",
+  fellowship: "graduation-cap",
+  scholarship: "gift",
+};
+
+export function opportunityCategoryIcon(category: string): string {
+  return OPPORTUNITY_CATEGORY_ICONS[category] ?? "star";
+}

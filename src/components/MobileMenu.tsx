@@ -129,19 +129,21 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
                     <Link
                       href="/dashboard"
                       onClick={onClose}
-                      className={`block px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
+                      className={`flex items-center gap-2.5 px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
                         path === "/dashboard"
                           ? "text-brand-blue bg-brand-blue-soft"
                           : "text-ink-900 hover:bg-brand-blue-soft"
                       }`}
                     >
+                      <Icon name="grid" className="h-5 w-5 shrink-0" />
                       Dashboard
                     </Link>
                     <Link
                       href={`/circle/${user.id}`}
                       onClick={onClose}
-                      className="block px-4 py-3 text-base font-semibold rounded-xl text-ink-900 transition-colors hover:bg-brand-blue-soft"
+                      className="flex items-center gap-2.5 px-4 py-3 text-base font-semibold rounded-xl text-ink-900 transition-colors hover:bg-brand-blue-soft"
                     >
+                      <Icon name="user" className="h-5 w-5 shrink-0" />
                       Profile
                     </Link>
                     <Link
@@ -165,8 +167,9 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-3 text-base font-semibold rounded-xl text-ink-600 hover:bg-surface-soft transition-colors"
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-base font-semibold rounded-xl text-ink-600 hover:bg-surface-soft transition-colors"
                     >
+                      <Icon name="logout" className="h-5 w-5 shrink-0" />
                       Logout
                     </button>
                   </div>

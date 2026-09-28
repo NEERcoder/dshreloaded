@@ -57,7 +57,7 @@ function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
                   data-cursor="join"
                   className="btn-primary py-3 px-6 text-xs sm:text-sm font-black shadow-card inline-flex items-center justify-center gap-2"
                 >
-                  CAMPUS CORRESPONDENT →
+                  CAMPUS CORRESPONDENT <Icon name="external" className="h-4 w-4" />
                 </a>
                 <span className="text-xs font-bold text-ink-400">Direct Google Form</span>
               </div>
@@ -83,7 +83,7 @@ function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
                   href="#open-roles"
                   className="btn-secondary py-3 px-6 text-xs sm:text-sm font-black shadow-card inline-flex items-center justify-center gap-2"
                 >
-                  EXPLORE OPEN ROLES →
+                  EXPLORE OPEN ROLES <Icon name="arrow" className="h-4 w-4" />
                 </a>
                 <span className="text-xs font-bold text-ink-400">
                   {openRoleCount === null
@@ -141,16 +141,16 @@ function GeneralApplication() {
             </p>
             <div className="mt-6 space-y-3 text-sm text-ink-600">
               <p className="flex items-center gap-2">
-                <span className="text-brand-blue font-bold">✓</span> Direct contact:{" "}
+                <Icon name="check" className="h-4 w-4 shrink-0 text-brand-blue" /> Direct contact:{" "}
                 <a href="mailto:connect@dusciencehub.in" className="font-bold text-brand-blue hover:underline">
                   connect@dusciencehub.in
                 </a>
               </p>
               <p className="flex items-center gap-2">
-                <span className="text-brand-blue font-bold">✓</span> No corporate cover letters required
+                <Icon name="check" className="h-4 w-4 shrink-0 text-brand-blue" /> No corporate cover letters required
               </p>
               <p className="flex items-center gap-2">
-                <span className="text-brand-blue font-bold">✓</span> Reviewed directly by founding student contributors
+                <Icon name="check" className="h-4 w-4 shrink-0 text-brand-blue" /> Reviewed directly by founding student contributors
               </p>
             </div>
           </div>
@@ -189,11 +189,20 @@ function GeneralApplication() {
               disabled={submitting}
               className="btn-primary mt-6 w-full justify-center shadow-card disabled:opacity-60"
             >
-              {submitting ? "Uploading…" : "Drop Your Profile →"}
+              {submitting ? (
+                <>
+                  <Icon name="loader" className="h-4 w-4 animate-spin" /> Uploading…
+                </>
+              ) : (
+                <>
+                  Drop Your Profile <Icon name="send" className="h-4 w-4" />
+                </>
+              )}
             </button>
 
             {message && (
-              <p className="mt-4 text-xs font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-200" role="status">
+              <p className="mt-4 inline-flex w-full items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-200" role="status">
+                <Icon name="check-circle" className="h-4 w-4 shrink-0" />
                 {message}
               </p>
             )}
@@ -370,14 +379,14 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                           rel="noopener noreferrer"
                           className="btn-primary py-2.5 px-4 text-xs font-black justify-center shadow-soft text-center min-h-[44px]"
                         >
-                          Apply via Google Form →
+                          Apply via Google Form <Icon name="external" className="h-4 w-4" />
                         </a>
                       ) : null}
                       <Link
                         href={`/join/${item.id}`}
-                        className="text-xs font-extrabold text-ink-500 hover:text-brand-blue text-center py-1 transition-colors"
+                        className="inline-flex items-center justify-center gap-1.5 text-xs font-extrabold text-ink-500 hover:text-brand-blue text-center py-1 transition-colors"
                       >
-                        View Role Details →
+                        View Role Details <Icon name="arrow" className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </div>
@@ -415,8 +424,8 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
     <PageShell title={`${role.title} | Join JAVLIN`} backgroundPreset="team">
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border">
         <div className="container-px py-14 sm:py-20">
-          <Link href="/join" className="text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider">
-            ← Back to Open Positions
+          <Link href="/join" className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider">
+            <Icon name="arrow-left" className="h-4 w-4" /> Back to Open Positions
           </Link>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span
@@ -449,7 +458,7 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
                 rel="noopener noreferrer"
                 className="btn-primary text-sm font-extrabold shadow-lift"
               >
-                Apply via Official Google Form →
+                Apply via Official Google Form <Icon name="external" className="h-4 w-4" />
               </a>
             ) : null}
           </div>
@@ -492,7 +501,7 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
               <ul className="mt-4 space-y-2.5">
                 {role.benefits.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-ink-700">
-                    <span className="mt-1 text-emerald-600 font-bold">✓</span>
+                    <Icon name="check" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -510,7 +519,7 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
                 rel="noopener noreferrer"
                 className="btn-primary mt-6 inline-flex shadow-card"
               >
-                Apply via Google Form →
+                Apply via Google Form <Icon name="external" className="h-4 w-4" />
               </a>
             )}
           </div>

@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import PageShell from "../components/PageShell";
+import Icon from "../components/Icon";
+import StarRating from "../components/StarRating";
 import {
   deleteOpportunity,
   deleteReview,
@@ -224,8 +226,8 @@ function AdminLogin() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/" className="text-xs font-bold text-ink-400 hover:text-brand-blue">
-              ← Return to JAVLIN Homepage
+            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-400 hover:text-brand-blue">
+              <Icon name="arrow-left" className="h-3.5 w-3.5" /> Return to JAVLIN Homepage
             </Link>
           </div>
         </div>
@@ -315,7 +317,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
             </p>
           </div>
           <button className="btn-ghost self-start text-xs font-bold text-ink-600 hover:text-brand-red" onClick={onSignOut}>
-            Sign out →
+            <Icon name="logout" className="h-4 w-4" /> Sign out
           </button>
         </div>
 
@@ -567,18 +569,29 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, imageUrl: "" })}
-                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-red text-white text-xs flex items-center justify-center shadow-soft"
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-red text-white flex items-center justify-center shadow-soft"
                   title="Remove image"
-                >✕</button>
+                >
+                  <Icon name="close" className="h-3 w-3" />
+                </button>
               </div>
             ) : (
-              <div className="w-40 h-28 shrink-0 rounded-xl border-2 border-dashed border-surface-border bg-surface-soft flex items-center justify-center text-xs text-ink-400">
+              <div className="w-40 h-28 shrink-0 rounded-xl border-2 border-dashed border-surface-border bg-surface-soft flex flex-col items-center justify-center gap-1 text-xs text-ink-400">
+                <Icon name="image" className="h-6 w-6" />
                 No poster
               </div>
             )}
             <div className="flex flex-col gap-2">
               <label className={`btn-ghost cursor-pointer text-xs ${posterUploading ? "opacity-60 pointer-events-none" : ""}`}>
-                {posterUploading ? "Uploading…" : form.imageUrl ? "Replace Poster" : "Upload Poster"}
+                {posterUploading ? (
+                  <>
+                    <Icon name="loader" className="h-4 w-4 animate-spin" /> Uploading…
+                  </>
+                ) : (
+                  <>
+                    <Icon name="upload" className="h-4 w-4" /> {form.imageUrl ? "Replace Poster" : "Upload Poster"}
+                  </>
+                )}
                 <input type="file" accept="image/*" className="sr-only" onChange={handlePosterUpload} disabled={posterUploading} />
               </label>
               <p className="text-xs text-ink-400">Or paste a URL below</p>
@@ -658,14 +671,14 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.status === "published" ? "bg-brand-red-soft text-brand-red" : "bg-surface-border text-ink-500"}`}>
                   {item.status}
                 </span>
-                {item.featured && <span className="text-xs font-bold text-brand-red">★ Featured</span>}
+                {item.featured && <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-red"><Icon name="star" className="h-3 w-3" fill="currentColor" /> Featured</span>}
               </div>
               <h3 className="mt-2 font-bold text-ink-900">{item.title}</h3>
               <p className="text-sm text-ink-500">{item.organization} · {item.location || "Remote"}</p>
             </div>
             <div className="flex gap-2">
-              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}>Edit</button>
-              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}>Delete</button>
+              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}><Icon name="pen" className="h-3.5 w-3.5" /> Edit</button>
+              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}><Icon name="trash" className="h-3.5 w-3.5" /> Delete</button>
             </div>
           </div>
         ))}
@@ -714,8 +727,12 @@ function ReviewManager({ reviews, onUpdated }: { reviews: ReviewRecord[]; onUpda
                       {review.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-ink-400">
-                    {review.collegeName || review.collegeId} · {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)} · {new Date(review.createdAt).toLocaleDateString()}
+                  <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-ink-400">
+                    <span>{review.collegeName || review.collegeId}</span>
+                    <span aria-hidden="true">·</span>
+                    <StarRating value={review.rating} className="text-brand-red" starClassName="h-3 w-3" />
+                    <span aria-hidden="true">·</span>
+                    <span>{new Date(review.createdAt).toLocaleDateString()}</span>
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-ink-600">{review.review}</p>
                 </div>
@@ -914,8 +931,8 @@ function MentorManager({
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}>Edit</button>
-              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}>Delete</button>
+              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}><Icon name="pen" className="h-3.5 w-3.5" /> Edit</button>
+              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}><Icon name="trash" className="h-3.5 w-3.5" /> Delete</button>
             </div>
           </div>
         ))}
@@ -1102,15 +1119,15 @@ function VideoManager({
                 <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${item.active ? "bg-brand-blue-soft text-brand-blue" : "bg-surface-border text-ink-500"}`}>
                   {item.active ? "Active" : "Inactive"}
                 </span>
-                {item.featured && <span className="text-xs font-bold text-brand-red">★ Featured</span>}
+                {item.featured && <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-red"><Icon name="star" className="h-3 w-3" fill="currentColor" /> Featured</span>}
                 {item.college && <span className="text-xs font-semibold text-ink-600">College: {item.college}</span>}
               </div>
               <h3 className="mt-2 font-bold text-ink-900">{item.title}</h3>
               {item.duration && <p className="text-xs text-ink-400">Duration: {item.duration} · Sort Order: {item.sortOrder}</p>}
             </div>
             <div className="flex gap-2">
-              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}>Edit</button>
-              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}>Delete</button>
+              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}><Icon name="pen" className="h-3.5 w-3.5" /> Edit</button>
+              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}><Icon name="trash" className="h-3.5 w-3.5" /> Delete</button>
             </div>
           </div>
         ))}
@@ -1255,8 +1272,8 @@ function TeamRoleManager({ roles, onSaved }: { roles: TeamRoleRecord[]; onSaved:
               <p className="mt-1 text-sm text-ink-500">{item.shortDescription}</p>
             </div>
             <div className="flex gap-2">
-              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}>Edit</button>
-              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}>Delete</button>
+              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}><Icon name="pen" className="h-3.5 w-3.5" /> Edit</button>
+              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}><Icon name="trash" className="h-3.5 w-3.5" /> Delete</button>
             </div>
           </div>
         ))}
@@ -1351,8 +1368,8 @@ function TeamMemberManager({ members, onSaved }: { members: TeamMemberRecord[]; 
               <p className="text-sm text-ink-500">{item.role}{item.college ? ` · ${item.college}` : ""}</p>
             </div>
             <div className="flex gap-2">
-              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}>Edit</button>
-              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}>Delete</button>
+              <button className="btn-ghost px-3 py-2 text-xs" onClick={() => startEdit(item)}><Icon name="pen" className="h-3.5 w-3.5" /> Edit</button>
+              <button className="btn-ghost px-3 py-2 text-xs text-brand-red" onClick={() => remove(item.id)}><Icon name="trash" className="h-3.5 w-3.5" /> Delete</button>
             </div>
           </div>
         ))}

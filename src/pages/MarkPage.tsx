@@ -322,9 +322,9 @@ export default function MarkPage() {
                           </div>
                           <Link
                             href={`/teams/${entry.teamId}`}
-                            className="shrink-0 text-xs font-bold text-brand-blue hover:text-brand-blue-dark"
+                            className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-brand-blue hover:text-brand-blue-dark"
                           >
-                            View →
+                            View <Icon name="arrow" className="h-3.5 w-3.5" />
                           </Link>
                         </div>
                       </li>

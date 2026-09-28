@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import PageShell from "../components/PageShell";
+import Icon from "../components/Icon";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
@@ -132,8 +133,8 @@ export default function LoginPage() {
           </p>
 
           <div className="mt-4 text-center">
-            <Link href="/" className="text-xs font-bold text-ink-400 hover:text-brand-blue">
-              ← Return to JAVLIN Homepage
+            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-400 hover:text-brand-blue">
+              <Icon name="arrow-left" className="h-3.5 w-3.5" /> Return to JAVLIN Homepage
             </Link>
           </div>
         </div>
