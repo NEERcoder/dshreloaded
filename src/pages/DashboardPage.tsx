@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
+import { useUnreadNotificationCount } from "../components/NotificationBell";
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation } from "../lib/router";
 import {
@@ -8,10 +9,12 @@ import {
   createProfile,
   updateProfile,
   getMyCompetitionTeams,
+  getConnectionSummary,
   type CollegeRecord,
   type ProfileRecord,
   type ProfileInput,
   type CompetitionTeamRecord,
+  type ConnectionSummary,
 } from "../lib/dataAccess";
 
 const GENDER_OPTIONS = ["Female", "Male", "Non-binary", "Prefer not to say"];
@@ -42,6 +45,7 @@ function yearLabel(y: number): string {
 export default function DashboardPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { navigate } = useLocation();
+  const unreadNotifications = useUnreadNotificationCount();
 
   const currentYear = new Date().getFullYear();
   const graduationYearOptions = useMemo(
@@ -54,6 +58,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [myTeams, setMyTeams] = useState<CompetitionTeamRecord[]>([]);
+  const [connectionSummary, setConnectionSummary] = useState<ConnectionSummary | null>(null);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
@@ -71,13 +76,19 @@ export default function DashboardPage() {
   async function loadData() {
     setDataLoading(true);
     setLoadError(null);
-    const [collegesResult, profileResult, teamsResult] = await Promise.all([
+    const [collegesResult, profileResult, teamsResult, connectionsResult] = await Promise.all([
       getColleges(),
       getCurrentUserProfile(),
       getMyCompetitionTeams(),
+      getConnectionSummary(),
     ]);
     setColleges(collegesResult.data);
     setMyTeams(teamsResult.data ?? []);
+    // Connections are optional context: if the backend can't answer, the
+    // dashboard renders without the section instead of failing.
+    setConnectionSummary(
+      connectionsResult.error || !connectionsResult.configured ? null : connectionsResult.data
+    );
 
     if (profileResult.error) {
       setLoadError(profileResult.error);
@@ -212,7 +223,7 @@ export default function DashboardPage() {
   // Auth still resolving, or we're about to redirect a logged-out visitor.
   if (authLoading || !user) {
     return (
-      <PageShell title="Dashboard | DU Science Hub" backgroundPreset="explore">
+      <PageShell title="Dashboard | JAVLIN" backgroundPreset="explore">
         <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading your dashboard…
         </div>
@@ -222,8 +233,8 @@ export default function DashboardPage() {
 
   return (
     <PageShell
-      title="Dashboard | DU Science Hub"
-      description="Manage your DU Science Hub student profile."
+      title="Dashboard | JAVLIN"
+      description="Manage your JAVLIN student profile."
       backgroundPreset="explore"
     >
       <div className="container-px py-10 sm:py-14">
@@ -447,8 +458,8 @@ export default function DashboardPage() {
           ) : myTeams.length === 0 ? (
             <div className="mt-4 card p-6 text-center border-dashed">
               <p className="text-sm font-semibold text-ink-500">You haven't joined a competition team yet.</p>
-              <Link href="/opportunities" className="btn-secondary mt-4 inline-flex text-sm">
-                Explore Competitions
+              <Link href="/crew" className="btn-secondary mt-4 inline-flex text-sm">
+                Find a Crew on CREW
               </Link>
             </div>
           ) : (
@@ -478,6 +489,42 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* CONNECTIONS — compact summary, only when the backend can answer */}
+        {!dataLoading && connectionSummary && (
+          <div className="mt-10 max-w-2xl">
+            <div className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-extrabold text-ink-900">Connections</h2>
+                <p className="mt-1 text-sm font-semibold text-ink-500">
+                  {connectionSummary.connections} connection{connectionSummary.connections === 1 ? "" : "s"}
+                  {connectionSummary.incomingPending > 0 && (
+                    <span className="text-brand-red">
+                      {" · "}
+                      {connectionSummary.incomingPending} request
+                      {connectionSummary.incomingPending === 1 ? "" : "s"} waiting
+                    </span>
+                  )}
+                </p>
+                {unreadNotifications > 0 && (
+                  <p className="mt-1 text-xs font-bold text-brand-blue">
+                    {unreadNotifications} unread notification{unreadNotifications === 1 ? "" : "s"}
+                  </p>
+                )}
+              </div>
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {unreadNotifications > 0 && (
+                  <Link href="/notifications" className="btn-secondary text-xs">
+                    View notifications
+                  </Link>
+                )}
+                <Link href="/circle/connections" className="btn-outline-blue text-xs">
+                  View connections
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </PageShell>
   );

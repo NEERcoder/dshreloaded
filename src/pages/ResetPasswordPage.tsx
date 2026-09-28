@@ -122,8 +122,8 @@ export default function ResetPasswordPage() {
 
   return (
     <PageShell
-      title="Reset password | DU Science Hub"
-      description="Reset the password for your DU Science Hub student account."
+      title="Reset password | JAVLIN"
+      description="Reset the password for your JAVLIN student account."
       backgroundPreset="explore"
     >
       <section className="container-px py-16 sm:py-24">
@@ -215,7 +215,7 @@ export default function ResetPasswordPage() {
                 Set a new password.
               </h1>
               <p className="mt-3 text-sm leading-relaxed text-ink-500">
-                Choose a new password for your DU Science Hub account.
+                Choose a new password for your JAVLIN account.
               </p>
 
               {updateSuccess ? (

@@ -18,7 +18,7 @@ export type RoleCardData = {
 };
 
 /**
- * Central application URL mapping for DU Science Hub team positions.
+ * Central application URL mapping for JAVLIN team positions.
  * Updates here automatically reflect across all role cards and detail views.
  */
 export const roleApplicationUrls: Record<string, string> = {

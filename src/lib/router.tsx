@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode, type MouseEvent } from "react";
+import { smoothScrollToElement } from "./motion";
 
 type RouterContextType = {
   path: string;
@@ -61,9 +62,22 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
       e.button !== 0 ||
       props.target === "_blank" ||
       href.startsWith("http") ||
-      href.startsWith("mailto:") ||
-      href.startsWith("#")
+      href.startsWith("mailto:")
     ) {
+      onClick?.(e);
+      return;
+    }
+
+    // Same-page hash links: scroll explicitly (native fragment scrolling is unreliable here)
+    if (href.startsWith("#")) {
+      const el = document.getElementById(href.slice(1));
+      if (el) {
+        e.preventDefault();
+        onClick?.(e);
+        window.history.pushState(null, "", href);
+        smoothScrollToElement(el);
+        return;
+      }
       onClick?.(e);
       return;
     }
@@ -71,12 +85,12 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
     e.preventDefault();
     onClick?.(e);
 
-    // Handle hash links on same page
+    // Handle path#hash links on same page
     if (href.includes("#") && href.startsWith(window.location.pathname)) {
       const hash = href.split("#")[1];
       const el = document.getElementById(hash);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
+        smoothScrollToElement(el);
         return;
       }
     }

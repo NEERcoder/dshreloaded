@@ -5,14 +5,31 @@ import CustomCursor from "./components/CustomCursor";
 import PageTransition from "./components/PageTransition";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import HomeChoices from "./components/HomeChoices";
 import FeaturedOpportunityTicker from "./components/FeaturedOpportunityTicker";
 import Footer from "./components/Footer";
 import InteractiveDotGrid from "./components/InteractiveDotGrid";
+import AimPreview from "./components/home/AimPreview";
+import FieldPreview from "./components/home/FieldPreview";
+import CrewPreview from "./components/home/CrewPreview";
+import CirclePreview from "./components/home/CirclePreview";
+import MarkPreview from "./components/home/MarkPreview";
+import PulsePreview from "./components/home/PulsePreview";
+import ReviewsPreview from "./components/home/ReviewsPreview";
+import JoinPreview from "./components/home/JoinPreview";
 import ExplorePage from "./pages/ExplorePage";
 import CollegePage from "./pages/CollegePage";
 import JoinPage from "./pages/JoinPage";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
+import AimPage from "./pages/AimPage";
+import FieldPage from "./pages/FieldPage";
+import CrewPage from "./pages/CrewPage";
+import CirclePage from "./pages/CirclePage";
+import ConnectionsPage from "./pages/ConnectionsPage";
+import StudentProfilePage from "./pages/StudentProfilePage";
+import MarkPage from "./pages/MarkPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import PulsePage from "./pages/PulsePage";
+import CollegeReviewsPage from "./pages/CollegeReviewsPage";
 import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -20,7 +37,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import TeamPage from "./pages/TeamPage";
 
-function DuScienceHubHome() {
+function JavlinHome() {
   return (
     <div className="relative min-h-screen isolate">
       {/* Signature Living Background */}
@@ -28,14 +45,21 @@ function DuScienceHubHome() {
       <div className="relative z-10 flex flex-col min-h-screen justify-between">
         <Navbar />
         <main className="flex-1">
-          {/* 1. SIMPLE HERO — THE FRONT DOOR */}
+          {/* 1. HERO — THE FRONT DOOR */}
           <Hero />
 
           {/* 2. FEATURED OPPORTUNITIES — LEAD WITH OPPORTUNITIES */}
           <FeaturedOpportunityTicker />
 
-          {/* 3. HOME CHOICES — Opportunities primary, Explore secondary, Join compact */}
-          <HomeChoices />
+          {/* 3. LAUNCHPAD — compact glimpse of every major area */}
+          <AimPreview />
+          <FieldPreview />
+          <CrewPreview />
+          <CirclePreview />
+          <MarkPreview />
+          <PulsePreview />
+          <ReviewsPreview />
+          <JoinPreview />
         </main>
         <Footer />
       </div>
@@ -49,6 +73,17 @@ function AppRouter() {
   let page: React.ReactNode;
 
   if (path === "/dot-grid") page = <InteractiveDotGrid />;
+  else if (path === "/aim") page = <AimPage />;
+  else if (path === "/field") page = <FieldPage />;
+  else if (path === "/crew") page = <CrewPage />;
+  else if (path === "/circle") page = <CirclePage />;
+  // Before the /circle/:id match, or "connections" is read as a user id.
+  else if (path === "/circle/connections") page = <ConnectionsPage />;
+  else if (path.startsWith("/circle/")) page = <StudentProfilePage userId={path.replace("/circle/", "").replace(/\/$/, "")} />;
+  else if (path === "/mark") page = <MarkPage />;
+  else if (path === "/notifications") page = <NotificationsPage />;
+  else if (path === "/pulse") page = <PulsePage />;
+  else if (path === "/college-reviews") page = <CollegeReviewsPage />;
   else if (path === "/explore") page = <ExplorePage />;
   else if (path.startsWith("/explore/")) page = <CollegePage slug={path.replace("/explore/", "").replace(/\/$/, "")} />;
   else if (path === "/join") page = <JoinPage />;
@@ -62,7 +97,7 @@ function AppRouter() {
   else if (path === "/reset-password") page = <ResetPasswordPage />;
   else if (path === "/dashboard") page = <DashboardPage />;
   else if (path.startsWith("/teams/")) page = <TeamPage teamId={path.replace("/teams/", "").replace(/\/$/, "")} />;
-  else page = <DuScienceHubHome />;
+  else page = <JavlinHome />;
 
   return <PageTransition>{page}</PageTransition>;
 }

@@ -164,7 +164,7 @@ export default function SignupPage() {
 
   if (needsManualLogin) {
     return (
-      <PageShell title="Account created | DU Science Hub" backgroundPreset="explore">
+      <PageShell title="Account created | JAVLIN" backgroundPreset="explore">
         <section className="container-px py-16 sm:py-24">
           <div className="mx-auto max-w-md text-center animate-fade-up">
             <span className="inline-block rounded-full bg-brand-blue-soft px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-blue">
@@ -187,7 +187,7 @@ export default function SignupPage() {
 
   if (profileError) {
     return (
-      <PageShell title="Almost done | DU Science Hub" backgroundPreset="explore">
+      <PageShell title="Almost done | JAVLIN" backgroundPreset="explore">
         <section className="container-px py-16 sm:py-24">
           <div className="mx-auto max-w-md text-center animate-fade-up">
             <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red">
@@ -223,8 +223,8 @@ export default function SignupPage() {
 
   return (
     <PageShell
-      title="Create your account | DU Science Hub"
-      description="Create a DU Science Hub student account."
+      title="Create your account | JAVLIN"
+      description="Create a JAVLIN student account."
       backgroundPreset="explore"
     >
       <section className="container-px py-16 sm:py-24">
@@ -417,7 +417,7 @@ export default function SignupPage() {
 
           <div className="mt-4 text-center">
             <Link href="/" className="text-xs font-bold text-ink-400 hover:text-brand-blue">
-              ← Return to DU Science Hub Homepage
+              ← Return to JAVLIN Homepage
             </Link>
           </div>
         </div>

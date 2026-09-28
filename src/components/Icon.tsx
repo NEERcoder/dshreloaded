@@ -136,6 +136,12 @@ const paths: Record<string, JSX.Element> = {
       <path d="M4 6h16M7 12h10M10 18h4" />
     </>
   ),
+  bell: (
+    <>
+      <path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.5 6 1.5 6h-15S6 13.5 6 9" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
+    </>
+  ),
 };
 
 export default function Icon({ name, ...props }: IconProps) {

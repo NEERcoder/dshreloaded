@@ -1,5 +1,6 @@
 import { Link } from "../lib/router";
 import { useScrollReveal } from "../hooks/useScrollReveal";
+import BrandMark from "./BrandMark";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -8,20 +9,14 @@ export default function Footer() {
   return (
     <footer
       ref={ref}
-      className={`mt-20 border-t border-surface-border bg-surface-soft elephant-watermark reveal-stagger ${
+      className={`mt-20 border-t border-surface-border bg-surface-soft reveal-stagger ${
         isVisible ? "is-visible" : ""
       }`}
     >
       <div className="container-px py-12 sm:py-16 relative z-10">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2 max-w-sm">
-            <img
-              src="/DSH_OFFICIAL_LOGO.png"
-              alt="DU Science Hub"
-              className="h-10 w-auto max-w-[11rem] object-contain mb-4"
-              width={506}
-              height={229}
-            />
+            <BrandMark className="h-12 w-auto block mb-4" />
             <p className="text-sm text-ink-500 leading-relaxed">
               A student-powered platform for discovering Delhi University, learning from seniors
               and finding opportunities that help you move forward.
@@ -29,12 +24,17 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-ink-400 mb-4">Navigation</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-400 mb-4">Explore JAVLIN</p>
             <ul className="space-y-2.5">
               {[
-                { label: "Explore DU", href: "/explore" },
+                { label: "AIM", href: "/aim" },
+                { label: "FIELD", href: "/field" },
+                { label: "CREW", href: "/crew" },
+                { label: "CIRCLE", href: "/circle" },
+                { label: "MARK", href: "/mark" },
+                { label: "PULSE", href: "/pulse" },
+                { label: "College Reviews", href: "/college-reviews" },
                 { label: "Join Our Team", href: "/join" },
-                { label: "Opportunities", href: "/opportunities" },
               ].map((l) => (
                 <li key={l.label}>
                   <Link href={l.href} className="text-sm text-ink-700 hover:text-brand-blue transition-colors">
@@ -61,7 +61,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-ink-400">© {year} DU Science Hub</p>
+          <p className="text-xs text-ink-400">© {year} JAVLIN</p>
           <p className="text-xs text-ink-400">Built by students, for students.</p>
         </div>
       </div>

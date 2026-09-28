@@ -11,6 +11,27 @@ import {
   type OpportunityInput,
 } from "./localProvider";
 
+import {
+  assembleConnections,
+  buildConnectionMap,
+  mapConnectionRow,
+  peerUserIdOf,
+  stateOf,
+  summarise,
+  type ConnectionItem,
+  type ConnectionRef,
+  type ConnectionRow,
+  type ConnectionSummary,
+} from "./connections";
+
+import {
+  assembleNotifications,
+  mapNotificationRow,
+  type NotificationRecord,
+  type NotificationRow,
+  type NotificationType,
+} from "./notifications";
+
 export type {
   CollegeRecord,
   ReviewRecord,
@@ -20,6 +41,11 @@ export type {
   TeamRoleRecord,
   OpportunityRecord,
   OpportunityInput,
+  ConnectionRef,
+  ConnectionItem,
+  ConnectionSummary,
+  NotificationRecord,
+  NotificationType,
 };
 
 export type DataResult<T> = { data: T; error: string | null; configured: boolean };
@@ -50,6 +76,17 @@ export type ProfileInput = {
   yearOfStudy: number;
   graduationYear: number;
   gender: string;
+};
+
+/** A CIRCLE directory entry — the discovery-safe projection of public.profiles. */
+export type StudentProfileRecord = {
+  userId: string;
+  fullName: string;
+  collegeId: string;
+  collegeName: string;
+  course: string;
+  yearOfStudy: number;
+  graduationYear: number;
 };
 
 const localSuccess = <T>(data: T): DataResult<T> => ({
@@ -720,11 +757,12 @@ export async function getOpportunities(category?: OpportunityRecord["category"])
       let query = supabase.from("opportunities").select("*").eq("status", "published").order("featured", { ascending: false }).order("deadline");
       if (category) query = query.eq("category", category);
       const result = await query;
-      if (!result.error && result.data && result.data.length > 0) {
-        return remoteSuccess(result.data.map(mapOpportunity));
-      }
-    } catch {
-      // fallback to local
+      // A configured backend is authoritative — an empty feed stays empty rather
+      // than surfacing the local development seeds as if they were real listings.
+      if (result.error) return failure([], result.error);
+      return remoteSuccess((result.data || []).map(mapOpportunity));
+    } catch (err) {
+      return failure([], err);
     }
   }
   const localOpportunities = await LocalProvider.getOpportunities(category);
@@ -735,11 +773,10 @@ export async function getOpportunityById(id: string): Promise<DataResult<Opportu
   if (supabase) {
     try {
       const result = await supabase.from("opportunities").select("*").eq("id", id).maybeSingle();
-      if (!result.error && result.data) {
-        return remoteSuccess(mapOpportunity(result.data));
-      }
-    } catch {
-      // fallback to local
+      if (result.error) return failure(null, result.error);
+      return remoteSuccess(result.data ? mapOpportunity(result.data) : null);
+    } catch (err) {
+      return failure(null, err);
     }
   }
   const localOpp = await LocalProvider.getOpportunityById(id);
@@ -1736,10 +1773,69 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
   }
 }
 
+// ==========================================
+// CIRCLE — STUDENT DIRECTORY
+// ------------------------------------------
+// The directory projects public.profiles onto the columns that student
+// discovery actually needs. Two deliberate omissions:
+//   * gender — stored for college reporting, never intended for discovery;
+//   * email / auth metadata — profiles is keyed by user_id, and auth.users
+//     is never queried from the client.
+// Row visibility stays with RLS ("Authenticated users can read profiles"),
+// so this list is a projection, not a security boundary.
+const DIRECTORY_COLUMNS =
+  "user_id, full_name, college_id, course, year_of_study, graduation_year, colleges(name)";
+
+const mapStudent = (row: Record<string, unknown>): StudentProfileRecord => ({
+  userId: String(row.user_id),
+  fullName: String(row.full_name ?? ""),
+  collegeId: row.college_id ? String(row.college_id) : "",
+  collegeName:
+    (row.colleges as { name?: string } | null)?.name ??
+    (Array.isArray(row.colleges) ? String((row.colleges as Array<{ name?: string }>)[0]?.name ?? "") : ""),
+  course: String(row.course ?? ""),
+  yearOfStudy: Number(row.year_of_study ?? 0),
+  graduationYear: Number(row.graduation_year ?? 0),
+});
+
+export async function getStudentDirectory(limit = 240): Promise<DataResult<StudentProfileRecord[]>> {
+  if (!supabase || !isSupabaseConfigured) return remoteSuccess([]);
+  try {
+    // One query, college names resolved through the existing FK embed — a
+    // per-student college lookup would turn the grid into an N+1.
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(DIRECTORY_COLUMNS)
+      .order("full_name", { ascending: true })
+      .limit(limit);
+    if (error) return failure([], error);
+    return remoteSuccess((data || []).map((row) => mapStudent(row as Record<string, unknown>)));
+  } catch (err) {
+    return failure([], err);
+  }
+}
+
+export async function getStudentProfile(userId: string): Promise<DataResult<StudentProfileRecord | null>> {
+  if (!supabase || !isSupabaseConfigured) return remoteSuccess(null);
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(DIRECTORY_COLUMNS)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) return failure(null, error);
+    if (!data) return remoteSuccess(null);
+    return remoteSuccess(mapStudent(data as Record<string, unknown>));
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
 export async function updateProfile(input: ProfileInput): Promise<DataResult<ProfileRecord | null>> {
   if (!supabase || !isSupabaseConfigured) {
     return failure(null, new Error("Supabase authentication is not configured."));
   }
+
   try {
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
     const user = userRes?.user;
@@ -1813,4 +1909,346 @@ export async function isCurrentUserAdmin(): Promise<DataResult<boolean>> {
   } catch (err) {
     return failure(false, err);
   }
+}
+
+// ==========================================
+// CONNECTIONS — STUDENT SOCIAL GRAPH
+// ==========================================
+// public.student_connections (migration 005) is the only source of truth for
+// relationships, and it is reachable only with an authenticated session.
+// There is deliberately no LocalProvider fallback here: seeded or invented
+// friendships would look like a real social graph, so an unconfigured backend
+// reads as "no connections" and every write fails loudly instead.
+const CONNECTION_COLUMNS = "id, requester_user_id, recipient_user_id, status, created_at";
+
+// Peer ids reach PostgREST filter *strings*, so anything that isn't a uuid is
+// rejected before interpolation instead of being smuggled into the query.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
+async function requireSessionUserId(): Promise<string | null> {
+  if (!supabase || !isSupabaseConfigured) return null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Every row a student can touch is a row they are a participant in. */
+async function getMyConnectionRows(userId: string): Promise<{ rows: ConnectionRow[]; error: string | null }> {
+  if (!supabase) return { rows: [], error: "Supabase is not configured." };
+  const { data, error } = await supabase
+    .from("student_connections")
+    .select(CONNECTION_COLUMNS)
+    .or(`requester_user_id.eq.${userId},recipient_user_id.eq.${userId}`);
+  if (error) return { rows: [], error: error.message };
+  return { rows: (data || []).map((row) => mapConnectionRow(row as Record<string, unknown>)), error: null };
+}
+
+async function findPairRow(userId: string, targetUserId: string): Promise<ConnectionRow | null> {
+  if (!supabase || !isUuid(targetUserId)) return null;
+  const { data, error } = await supabase
+    .from("student_connections")
+    .select(CONNECTION_COLUMNS)
+    .or(
+      `and(requester_user_id.eq.${userId},recipient_user_id.eq.${targetUserId}),` +
+        `and(recipient_user_id.eq.${userId},requester_user_id.eq.${targetUserId})`
+    )
+    .maybeSingle();
+  if (error || !data) return null;
+  return mapConnectionRow(data as Record<string, unknown>);
+}
+
+async function getPeerProfiles(
+  userIds: string[]
+): Promise<{ profiles: StudentProfileRecord[]; error: string | null }> {
+  if (!supabase || userIds.length === 0) return { profiles: [], error: null };
+  // One profiles query for the whole list — the directory projection already
+  // carries college names through the existing FK embed.
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(DIRECTORY_COLUMNS)
+    .in("user_id", userIds);
+  if (error) return { profiles: [], error: error.message };
+  return { profiles: (data || []).map((row) => mapStudent(row as Record<string, unknown>)), error: null };
+}
+
+async function listConnectionsByState(
+  userId: string,
+  wanted: ConnectionRef["state"][]
+): Promise<DataResult<ConnectionItem[]>> {
+  const mine = await getMyConnectionRows(userId);
+  if (mine.error) return failure([], new Error(mine.error));
+
+  const rows = mine.rows.filter((row) => {
+    const state = stateOf(row, userId);
+    return state !== null && wanted.includes(state);
+  });
+  if (rows.length === 0) return remoteSuccess([]);
+
+  const peerIds = rows.map((row) => peerUserIdOf(row, userId)).filter((id): id is string => Boolean(id));
+  const peers = await getPeerProfiles(peerIds);
+  if (peers.error) return failure([], new Error(peers.error));
+
+  return remoteSuccess(assembleConnections(rows, peers.profiles, userId));
+}
+
+export async function getMyConnections(): Promise<DataResult<ConnectionItem[]>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure([], new Error("You must be signed in to see your connections."));
+  return listConnectionsByState(userId, ["accepted"]);
+}
+
+export async function getMyPendingRequests(): Promise<DataResult<ConnectionItem[]>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure([], new Error("You must be signed in to see your requests."));
+  return listConnectionsByState(userId, ["incoming_pending"]);
+}
+
+export async function getMySentRequests(): Promise<DataResult<ConnectionItem[]>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure([], new Error("You must be signed in to see your requests."));
+  return listConnectionsByState(userId, ["outgoing_pending"]);
+}
+
+/** peer user id -> relationship, for badges across the directory. */
+export async function getConnectionStates(): Promise<DataResult<Record<string, ConnectionRef>>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return remoteSuccess({});
+  const mine = await getMyConnectionRows(userId);
+  if (mine.error) return failure({}, new Error(mine.error));
+  return remoteSuccess(buildConnectionMap(mine.rows, userId));
+}
+
+export async function getConnectionSummary(): Promise<DataResult<ConnectionSummary>> {
+  const empty: ConnectionSummary = { connections: 0, incomingPending: 0, outgoingPending: 0 };
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(empty, new Error("You must be signed in."));
+  const mine = await getMyConnectionRows(userId);
+  if (mine.error) return failure(empty, new Error(mine.error));
+  return remoteSuccess(summarise(mine.rows, userId));
+}
+
+export async function getConnectionStatus(targetUserId: string): Promise<DataResult<ConnectionRef | null>> {
+  const userId = await requireSessionUserId();
+  if (!userId || userId === targetUserId) return remoteSuccess(null);
+  const row = await findPairRow(userId, targetUserId);
+  if (!row) return remoteSuccess(null);
+  return remoteSuccess(buildConnectionMap([row], userId)[targetUserId] ?? null);
+}
+
+export type ConnectionRequestResult = {
+  status: "sent" | "already_pending" | "incoming_request" | "already_connected";
+};
+
+export async function sendConnectionRequest(
+  targetUserId: string
+): Promise<DataResult<ConnectionRequestResult | null>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("Connections need an authenticated Supabase backend."));
+  }
+
+  try {
+    const userId = await requireSessionUserId();
+    if (!userId) return failure(null, new Error("You must be signed in."));
+    if (userId === targetUserId) return failure(null, new Error("You can't connect with yourself."));
+    if (!isUuid(targetUserId)) return failure(null, new Error("That student profile isn't reachable."));
+
+    const existing = await findPairRow(userId, targetUserId);
+    if (existing) {
+      const state = stateOf(existing, userId);
+      if (state === "accepted") return remoteSuccess({ status: "already_connected" });
+      if (state === "outgoing_pending") return remoteSuccess({ status: "already_pending" });
+      if (state === "incoming_pending") return remoteSuccess({ status: "incoming_request" });
+    }
+
+    const { error } = await supabase.from("student_connections").insert({
+      requester_user_id: userId,
+      recipient_user_id: targetUserId,
+      status: "pending",
+    });
+
+    if (error) {
+      // 23505: the canonical pair index already holds this pair — someone
+      // acted on the same relationship a moment before us.
+      if (error.code === "23505") return remoteSuccess({ status: "already_pending" });
+      return failure(null, error);
+    }
+    return remoteSuccess({ status: "sent" });
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
+async function loadOwnConnection(
+  connectionId: string
+): Promise<{ row: ConnectionRow; userId: string } | { error: string }> {
+  if (!supabase || !isSupabaseConfigured) return { error: "Connections need an authenticated Supabase backend." };
+  const userId = await requireSessionUserId();
+  if (!userId) return { error: "You must be signed in." };
+
+  const { data, error } = await supabase
+    .from("student_connections")
+    .select(CONNECTION_COLUMNS)
+    .eq("id", connectionId)
+    .maybeSingle();
+  if (error) return { error: error.message };
+  if (!data) return { error: "That connection no longer exists." };
+
+  const row = mapConnectionRow(data as Record<string, unknown>);
+  if (row.requesterUserId !== userId && row.recipientUserId !== userId) {
+    return { error: "You can only change your own connections." };
+  }
+  return { row, userId };
+}
+
+async function deleteConnectionRow(connectionId: string): Promise<DataResult<boolean>> {
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+  const { error } = await supabase.from("student_connections").delete().eq("id", connectionId);
+  if (error) return failure(false, error);
+  return remoteSuccess(true);
+}
+
+export async function acceptConnectionRequest(connectionId: string): Promise<DataResult<boolean>> {
+  const found = await loadOwnConnection(connectionId);
+  if ("error" in found) return failure(false, new Error(found.error));
+  if (found.row.recipientUserId !== found.userId) {
+    return failure(false, new Error("Only the student who received this request can accept it."));
+  }
+  if (found.row.status !== "pending") {
+    return failure(false, new Error("This request has already been handled."));
+  }
+
+  const { data, error } = await supabase!
+    .from("student_connections")
+    .update({ status: "accepted" })
+    .eq("id", connectionId)
+    .eq("status", "pending")
+    .select("id");
+  if (error) return failure(false, error);
+  if (!data || data.length === 0) return failure(false, new Error("This request has already been handled."));
+  return remoteSuccess(true);
+}
+
+export async function rejectConnectionRequest(connectionId: string): Promise<DataResult<boolean>> {
+  const found = await loadOwnConnection(connectionId);
+  if ("error" in found) return failure(false, new Error(found.error));
+  if (found.row.recipientUserId !== found.userId) {
+    return failure(false, new Error("Only the student who received this request can reject it."));
+  }
+  if (found.row.status !== "pending") {
+    return failure(false, new Error("This request has already been handled."));
+  }
+  return deleteConnectionRow(connectionId);
+}
+
+export async function cancelConnectionRequest(connectionId: string): Promise<DataResult<boolean>> {
+  const found = await loadOwnConnection(connectionId);
+  if ("error" in found) return failure(false, new Error(found.error));
+  if (found.row.requesterUserId !== found.userId) {
+    return failure(false, new Error("Only the student who sent this request can cancel it."));
+  }
+  if (found.row.status !== "pending") {
+    return failure(false, new Error("Only a pending request can be cancelled."));
+  }
+  return deleteConnectionRow(connectionId);
+}
+
+export async function removeConnection(connectionId: string): Promise<DataResult<boolean>> {
+  const found = await loadOwnConnection(connectionId);
+  if ("error" in found) return failure(false, new Error(found.error));
+  if (found.row.status !== "accepted") {
+    return failure(false, new Error("Use cancel or reject for a pending request."));
+  }
+  return deleteConnectionRow(connectionId);
+}
+
+// ==========================================
+// NOTIFICATIONS — CONNECTION ACTIVITY
+// ==========================================
+// Rows in public.student_notifications (migration 006) are written by database
+// triggers on the connection table, never by a client, so these readers only
+// ever surface what actually happened. There is no LocalProvider fallback: an
+// unconfigured backend reports an empty inbox rather than invented activity.
+const NOTIFICATION_COLUMNS =
+  "id, user_id, type, actor_user_id, connection_id, read_at, created_at";
+
+export async function getMyNotifications(limit = 50): Promise<DataResult<NotificationRecord[]>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure([], new Error("You must be signed in to see notifications."));
+  if (!supabase) return failure([], new Error("Supabase is not configured."));
+
+  const { data, error } = await supabase
+    .from("student_notifications")
+    .select(NOTIFICATION_COLUMNS)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) return failure([], new Error(error.message));
+
+  const rows = (data || [])
+    .map((row) => mapNotificationRow(row as Record<string, unknown>))
+    .filter((row): row is NotificationRow => row !== null);
+  if (rows.length === 0) return remoteSuccess([]);
+
+  const actorIds = Array.from(
+    new Set(rows.map((row) => row.actorUserId).filter((id): id is string => Boolean(id)))
+  );
+  const actors = await getPeerProfiles(actorIds);
+  if (actors.error) return failure([], new Error(actors.error));
+
+  return remoteSuccess(assembleNotifications(rows, actors.profiles));
+}
+
+export async function getUnreadNotificationCount(): Promise<DataResult<number>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(0, new Error("You must be signed in to see notifications."));
+  if (!supabase) return failure(0, new Error("Supabase is not configured."));
+
+  const { count, error } = await supabase
+    .from("student_notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .is("read_at", null);
+  if (error) return failure(0, new Error(error.message));
+  return remoteSuccess(count ?? 0);
+}
+
+export async function markNotificationRead(notificationId: string): Promise<DataResult<boolean>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(false, new Error("You must be signed in."));
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+
+  // The guard trigger in 006 makes an already-read row reject a second write,
+  // so a stale click simply reports back as "already read" instead of lying.
+  const { data, error } = await supabase
+    .from("student_notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("id", notificationId)
+    .eq("user_id", userId)
+    .is("read_at", null)
+    .select("id");
+  if (error) return failure(false, new Error(error.message));
+  if (!data || data.length === 0) return failure(false, new Error("That notification is already read."));
+  return remoteSuccess(true);
+}
+
+export async function markAllNotificationsRead(): Promise<DataResult<number>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(0, new Error("You must be signed in."));
+  if (!supabase) return failure(0, new Error("Supabase is not configured."));
+
+  const { data, error } = await supabase
+    .from("student_notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("read_at", null)
+    .select("id");
+  if (error) return failure(0, new Error(error.message));
+  return remoteSuccess(data?.length ?? 0);
 }

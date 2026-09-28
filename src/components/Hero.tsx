@@ -1,73 +1,43 @@
-import { useEffect, useRef, useState } from "react";
-
-const heroPhrases = [
-  "Delhi University",
-  "Internships",
-  "Competitions",
-  "Certifications",
-  "Jobs",
-  "Research",
-  "Campus Life",
-  "Scholarships",
-];
-
-const PHRASE_DURATION = 1400;
+import Icon from "./Icon";
+import { Link } from "../lib/router";
 
 export default function Hero() {
-  const [index, setIndex] = useState(0);
-  const [prevIndex, setPrevIndex] = useState<number | null>(null);
-  const prevTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return;
-    const timer = setInterval(() => {
-      setIndex((prev) => {
-        setPrevIndex(prev);
-        if (prevTimerRef.current) window.clearTimeout(prevTimerRef.current);
-        prevTimerRef.current = window.setTimeout(() => {
-          setPrevIndex(null);
-        }, 280);
-        return (prev + 1) % heroPhrases.length;
-      });
-    }, PHRASE_DURATION);
-    return () => {
-      clearInterval(timer);
-      if (prevTimerRef.current) window.clearTimeout(prevTimerRef.current);
-    };
-  }, []);
-
   return (
-    <section className="relative overflow-hidden pt-28 pb-10 sm:pt-36 sm:pb-14 lg:pt-40 lg:pb-16">
+    <section className="relative overflow-hidden pt-24 pb-10 sm:pt-28 sm:pb-14 lg:pt-32 lg:pb-16">
       <div className="container-px">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-surface-border bg-white/90 backdrop-blur-md px-4 py-1.5 text-xs font-bold text-ink-700 shadow-soft animate-fade-up">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-surface-border bg-white/90 backdrop-blur-md px-4 py-1.5 shadow-soft animate-fade-up">
             <span className="h-2 w-2 rounded-full bg-brand-red animate-pulse" />
-            <span className="text-brand-blue font-extrabold uppercase tracking-wider">The Living Digital Campus</span>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-ink-700">
+              A Student Platform
+            </span>
           </div>
 
-          {/* Signature Animated Headline: Explore [Rotating Phrase] */}
-          <div className="mt-6 animate-fade-up" style={{ animationDelay: "80ms" }}>
-            <h1 className="text-3xl sm:text-6xl lg:text-7xl font-black tracking-tight text-ink-900 leading-[1.15] break-words">
-              <span className="text-brand-blue">Explore </span>
-              <span className="phrase-track relative text-brand-red font-black inline-flex">
-                {prevIndex !== null && (
-                  <span key={`prev-${prevIndex}`} className="phrase-item-exit pointer-events-none">
-                    {heroPhrases[prevIndex]}
-                  </span>
-                )}
-                <span key={index} className="phrase-item-modern">
-                  {heroPhrases[index]}
-                </span>
-              </span>
-            </h1>
-          </div>
+          <h1
+            className="font-display mt-5 text-4xl sm:text-6xl font-black tracking-tight text-ink-900 leading-[1.08] text-balance animate-fade-up"
+            style={{ animationDelay: "80ms" }}
+          >
+            Shoot Your Shot.
+          </h1>
 
-          {/* Simple Supporting Line */}
-          <p className="mt-5 max-w-2xl mx-auto text-base sm:text-lg lg:text-xl leading-relaxed text-ink-600 font-medium animate-fade-up" style={{ animationDelay: "160ms" }}>
-            Everything you need to explore DU, represent your college, and find your next opportunity.
+          <p
+            className="mt-4 max-w-xl mx-auto text-base sm:text-lg leading-relaxed text-ink-600 font-medium animate-fade-up"
+            style={{ animationDelay: "160ms" }}
+          >
+            Find opportunities. Take on challenges. Build your crew. Make your college years count.
           </p>
+
+          <div
+            className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-up"
+            style={{ animationDelay: "240ms" }}
+          >
+            <Link href="#aim" className="btn-primary w-full sm:w-auto shadow-card">
+              Explore JAVLIN <Icon name="arrow" className="h-4 w-4" />
+            </Link>
+            <Link href="/signup" className="btn-secondary w-full sm:w-auto">
+              Create Your Profile
+            </Link>
+          </div>
         </div>
       </div>
     </section>

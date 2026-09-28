@@ -40,7 +40,7 @@ function collegeColor(name: string, alpha: number): string {
 
 function ComingSoon({
   label,
-  copy = "This section will appear when verified college data is connected. DU Science Hub does not publish unverified facts.",
+  copy = "This section will appear when verified college data is connected. JAVLIN does not publish unverified facts.",
 }: {
   label: string;
   copy?: string;
@@ -124,7 +124,7 @@ export default function CollegePage({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <PageShell title="Loading college profile | DU Science Hub">
+      <PageShell title="Loading college profile | JAVLIN">
         <SkeletonCollegePage />
       </PageShell>
     );
@@ -132,7 +132,7 @@ export default function CollegePage({ slug }: { slug: string }) {
 
   if (!college) {
     return (
-      <PageShell title="College profile coming soon | DU Science Hub" backgroundPreset="college">
+      <PageShell title="College profile coming soon | JAVLIN" backgroundPreset="college">
         <section className="container-px py-20 sm:py-28">
           <Link href="/explore" className="text-sm font-semibold text-brand-blue hover:underline">
             ← Back to Explore DU
@@ -180,8 +180,8 @@ export default function CollegePage({ slug }: { slug: string }) {
 
   return (
     <PageShell
-      title={`${college.name} | DU Science Hub`}
-      description={`Explore ${college.name} — courses, reviews, student experiences and opportunities on DU Science Hub.`}
+      title={`${college.name} | JAVLIN`}
+      description={`Explore ${college.name} — courses, reviews, student experiences and opportunities on JAVLIN.`}
       backgroundPreset="college"
     >
       {/* 1. CINEMATIC ASSEMBLED HERO: College Identity */}

@@ -102,7 +102,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
 
   async function shareTeam() {
     if (!team) return;
-    const text = `Join my team "${team.name}" for ${team.competitionTitle}!\nTeam code: ${team.inviteCode}\n${window.location.origin}/opportunities`;
+    const text = `Join my team "${team.name}" for ${team.competitionTitle}!\nTeam code: ${team.inviteCode}\nFind more crews on JAVLIN CREW: ${window.location.origin}/crew`;
     if (navigator.share) {
       try { await navigator.share({ title: team.name, text }); return; } catch { /* fallthrough */ }
     }
@@ -185,7 +185,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
 
   if (authLoading || (!user && !authLoading)) {
     return (
-      <PageShell title="Team | DU Science Hub" backgroundPreset="explore">
+      <PageShell title="Team | JAVLIN" backgroundPreset="explore">
         <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading…
         </div>
@@ -195,7 +195,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
 
   if (loading) {
     return (
-      <PageShell title="Team | DU Science Hub" backgroundPreset="explore">
+      <PageShell title="Team | JAVLIN" backgroundPreset="explore">
         <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading team…
         </div>
@@ -205,11 +205,11 @@ export default function TeamPage({ teamId }: { teamId: string }) {
 
   if (error || !team) {
     return (
-      <PageShell title="Team not found | DU Science Hub" backgroundPreset="explore">
+      <PageShell title="Team not found | JAVLIN" backgroundPreset="explore">
         <div className="container-px py-24 text-center max-w-md mx-auto">
           <p className="text-sm font-bold text-brand-red">{error ?? "Team not found."}</p>
-          <Link href="/opportunities" className="btn-secondary mt-6 inline-flex">
-            Back to Opportunities
+          <Link href="/crew" className="btn-secondary mt-6 inline-flex">
+            Back to CREW
           </Link>
         </div>
       </PageShell>
@@ -221,13 +221,13 @@ export default function TeamPage({ teamId }: { teamId: string }) {
 
   return (
     <PageShell
-      title={`${team.name} | DU Science Hub`}
+      title={`${team.name} | JAVLIN`}
       description={`Team ${team.name} for ${team.competitionTitle}`}
       backgroundPreset="explore"
     >
       <div className="container-px py-10 sm:py-14 max-w-3xl mx-auto">
-        <Link href="/opportunities" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark">
-          ← Opportunities
+        <Link href="/crew" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark">
+          ← Back to CREW
         </Link>
 
         {/* Header */}
@@ -242,6 +242,9 @@ export default function TeamPage({ teamId }: { teamId: string }) {
             <span className="text-xs text-ink-400">
               {team.memberCount} member{team.memberCount !== 1 ? "s" : ""}
             </span>
+            <Link href="/field" className="text-xs font-bold text-brand-blue hover:text-brand-blue-dark">
+              Competition details on FIELD →
+            </Link>
           </div>
         </div>
 

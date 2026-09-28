@@ -15,7 +15,7 @@ export type BackgroundPreset =
 type PresetConfig = {
   gridSpacing: number;
   baseOpacity: number;
-  redDotRatio: number; // probability interval (e.g. 17 means 1 in 17 dots is red)
+  accentDotRatio: number; // probability interval (e.g. 17 means 1 in 17 dots is orange accent)
   freeParticlesDesktop: number;
   freeParticlesMobile: number;
   connectionMaxDist: number;
@@ -35,7 +35,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   home: {
     gridSpacing: 40,
     baseOpacity: 0.42,
-    redDotRatio: 17,
+    accentDotRatio: 17,
     freeParticlesDesktop: 55,
     freeParticlesMobile: 28,
     connectionMaxDist: 68,
@@ -53,7 +53,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   explore: {
     gridSpacing: 42,
     baseOpacity: 0.40,
-    redDotRatio: 15,
+    accentDotRatio: 15,
     freeParticlesDesktop: 50,
     freeParticlesMobile: 26,
     connectionMaxDist: 76,
@@ -71,7 +71,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   directory: {
     gridSpacing: 42,
     baseOpacity: 0.38,
-    redDotRatio: 19,
+    accentDotRatio: 19,
     freeParticlesDesktop: 40,
     freeParticlesMobile: 20,
     connectionMaxDist: 66,
@@ -89,7 +89,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   college: {
     gridSpacing: 44,
     baseOpacity: 0.34,
-    redDotRatio: 22,
+    accentDotRatio: 22,
     freeParticlesDesktop: 34,
     freeParticlesMobile: 18,
     connectionMaxDist: 64,
@@ -107,7 +107,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   media: {
     gridSpacing: 40,
     baseOpacity: 0.42,
-    redDotRatio: 14,
+    accentDotRatio: 14,
     freeParticlesDesktop: 48,
     freeParticlesMobile: 24,
     connectionMaxDist: 72,
@@ -125,7 +125,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   mentors: {
     gridSpacing: 40,
     baseOpacity: 0.38,
-    redDotRatio: 16,
+    accentDotRatio: 16,
     freeParticlesDesktop: 44,
     freeParticlesMobile: 22,
     connectionMaxDist: 74,
@@ -143,7 +143,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   opportunities: {
     gridSpacing: 38,
     baseOpacity: 0.44,
-    redDotRatio: 11, // More urgency / deadline red highlights
+    accentDotRatio: 11, // More urgency / deadline orange highlights
     freeParticlesDesktop: 60,
     freeParticlesMobile: 30,
     connectionMaxDist: 70,
@@ -161,7 +161,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   team: {
     gridSpacing: 40,
     baseOpacity: 0.40,
-    redDotRatio: 14,
+    accentDotRatio: 14,
     freeParticlesDesktop: 52,
     freeParticlesMobile: 26,
     connectionMaxDist: 72,
@@ -179,7 +179,7 @@ const PRESET_CONFIGS: Record<BackgroundPreset, PresetConfig> = {
   admin: {
     gridSpacing: 48,
     baseOpacity: 0.16,
-    redDotRatio: 35,
+    accentDotRatio: 35,
     freeParticlesDesktop: 12,
     freeParticlesMobile: 6,
     connectionMaxDist: 50,
@@ -204,7 +204,7 @@ type GridDot = {
   vx: number;
   vy: number;
   phase: number;
-  isRed: boolean;
+  isAccent: boolean;
   scale: number;
   opacity: number;
 };
@@ -215,7 +215,7 @@ type FreeParticle = {
   vx: number;
   vy: number;
   radius: number;
-  isRed: boolean;
+  isAccent: boolean;
   alpha: number;
   layer: number;
 };
@@ -227,7 +227,7 @@ type Ripple = {
   maxRadius: number;
   speed: number;
   alpha: number;
-  isRed: boolean;
+  isAccent: boolean;
 };
 
 type Spark = {
@@ -237,7 +237,7 @@ type Spark = {
   vy: number;
   alpha: number;
   decay: number;
-  isRed: boolean;
+  isAccent: boolean;
 };
 
 type Glyph = {
@@ -247,7 +247,7 @@ type Glyph = {
   size: number;
   angle: number;
   rotSpeed: number;
-  isRed: boolean;
+  isAccent: boolean;
 };
 
 type Packet = {
@@ -255,7 +255,7 @@ type Packet = {
   dotIdxB: number;
   progress: number;
   speed: number;
-  isRed: boolean;
+  isAccent: boolean;
 };
 
 type InteractiveDotGridProps = {
@@ -276,6 +276,21 @@ export default function InteractiveDotGrid({
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // JAVLIN palettes: light ambient treatment for site-wide backgrounds,
+    // dark signature treatment (navy + white dots) reserved for the dot-grid page.
+    const dark = !background;
+    const COLORS = dark
+      ? {
+          base: "255, 255, 255",
+          accent: "255, 122, 48",
+          interactive: "230, 238, 255",
+        }
+      : {
+          base: "7, 26, 51",
+          accent: "255, 122, 48",
+          interactive: "23, 105, 255",
+        };
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
@@ -323,12 +338,12 @@ export default function InteractiveDotGrid({
     // Ambient floating glyphs
     const glyphs: Glyph[] = config.enableGlyphs
       ? [
-          { xRatio: 0.12, yRatio: 0.22, type: "plus", size: 9, angle: 0, rotSpeed: 0.003, isRed: false },
-          { xRatio: 0.88, yRatio: 0.18, type: "diamond", size: 10, angle: 0, rotSpeed: -0.0025, isRed: true },
-          { xRatio: 0.82, yRatio: 0.65, type: "ring", size: 12, angle: 0, rotSpeed: 0.002, isRed: false },
-          { xRatio: 0.18, yRatio: 0.78, type: "crosshair", size: 11, angle: 0, rotSpeed: -0.003, isRed: false },
-          { xRatio: 0.5, yRatio: 0.92, type: "hex", size: 10, angle: 0, rotSpeed: 0.002, isRed: true },
-          { xRatio: 0.92, yRatio: 0.42, type: "plus", size: 8, angle: 0, rotSpeed: 0.0035, isRed: false },
+          { xRatio: 0.12, yRatio: 0.22, type: "plus", size: 9, angle: 0, rotSpeed: 0.003, isAccent: false },
+          { xRatio: 0.88, yRatio: 0.18, type: "diamond", size: 10, angle: 0, rotSpeed: -0.0025, isAccent: true },
+          { xRatio: 0.82, yRatio: 0.65, type: "ring", size: 12, angle: 0, rotSpeed: 0.002, isAccent: false },
+          { xRatio: 0.18, yRatio: 0.78, type: "crosshair", size: 11, angle: 0, rotSpeed: -0.003, isAccent: false },
+          { xRatio: 0.5, yRatio: 0.92, type: "hex", size: 10, angle: 0, rotSpeed: 0.002, isAccent: true },
+          { xRatio: 0.92, yRatio: 0.42, type: "plus", size: 8, angle: 0, rotSpeed: 0.0035, isAccent: false },
         ]
       : [];
 
@@ -366,7 +381,7 @@ export default function InteractiveDotGrid({
             vx: 0,
             vy: 0,
             phase: (c * 0.73 + r * 1.17) % (Math.PI * 2),
-            isRed: (c * 7 + r * 13) % config.redDotRatio === 0,
+            isAccent: (c * 7 + r * 13) % config.accentDotRatio === 0,
             scale: 1,
             opacity: config.baseOpacity,
           });
@@ -377,7 +392,7 @@ export default function InteractiveDotGrid({
       const count = isTouchDevice ? config.freeParticlesMobile : config.freeParticlesDesktop;
       freeParticles = [];
       for (let i = 0; i < count; i++) {
-        const isRed = i % 7 === 0;
+        const isAccent = i % 7 === 0;
         const layer = i % 3;
         freeParticles.push({
           x: Math.random() * width,
@@ -385,7 +400,7 @@ export default function InteractiveDotGrid({
           vx: (Math.random() - 0.5) * (0.3 + layer * 0.25) + config.flowVx,
           vy: (Math.random() - 0.5) * (0.3 + layer * 0.25) + config.flowVy,
           radius: layer === 2 ? 2.4 : layer === 1 ? 1.8 : 1.2,
-          isRed,
+          isAccent,
           alpha: layer === 2 ? 0.65 : layer === 1 ? 0.45 : 0.25,
           layer,
         });
@@ -402,13 +417,13 @@ export default function InteractiveDotGrid({
             dotIdxB: Math.min(dots.length - 1, idxA + 1),
             progress: Math.random(),
             speed: 0.012 + Math.random() * 0.016,
-            isRed: k % 3 === 0,
+            isAccent: k % 3 === 0,
           });
         }
       }
     };
 
-    const addRipple = (x: number, y: number, isRed = false, maxRad = 190) => {
+    const addRipple = (x: number, y: number, isAccent = false, maxRad = 190) => {
       if (!config.enableRipples) return;
       if (ripples.length >= 5) ripples.shift();
       ripples.push({
@@ -418,11 +433,11 @@ export default function InteractiveDotGrid({
         maxRadius: maxRad,
         speed: 4.8,
         alpha: 0.5,
-        isRed,
+        isAccent,
       });
     };
 
-    const addSparks = (x: number, y: number, count = 8, isRed = false) => {
+    const addSparks = (x: number, y: number, count = 8, isAccent = false) => {
       for (let i = 0; i < count; i++) {
         const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
         const spd = 1.8 + Math.random() * 2.8;
@@ -433,7 +448,7 @@ export default function InteractiveDotGrid({
           vy: Math.sin(angle) * spd,
           alpha: 0.9,
           decay: 0.035 + Math.random() * 0.02,
-          isRed: Math.random() > 0.6 ? !isRed : isRed,
+          isAccent: Math.random() > 0.6 ? !isAccent : isAccent,
         });
       }
     };
@@ -445,10 +460,10 @@ export default function InteractiveDotGrid({
       for (let i = 0; i < dots.length; i++) {
         const dot = dots[i];
         ctx.beginPath();
-        ctx.arc(dot.originX, dot.originY, dot.isRed ? 2.6 : 2.0, 0, Math.PI * 2);
-        ctx.fillStyle = dot.isRed
-          ? `rgba(230, 57, 70, ${config.baseOpacity * 0.9})`
-          : `rgba(29, 78, 137, ${config.baseOpacity * 0.8})`;
+        ctx.arc(dot.originX, dot.originY, dot.isAccent ? 2.6 : 2.0, 0, Math.PI * 2);
+        ctx.fillStyle = dot.isAccent
+          ? `rgba(${COLORS.accent}, ${config.baseOpacity * 0.9})`
+          : `rgba(${COLORS.base}, ${config.baseOpacity * 0.8})`;
         ctx.fill();
       }
       return;
@@ -481,8 +496,8 @@ export default function InteractiveDotGrid({
         const radarTargetY = height * 0.35 + Math.sin(radarAngle) * rLen;
 
         const radarGrad = ctx.createLinearGradient(width * 0.5, height * 0.35, radarTargetX, radarTargetY);
-        radarGrad.addColorStop(0, "rgba(29, 78, 137, 0.05)");
-        radarGrad.addColorStop(1, "rgba(29, 78, 137, 0)");
+        radarGrad.addColorStop(0, "rgba(${COLORS.interactive}, 0.05)");
+        radarGrad.addColorStop(1, "rgba(${COLORS.interactive}, 0)");
 
         ctx.save();
         ctx.beginPath();
@@ -525,9 +540,9 @@ export default function InteractiveDotGrid({
 
         ctx.beginPath();
         ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = rip.isRed
-          ? `rgba(230, 57, 70, ${rip.alpha * 0.35})`
-          : `rgba(29, 78, 137, ${rip.alpha * 0.28})`;
+        ctx.strokeStyle = rip.isAccent
+          ? `rgba(${COLORS.accent}, ${rip.alpha * 0.35})`
+          : `rgba(${COLORS.interactive}, ${rip.alpha * 0.28})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
@@ -548,9 +563,9 @@ export default function InteractiveDotGrid({
 
         ctx.beginPath();
         ctx.arc(spk.x, spk.y, 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = spk.isRed
-          ? `rgba(230, 57, 70, ${spk.alpha})`
-          : `rgba(29, 78, 137, ${spk.alpha})`;
+        ctx.fillStyle = spk.isAccent
+          ? `rgba(${COLORS.accent}, ${spk.alpha})`
+          : `rgba(${COLORS.interactive}, ${spk.alpha})`;
         ctx.fill();
       }
 
@@ -651,13 +666,13 @@ export default function InteractiveDotGrid({
 
         // Draw node
         ctx.beginPath();
-        const baseRadius = dot.isRed ? 2.8 : 2.2;
+        const baseRadius = dot.isAccent ? 2.8 : 2.2;
         ctx.arc(dot.x, dot.y, baseRadius * dot.scale, 0, Math.PI * 2);
 
-        if (dot.isRed) {
-          ctx.fillStyle = `rgba(230, 57, 70, ${dot.opacity})`;
+        if (dot.isAccent) {
+          ctx.fillStyle = `rgba(${COLORS.accent}, ${dot.opacity})`;
         } else {
-          ctx.fillStyle = `rgba(29, 78, 137, ${dot.opacity * 0.85})`;
+          ctx.fillStyle = `rgba(${COLORS.base}, ${dot.opacity * 0.85})`;
         }
         ctx.fill();
       }
@@ -676,9 +691,9 @@ export default function InteractiveDotGrid({
               ctx.beginPath();
               ctx.moveTo(d1.x, d1.y);
               ctx.lineTo(d2.x, d2.y);
-              ctx.strokeStyle = d1.isRed || d2.isRed
-                ? `rgba(230, 57, 70, ${lineAlpha * 0.9})`
-                : `rgba(29, 78, 137, ${lineAlpha})`;
+              ctx.strokeStyle = d1.isAccent || d2.isAccent
+                ? `rgba(${COLORS.accent}, ${lineAlpha * 0.9})`
+                : `rgba(${COLORS.interactive}, ${lineAlpha})`;
               ctx.lineWidth = 1;
               ctx.stroke();
             }
@@ -707,7 +722,7 @@ export default function InteractiveDotGrid({
 
             ctx.beginPath();
             ctx.arc(pkx, pky, 2.0, 0, Math.PI * 2);
-            ctx.fillStyle = pkt.isRed ? "rgba(230, 57, 70, 0.75)" : "rgba(29, 78, 137, 0.75)";
+            ctx.fillStyle = pkt.isAccent ? "rgba(${COLORS.accent}, 0.75)" : "rgba(${COLORS.interactive}, 0.75)";
             ctx.fill();
           }
         }
@@ -757,9 +772,9 @@ export default function InteractiveDotGrid({
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.isRed
-          ? `rgba(230, 57, 70, ${p.alpha})`
-          : `rgba(29, 78, 137, ${p.alpha})`;
+        ctx.fillStyle = p.isAccent
+          ? `rgba(${COLORS.accent}, ${p.alpha})`
+          : `rgba(${COLORS.interactive}, ${p.alpha})`;
         ctx.fill();
       }
 
@@ -788,9 +803,9 @@ export default function InteractiveDotGrid({
         ctx.translate(gx, gy);
         ctx.rotate(glyph.angle);
         ctx.scale(gScale, gScale);
-        ctx.strokeStyle = glyph.isRed
-          ? `rgba(230, 57, 70, ${gAlpha})`
-          : `rgba(29, 78, 137, ${gAlpha})`;
+        ctx.strokeStyle = glyph.isAccent
+          ? `rgba(${COLORS.accent}, ${gAlpha})`
+          : `rgba(${COLORS.interactive}, ${gAlpha})`;
         ctx.lineWidth = 1.2;
 
         const s = glyph.size;
@@ -980,7 +995,7 @@ export default function InteractiveDotGrid({
         window.removeEventListener("touchend", handleTouchEnd);
       }
     };
-  }, [preset, config]);
+  }, [preset, config, background]);
 
   const canvas = (
     <canvas
@@ -997,7 +1012,7 @@ export default function InteractiveDotGrid({
   return (
     <main className="dot-grid-page">
       {canvas}
-      <p className="sr-only">Living DU Science Hub Digital Campus Network</p>
+      <p className="sr-only">Living JAVLIN network</p>
     </main>
   );
 }

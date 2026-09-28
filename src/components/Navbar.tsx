@@ -1,15 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
+import BrandMark from "./BrandMark";
 import MobileMenu from "./MobileMenu";
-import MagneticButton from "./MagneticButton";
+import NotificationBell from "./NotificationBell";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 
-const navLinks = [
-  { label: "Explore DU", href: "/explore" },
-  { label: "Join Our Team", href: "/join" },
-  { label: "Opportunity Radar", href: "/opportunities" },
+const primaryNav = [
+  { label: "AIM", href: "/aim" },
+  { label: "FIELD", href: "/field" },
+  { label: "CREW", href: "/crew" },
+  { label: "CIRCLE", href: "/circle" },
+  { label: "MARK", href: "/mark" },
+  { label: "PULSE", href: "/pulse" },
 ];
+
+const secondaryNav = [
+  { label: "College Reviews", href: "/college-reviews" },
+  { label: "Join JAVLIN", href: "/join" },
+];
+
+const navLinks = [...primaryNav, ...secondaryNav];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -49,8 +60,8 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const activeIndex = navLinks.findIndex(
-      (link) => path === link.href || (link.href !== "/" && path.startsWith(link.href))
+    const activeIndex = primaryNav.findIndex(
+      (link) => path === link.href || path.startsWith(`${link.href}/`)
     );
     if (activeIndex !== -1 && linkRefs.current[activeIndex] && navContainerRef.current) {
       const activeEl = linkRefs.current[activeIndex]!;
@@ -85,12 +96,12 @@ export default function Navbar() {
           className="container-px flex items-center justify-between h-16 sm:h-20"
           aria-label="Primary"
         >
-          {/* Official Brand Logo with Tasteful Easter Egg */}
+          {/* Brand wordmark with tasteful easter egg */}
           <div className="relative flex items-center">
             <Link
               href="/"
               onClick={() => {
-                // If already on homepage, trigger elephant easter egg
+                // If already on homepage, trigger easter egg
                 if (window.location.pathname === "/") {
                   triggerEasterEgg();
                 }
@@ -100,24 +111,16 @@ export default function Navbar() {
                 triggerEasterEgg();
               }}
               className="flex items-center gap-2 shrink-0 group relative"
-              aria-label="DU Science Hub home"
+              aria-label="JAVLIN home"
             >
-              <img
-                src="/DSH_OFFICIAL_LOGO.png"
-                alt="DU Science Hub"
-                className={`h-10 sm:h-12 w-auto max-w-[11rem] object-contain transition-transform duration-300 ${
-                  eggActive ? "scale-110 -rotate-2" : "group-hover:scale-[1.02]"
-                }`}
-                width={506}
-                height={229}
-              />
+              <BrandMark className={`h-8 w-auto sm:h-9 transition-transform duration-300 ${eggActive ? "scale-110 -rotate-2" : "group-hover:scale-[1.02]"}`} />
             </Link>
 
             {/* Hidden playful easter egg toast */}
             {eggActive && (
               <div className="absolute left-0 -bottom-10 z-50 animate-fade-up pointer-events-none whitespace-nowrap rounded-full bg-brand-blue text-white px-3 py-1 text-[11px] font-extrabold shadow-lift border border-white/20 flex items-center gap-1.5">
-                <span className="animate-bounce">🐘</span>
-                <span>DU Science Hub · Built for the grind</span>
+                <span className="animate-bounce">•</span>
+                <span className="font-display">JAVLIN · Shoot Your Shot.</span>
               </div>
             )}
           </div>
@@ -137,14 +140,14 @@ export default function Navbar() {
                 }}
               />
             )}
-            {navLinks.map((link, idx) => {
-              const isActive = path === link.href || (link.href !== "/" && path.startsWith(link.href));
+            {primaryNav.map((link, idx) => {
+              const isActive = path === link.href || path.startsWith(`${link.href}/`);
               return (
                 <Link
                   key={link.label}
                   ref={(el) => (linkRefs.current[idx] = el)}
                   href={link.href}
-                  className={`relative z-10 px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-colors duration-200 ${
+                  className={`relative z-10 px-3 py-2 text-[11px] font-extrabold uppercase tracking-wider rounded-xl transition-colors duration-200 ${
                     isActive
                       ? "text-brand-blue"
                       : "text-ink-600 hover:text-brand-blue"
@@ -160,8 +163,26 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Magnetic Primary CTA + Admin Button (Visible strictly to authenticated verified admins) */}
-          <div className="hidden lg:flex items-center gap-3">
+          {/* Secondary Nav + Admin Button (Visible strictly to authenticated verified admins) */}
+          <div className="hidden lg:flex items-center gap-2">
+            <Link
+              href="/college-reviews"
+              className={`hidden xl:inline-flex px-3 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-colors duration-200 ${
+                path === "/college-reviews"
+                  ? "text-brand-blue bg-brand-blue-soft"
+                  : "text-ink-600 hover:text-brand-blue"
+              }`}
+            >
+              College Reviews
+            </Link>
+            <Link
+              href="/join"
+              className={`btn-outline-blue px-3.5 py-2 text-xs ${
+                path === "/join" || path.startsWith("/join/") ? "bg-brand-blue-soft" : ""
+              }`}
+            >
+              Join JAVLIN
+            </Link>
             {isAdmin && !authLoading && (
               <Link
                 href="/admin"
@@ -180,6 +201,7 @@ export default function Navbar() {
               <>
                 {user ? (
                   <div className="flex items-center gap-1.5">
+                    <NotificationBell className="px-1.5" />
                     <Link
                       href="/dashboard"
                       className={`px-3 py-2 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-colors duration-200 ${
@@ -206,16 +228,12 @@ export default function Navbar() {
                       Login
                     </Link>
                     <Link href="/signup" className="btn-outline-blue px-3.5 py-2 text-xs">
-                      Sign Up
+                      Create Profile
                     </Link>
                   </div>
                 )}
               </>
             )}
-            <MagneticButton href="/opportunities" variant="primary">
-              Opportunity Radar
-              <Icon name="target" className="h-4 w-4" />
-            </MagneticButton>
           </div>
 
           {/* Mobile Hamburger Menu Toggle */}

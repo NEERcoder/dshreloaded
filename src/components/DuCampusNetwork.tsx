@@ -80,19 +80,19 @@ export default function DuCampusNetwork() {
         <div className="mt-10 relative min-h-[420px] sm:min-h-[500px] rounded-3xl border border-surface-border bg-white/70 backdrop-blur-md shadow-card overflow-hidden p-6 sm:p-10 flex items-center justify-center">
           {/* Subtle constellation lines */}
           <svg className="absolute inset-0 h-full w-full pointer-events-none opacity-25" aria-hidden="true">
-            <line x1="28%" y1="24%" x2="38%" y2="18%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="28%" y1="24%" x2="20%" y2="35%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="38%" y1="18%" x2="44%" y2="32%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="20%" y1="35%" x2="32%" y2="45%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="32%" y1="45%" x2="46%" y2="50%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="44%" y1="32%" x2="68%" y2="30%" stroke="#E63946" strokeWidth="1.5" strokeDasharray="4 4" />
-            <line x1="68%" y1="30%" x2="78%" y2="22%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="78%" y1="22%" x2="84%" y2="40%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="68%" y1="30%" x2="62%" y2="48%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="62%" y1="48%" x2="74%" y2="60%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="32%" y1="45%" x2="26%" y2="78%" stroke="#E63946" strokeWidth="1.5" strokeDasharray="4 4" />
-            <line x1="26%" y1="78%" x2="50%" y2="80%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
-            <line x1="50%" y1="80%" x2="76%" y2="82%" stroke="#1D4E89" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="28%" y1="24%" x2="38%" y2="18%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="28%" y1="24%" x2="20%" y2="35%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="38%" y1="18%" x2="44%" y2="32%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="20%" y1="35%" x2="32%" y2="45%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="32%" y1="45%" x2="46%" y2="50%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="44%" y1="32%" x2="68%" y2="30%" stroke="#FF7A30" strokeWidth="1.5" strokeDasharray="4 4" />
+            <line x1="68%" y1="30%" x2="78%" y2="22%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="78%" y1="22%" x2="84%" y2="40%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="68%" y1="30%" x2="62%" y2="48%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="62%" y1="48%" x2="74%" y2="60%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="32%" y1="45%" x2="26%" y2="78%" stroke="#FF7A30" strokeWidth="1.5" strokeDasharray="4 4" />
+            <line x1="26%" y1="78%" x2="50%" y2="80%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="50%" y1="80%" x2="76%" y2="82%" stroke="#1769FF" strokeWidth="1.5" strokeDasharray="3 3" />
           </svg>
 
           {/* Node Elements */}
@@ -102,7 +102,7 @@ export default function DuCampusNetwork() {
               const isNorth = college.campus === "North Campus";
               const isSouth = college.campus === "South Campus";
 
-              const nodeColor = isNorth ? "#E63946" : isSouth ? "#1D4E89" : "#64748B";
+              const nodeColor = isNorth ? "#FF7A30" : isSouth ? "#1769FF" : "#64748B";
               const nodeBg = isNorth ? "bg-brand-red-soft text-brand-red" : isSouth ? "bg-brand-blue-soft text-brand-blue" : "bg-surface-soft text-ink-700";
 
               return (

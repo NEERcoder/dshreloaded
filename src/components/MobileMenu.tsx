@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import BrandMark from "./BrandMark";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
+import { useUnreadNotificationCount } from "./NotificationBell";
 
 type NavLink = { label: string; href: string };
 
@@ -15,6 +17,7 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
   const [render, setRender] = useState(open);
   const { path, navigate } = useLocation();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+  const unread = useUnreadNotificationCount();
 
   async function handleSignOut() {
     onClose();
@@ -56,13 +59,7 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
           style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
         >
           <div className="flex items-center justify-between h-16 px-5 border-b border-surface-border">
-            <img
-              src="/DSH_OFFICIAL_LOGO.png"
-              alt="DU Science Hub"
-              className="h-9 w-auto max-w-[10rem] object-contain"
-              width={506}
-              height={229}
-            />
+            <BrandMark className="h-9 w-auto" />
             <button
               onClick={onClose}
               aria-label="Close menu"
@@ -130,6 +127,25 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
                 {user ? (
                   <div className="flex flex-col gap-2 mt-1">
                     <Link
+                      href="/notifications"
+                      onClick={onClose}
+                      className={`flex items-center justify-between px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
+                        path === "/notifications"
+                          ? "text-brand-blue bg-brand-blue-soft"
+                          : "text-ink-900 hover:bg-brand-blue-soft"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icon name="bell" className="h-5 w-5" />
+                        Notifications
+                      </span>
+                      {unread > 0 && (
+                        <span className="rounded-full bg-brand-red px-2 py-0.5 text-[11px] font-black text-white">
+                          {unread > 9 ? "9+" : unread}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
                       href="/dashboard"
                       onClick={onClose}
                       className={`block px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
@@ -169,7 +185,7 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
                           : "text-ink-900 hover:bg-brand-blue-soft"
                       }`}
                     >
-                      Sign Up
+                      Create Profile
                     </Link>
                   </div>
                 )}
@@ -181,11 +197,11 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
               style={{ transitionDelay: open ? `${(navLinks.length + (isAdmin ? 1 : 0) + 2) * 45 + 50}ms` : "0ms" }}
             >
               <Link
-                href="/opportunities"
+                href="/aim"
                 onClick={onClose}
                 className="btn-primary mt-4 w-full shadow-card"
               >
-                Opportunity Radar
+                Explore AIM
               </Link>
             </div>
           </div>

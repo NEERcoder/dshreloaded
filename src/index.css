@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* JAVLIN brand palette */
+  --javlin-navy: #071a33;
+  --javlin-blue: #1769ff;
+  --javlin-light-blue: #e6eeff;
+  --javlin-gray: #94a3b8;
+  --javlin-orange: #ff7a30;
+
+  /* Semantic tokens (light-first) */
+  --javlin-page-bg: #ffffff;
+  --javlin-card-bg: #ffffff;
+  --javlin-text-primary: var(--javlin-navy);
+  --javlin-text-secondary: #475569;
+  --javlin-text-muted: var(--javlin-gray);
+  --javlin-border: #e2e8f0;
+  --javlin-btn-primary-bg: var(--javlin-blue);
+  --javlin-btn-primary-text: #ffffff;
+  --javlin-btn-primary-hover: #0f53d6;
+  --javlin-btn-secondary-bg: #ffffff;
+  --javlin-btn-secondary-text: var(--javlin-navy);
+  --javlin-btn-secondary-hover: var(--javlin-light-blue);
+  --javlin-hover-surface: #f8fafc;
+  --javlin-focus-ring: var(--javlin-blue);
+  --javlin-success: #16a34a;
+  --javlin-error: #dc2626;
+  --javlin-shadow-soft: 0 1px 3px rgba(7, 26, 51, 0.04), 0 1px 2px rgba(7, 26, 51, 0.03);
+  --javlin-shadow-card: 0 4px 16px rgba(7, 26, 51, 0.06);
+  --javlin-shadow-lift: 0 12px 32px rgba(7, 26, 51, 0.1);
+  --javlin-radius-md: 0.875rem;
+  --javlin-radius-lg: 1.25rem;
+  --javlin-space-section: 4rem;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
@@ -38,10 +71,10 @@
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all duration-200 select-none min-h-[44px];
   }
   .btn-primary {
-    @apply btn bg-brand-red text-white shadow-soft hover:bg-brand-red-dark hover:shadow-card active:scale-[0.98];
+    @apply btn bg-brand-blue text-white shadow-soft hover:bg-brand-blue-dark hover:shadow-card active:scale-[0.98];
   }
   .btn-secondary {
-    @apply btn bg-brand-blue text-white shadow-soft hover:bg-brand-blue-dark hover:shadow-card active:scale-[0.98];
+    @apply btn bg-white text-ink-900 border border-surface-border shadow-soft hover:bg-brand-blue-soft hover:shadow-card active:scale-[0.98];
   }
   .btn-ghost {
     @apply btn bg-white text-ink-900 border border-surface-border hover:bg-surface-soft hover:border-ink-400 active:scale-[0.98];
@@ -99,25 +132,6 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-  /* Faint elephant watermark using the brand mark */
-  .elephant-watermark {
-    position: relative;
-  }
-  .elephant-watermark::after {
-    content: "";
-    position: absolute;
-    bottom: -20px;
-    right: -20px;
-    width: 180px;
-    height: 180px;
-    background-image: url("/DSH_FAVICON.png");
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: bottom right;
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 0;
   }
 }
 

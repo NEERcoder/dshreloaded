@@ -120,7 +120,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <PageShell title="Admin | DU Science Hub" backgroundPreset="admin">
+      <PageShell title="Admin | JAVLIN" backgroundPreset="admin">
         <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Verifying credentials…
         </div>
@@ -176,7 +176,7 @@ function AdminLogin() {
   }
 
   return (
-    <PageShell title="Admin sign in | DU Science Hub" backgroundPreset="admin">
+    <PageShell title="Admin sign in | JAVLIN" backgroundPreset="admin">
       <section className="container-px py-20 sm:py-28">
         <div className="mx-auto max-w-md">
           <p className="eyebrow text-brand-red">PROTECTED WORKSPACE</p>
@@ -225,7 +225,7 @@ function AdminLogin() {
 
           <div className="mt-6 text-center">
             <Link href="/" className="text-xs font-bold text-ink-400 hover:text-brand-blue">
-              ← Return to DU Science Hub Homepage
+              ← Return to JAVLIN Homepage
             </Link>
           </div>
         </div>
@@ -236,7 +236,7 @@ function AdminLogin() {
 
 function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
   return (
-    <PageShell title="Admin access denied | DU Science Hub" backgroundPreset="admin">
+    <PageShell title="Admin access denied | JAVLIN" backgroundPreset="admin">
       <section className="container-px py-20 sm:py-28">
         <div className="mx-auto max-w-lg text-center">
           <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red">
@@ -299,7 +299,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
   }, []);
 
   return (
-    <PageShell title="Admin Dashboard | DU Science Hub" backgroundPreset="admin">
+    <PageShell title="Admin Dashboard | JAVLIN" backgroundPreset="admin">
       <div className="container-px py-10 sm:py-14">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between pb-6 border-b border-surface-border">
           <div>

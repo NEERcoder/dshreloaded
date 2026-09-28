@@ -551,8 +551,8 @@ export default function ExplorePage() {
 
   return (
     <PageShell
-      title="Explore Delhi University | DU Science Hub"
-      description="Explore Delhi University colleges, courses, campus experiences and student perspectives with DU Science Hub."
+      title="Explore Delhi University | JAVLIN"
+      description="Explore Delhi University colleges, courses, campus experiences and student perspectives with JAVLIN."
       backgroundPreset="explore"
     >
       {/* 1. EDITORIAL HEADER & 4 PRIMARY PATHWAYS */}

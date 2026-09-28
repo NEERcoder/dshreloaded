@@ -250,7 +250,7 @@ function getInitialTeamMembers(): TeamMemberRecord[] {
       role: "Founder's Office",
       college: "Hans Raj College",
       course: "BSc Physics",
-      shortBio: "Building DU Science Hub for future DU students. [SAMPLE]",
+      shortBio: "Building JAVLIN for future DU students. [SAMPLE]",
       linkedinUrl: null,
     },
     {

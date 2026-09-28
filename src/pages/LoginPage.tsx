@@ -59,8 +59,8 @@ export default function LoginPage() {
 
   return (
     <PageShell
-      title="Log in | DU Science Hub"
-      description="Log in to your DU Science Hub student account."
+      title="Log in | JAVLIN"
+      description="Log in to your JAVLIN student account."
       backgroundPreset="explore"
     >
       <section className="container-px py-16 sm:py-24">
@@ -70,7 +70,7 @@ export default function LoginPage() {
             Welcome back.
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-500">
-            Log in to view and manage your DU Science Hub profile.
+            Log in to view and manage your JAVLIN profile.
           </p>
 
           <form onSubmit={submit} className="card mt-8 p-6 bg-white border border-surface-border shadow-card">
@@ -125,7 +125,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-sm text-ink-600">
-            New to DU Science Hub?{" "}
+            New to JAVLIN?{" "}
             <Link href="/signup" className="font-bold text-brand-blue hover:text-brand-blue-dark">
               Create an account
             </Link>
@@ -133,7 +133,7 @@ export default function LoginPage() {
 
           <div className="mt-4 text-center">
             <Link href="/" className="text-xs font-bold text-ink-400 hover:text-brand-blue">
-              ← Return to DU Science Hub Homepage
+              ← Return to JAVLIN Homepage
             </Link>
           </div>
         </div>

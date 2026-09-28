@@ -2,24 +2,34 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Icon from "../components/Icon";
 import PageShell from "../components/PageShell";
 import TiltCard from "../components/TiltCard";
-import { roles as fallbackRoles, roleApplicationUrls, type RoleCardData } from "../data/roles";
+import { roleApplicationUrls, type RoleCardData } from "../data/roles";
 import { getOpenTeamRoles, submitGeneralApplication } from "../lib/dataAccess";
+import { isSupabaseConfigured } from "../lib/supabase";
 import { sanitizeExternalUrl } from "../lib/urlSafety";
 import { Link } from "../lib/router";
 
-function JoinIntro() {
+const ROLE_PRESENTATION: Record<string, { icon: string; accent: "red" | "blue" }> = {
+  "campus-correspondent": { icon: "mic", accent: "red" },
+  "canva-editor": { icon: "palette", accent: "blue" },
+  "content-writer": { icon: "pen", accent: "red" },
+  "founders-office-intern": { icon: "briefcase", accent: "blue" },
+};
+
+function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
   const campusCorrespondentUrl = roleApplicationUrls["campus-correspondent"] || "https://forms.gle/oqqLTmm45NEtvjV49";
 
   return (
     <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-12 pb-16 sm:pt-16 sm:pb-20">
       <div className="container-px max-w-7xl mx-auto">
         <div className="max-w-3xl">
-          <p className="eyebrow text-brand-red">JOIN OUR TEAM</p>
+          <p className="eyebrow text-brand-red">JOIN JAVLIN</p>
           <h1 className="mt-3 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
-            Represent Your College or Build With Us.
+            Want to build JAVLIN with us?
           </h1>
           <p className="mt-4 text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
-            Work with an ambitious, student-powered team helping Delhi University students discover real information, authentic campus perspectives, and career-defining opportunities.
+            We're building the student platform we wish existed — and the team behind it is students
+            helping Delhi University discover real information, authentic campus perspectives, and
+            career-defining opportunities.
           </p>
         </div>
 
@@ -75,7 +85,11 @@ function JoinIntro() {
                 >
                   EXPLORE OPEN ROLES →
                 </a>
-                <span className="text-xs font-bold text-ink-400">4 Active Openings</span>
+                <span className="text-xs font-bold text-ink-400">
+                  {openRoleCount === null
+                    ? "Open roles below"
+                    : `${openRoleCount} open role${openRoleCount === 1 ? "" : "s"}`}
+                </span>
               </div>
             </div>
           </TiltCard>
@@ -191,35 +205,39 @@ function GeneralApplication() {
 }
 
 export default function JoinPage({ roleId }: { roleId?: string }) {
-  const [roleList, setRoleList] = useState<RoleCardData[]>(fallbackRoles);
+  const [roleList, setRoleList] = useState<RoleCardData[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     getOpenTeamRoles().then((result) => {
       if (cancelled) return;
-      if (!result.data.length) return;
-      const mapped: RoleCardData[] = result.data.map((r, index) => {
-        const fallback = fallbackRoles.find((f) => f.slug === r.slug) || fallbackRoles[index % fallbackRoles.length];
+      // A configured backend that returns no open roles must show an empty
+      // page rather than the local development seed roles.
+      const rows = isSupabaseConfigured && !result.configured ? [] : result.data;
+      const mapped: RoleCardData[] = rows.map((r) => {
+        const presentation = ROLE_PRESENTATION[r.slug] ?? { icon: "star", accent: "blue" as const };
         return {
           id: r.id,
           slug: r.slug,
           title: r.title,
-          description: r.shortDescription || fallback.description,
-          fullDescription: r.fullDescription || fallback.fullDescription,
-          icon: fallback.icon,
-          accent: fallback.accent,
-          responsibilities: r.responsibilities.length ? r.responsibilities : fallback.responsibilities,
-          requirements: r.requirements.length ? r.requirements : fallback.requirements,
-          benefits: r.benefits.length ? r.benefits : fallback.benefits,
-          workArrangement: r.workMode || fallback.workArrangement,
-          workMode: r.workMode || fallback.workMode,
-          duration: r.duration || fallback.duration,
+          description: r.shortDescription || "",
+          fullDescription: r.fullDescription || "",
+          icon: presentation.icon,
+          accent: presentation.accent,
+          responsibilities: r.responsibilities,
+          requirements: r.requirements,
+          benefits: r.benefits,
+          workArrangement: r.workMode || "",
+          workMode: r.workMode || undefined,
+          duration: r.duration || "",
           status: r.isOpen ? "Open" : "Closed",
           isOpen: r.isOpen,
-          googleFormUrl: r.googleFormUrl || fallback.googleFormUrl || roleApplicationUrls[r.slug] || "",
+          googleFormUrl: r.googleFormUrl || roleApplicationUrls[r.slug] || "",
         };
       });
       setRoleList(mapped);
+      setRolesLoading(false);
     });
     return () => {
       cancelled = true;
@@ -231,14 +249,16 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
     return roleList.find((item) => item.id === roleId || item.slug === roleId);
   }, [roleId, roleList]);
 
+  const openRoleCount = useMemo(() => roleList.filter((item) => item.isOpen).length, [roleList]);
+
   if (roleId) {
     return <RoleDetail role={role} />;
   }
 
   return (
-    <PageShell title="Join DU Science Hub | Build DU With Us" backgroundPreset="team">
+    <PageShell title="Join JAVLIN | Build DU With Us" backgroundPreset="team">
       {/* 1. TWO VERY CLEAR PATHWAYS */}
-      <JoinIntro />
+      <JoinIntro openRoleCount={rolesLoading ? null : openRoleCount} />
 
       {/* 2. AVAILABLE ROLES (SIMPLE, SCANNABLE FORMAT) */}
       <section id="open-roles" className="scroll-mt-24 py-16 sm:py-24 border-b border-surface-border">
@@ -250,14 +270,35 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                 Choose your role.
               </h2>
               <p className="mt-2 text-base text-ink-600 font-normal">
-                4 active student openings with instant Google Form applications.
+                {rolesLoading
+                  ? "Loading the roles we're hiring for right now."
+                  : "Roles are maintained by the JAVLIN team and apply straight through each listing."}
               </p>
             </div>
-            <span className="text-xs sm:text-sm font-bold text-ink-500 bg-white border border-surface-border px-3.5 py-1.5 rounded-full shadow-soft self-start sm:self-auto">
-              {roleList.filter((item) => item.status === "Open" || item.isOpen).length} active openings
-            </span>
+            {!rolesLoading && openRoleCount > 0 && (
+              <span className="text-xs sm:text-sm font-bold text-ink-500 bg-white border border-surface-border px-3.5 py-1.5 rounded-full shadow-soft self-start sm:self-auto">
+                {openRoleCount} open role{openRoleCount === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
 
+          {rolesLoading ? (
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[0, 1, 2, 3].map((slot) => (
+                <div
+                  key={slot}
+                  className="h-64 rounded-2xl border border-surface-border bg-white p-6 shadow-card animate-pulse"
+                />
+              ))}
+            </div>
+          ) : roleList.length === 0 ? (
+            <div className="mt-10 card border-dashed p-10 text-center bg-white">
+              <p className="text-base font-bold text-ink-900">No open roles right now.</p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-ink-500">
+                We open positions in waves. Drop your CV below and we'll keep you in mind for the next one.
+              </p>
+            </div>
+          ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {roleList.map((item) => {
               const safeUrl = sanitizeExternalUrl(item.googleFormUrl);
@@ -286,7 +327,17 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                             ? "EDITORIAL & GUIDES"
                             : "STRATEGY & OPS"}
                         </span>
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Actively Recruiting" />
+                        {item.isOpen ? (
+                          <span
+                            className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                            title="Actively recruiting"
+                            aria-label="Actively recruiting"
+                          />
+                        ) : (
+                          <span className="rounded-lg bg-surface-soft px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-ink-500">
+                            Closed
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-6 flex items-center gap-3">
@@ -304,9 +355,11 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                         </h3>
                       </div>
 
-                      <p className="mt-4 text-sm text-ink-600 leading-relaxed line-clamp-3 font-normal">
-                        {item.description}
-                      </p>
+                      {item.description && (
+                        <p className="mt-4 text-sm text-ink-600 leading-relaxed line-clamp-3 font-normal">
+                          {item.description}
+                        </p>
+                      )}
                     </div>
 
                     <div className="mt-8 pt-5 border-t border-surface-border flex flex-col gap-2.5">
@@ -332,6 +385,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
               );
             })}
           </div>
+          )}
         </div>
       </section>
 
@@ -344,7 +398,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
 function RoleDetail({ role }: { role?: RoleCardData }) {
   if (!role) {
     return (
-      <PageShell title="Role Not Found | DU Science Hub" backgroundPreset="team">
+      <PageShell title="Role Not Found | JAVLIN" backgroundPreset="team">
         <section className="container-px py-20">
           <h1 className="text-3xl font-extrabold text-ink-900">Role not found</h1>
           <Link href="/join" className="btn-secondary mt-6">
@@ -358,7 +412,7 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
   const safeGoogleFormUrl = sanitizeExternalUrl(role.googleFormUrl);
 
   return (
-    <PageShell title={`${role.title} | Join DU Science Hub`} backgroundPreset="team">
+    <PageShell title={`${role.title} | Join JAVLIN`} backgroundPreset="team">
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border">
         <div className="container-px py-14 sm:py-20">
           <Link href="/join" className="text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider">
