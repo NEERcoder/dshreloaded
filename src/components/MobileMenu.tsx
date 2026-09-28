@@ -53,7 +53,7 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
         onClick={onClose}
       />
         <div
-          className={`absolute top-0 right-0 h-full w-[82%] max-w-sm bg-white shadow-lift transition-transform duration-300 ${
+          className={`absolute top-0 right-0 h-full w-[82%] max-w-sm bg-white/90 backdrop-blur-xl shadow-lift border-l border-white/70 transition-transform duration-300 ${
             open ? "translate-x-0" : "translate-x-full"
           }`}
           style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
@@ -127,6 +127,24 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
                 {user ? (
                   <div className="flex flex-col gap-2 mt-1">
                     <Link
+                      href="/dashboard"
+                      onClick={onClose}
+                      className={`block px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
+                        path === "/dashboard"
+                          ? "text-brand-blue bg-brand-blue-soft"
+                          : "text-ink-900 hover:bg-brand-blue-soft"
+                      }`}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href={`/circle/${user.id}`}
+                      onClick={onClose}
+                      className="block px-4 py-3 text-base font-semibold rounded-xl text-ink-900 transition-colors hover:bg-brand-blue-soft"
+                    >
+                      Profile
+                    </Link>
+                    <Link
                       href="/notifications"
                       onClick={onClose}
                       className={`flex items-center justify-between px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
@@ -144,17 +162,6 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
                           {unread > 9 ? "9+" : unread}
                         </span>
                       )}
-                    </Link>
-                    <Link
-                      href="/dashboard"
-                      onClick={onClose}
-                      className={`block px-4 py-3 text-base font-semibold rounded-xl transition-colors ${
-                        path === "/dashboard"
-                          ? "text-brand-blue bg-brand-blue-soft"
-                          : "text-ink-900 hover:bg-brand-blue-soft"
-                      }`}
-                    >
-                      Dashboard
                     </Link>
                     <button
                       onClick={handleSignOut}
@@ -191,19 +198,6 @@ export default function MobileMenu({ open, onClose, navLinks }: MobileMenuProps)
                 )}
               </div>
             )}
-
-            <div
-              className={`drawer-link ${open ? "is-visible" : ""}`}
-              style={{ transitionDelay: open ? `${(navLinks.length + (isAdmin ? 1 : 0) + 2) * 45 + 50}ms` : "0ms" }}
-            >
-              <Link
-                href="/aim"
-                onClick={onClose}
-                className="btn-primary mt-4 w-full shadow-card"
-              >
-                Explore AIM
-              </Link>
-            </div>
           </div>
         </div>
     </div>

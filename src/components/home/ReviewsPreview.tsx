@@ -22,7 +22,7 @@ export default function ReviewsPreview() {
   }, []);
 
   return (
-    <section id="college-reviews" className="scroll-mt-24 border-t border-surface-border bg-white/60 backdrop-blur-[2px]">
+    <section id="college-reviews" className="scroll-mt-24 border-t glass-panel">
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="COLLEGE REVIEWS"

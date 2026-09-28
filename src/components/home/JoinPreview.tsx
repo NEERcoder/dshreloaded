@@ -18,9 +18,9 @@ export default function JoinPreview() {
   }, []);
 
   return (
-    <section id="join" className="scroll-mt-24 border-t border-surface-border bg-white/60 backdrop-blur-[2px]">
+    <section id="join" className="scroll-mt-24 border-t glass-panel">
       <div className="container-px py-10 sm:py-14">
-        <div className="flex flex-col items-start justify-between gap-5 rounded-2xl border border-surface-border bg-white p-6 shadow-card sm:p-8 lg:flex-row lg:items-center">
+        <div className="glass-card flex flex-col items-start justify-between gap-5 p-6 sm:p-8 lg:flex-row lg:items-center">
           <div className="flex items-start gap-4">
             <span className="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-red-soft text-brand-red">
               <Icon name="flag" className="h-6 w-6" />

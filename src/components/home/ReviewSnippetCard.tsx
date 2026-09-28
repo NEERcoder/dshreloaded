@@ -20,7 +20,7 @@ export default function ReviewSnippetCard({
     <Link
       href={href}
       data-cursor="view"
-      className="group flex min-w-[78%] snap-start flex-col rounded-2xl border border-surface-border bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue sm:min-w-0"
+      className="glass-card group flex min-w-[78%] snap-start flex-col p-5 hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue sm:min-w-0"
     >
       <div className="flex items-center justify-between gap-2">
         {collegeName ? (

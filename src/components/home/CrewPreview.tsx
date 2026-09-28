@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
+import { categoryById } from "../../lib/categories";
 import CompactOpportunityCard from "./CompactOpportunityCard";
 import TeamSeekCard, { type TeamSeekItem } from "./TeamSeekCard";
 import EmptyState from "./EmptyState";
@@ -52,7 +53,7 @@ export default function CrewPreview() {
   const showCompetitions = !loading && competitions.length > 0;
 
   return (
-    <section id="crew" className="scroll-mt-24 border-t border-surface-border bg-white/60 backdrop-blur-[2px]">
+    <section id="crew" className="scroll-mt-24 border-t glass-panel">
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="CREW"
@@ -60,6 +61,7 @@ export default function CrewPreview() {
           description="Trending team competitions and crews already looking for members."
           viewAllHref="/crew"
           viewAllLabel="Find Your Crew"
+          iconSrc={categoryById("crew")?.iconSrc}
         />
         <div className="mt-6 space-y-6">
           {loading ? (

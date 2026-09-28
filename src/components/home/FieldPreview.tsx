@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
+import { categoryById } from "../../lib/categories";
 import CompactOpportunityCard from "./CompactOpportunityCard";
 import EmptyState from "./EmptyState";
 import CardRowSkeleton from "./CardRowSkeleton";
@@ -22,7 +23,7 @@ export default function FieldPreview() {
   }, []);
 
   return (
-    <section id="field" className="scroll-mt-24 border-t border-surface-border bg-white/60 backdrop-blur-[2px]">
+    <section id="field" className="scroll-mt-24 border-t glass-panel">
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="FIELD"
@@ -30,6 +31,7 @@ export default function FieldPreview() {
           description="Hackathons, case competitions, and contests where you can test your skills."
           viewAllHref="/field"
           viewAllLabel="Explore FIELD"
+          iconSrc={categoryById("field")?.iconSrc}
         />
         <div className="mt-6">
           {loading ? (

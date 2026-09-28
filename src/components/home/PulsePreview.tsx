@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
+import { categoryById } from "../../lib/categories";
 import CompactOpportunityCard from "./CompactOpportunityCard";
 import EmptyState from "./EmptyState";
 import CardRowSkeleton from "./CardRowSkeleton";
@@ -25,7 +26,7 @@ export default function PulsePreview() {
   }, []);
 
   return (
-    <section id="pulse" className="scroll-mt-24 border-t border-surface-border bg-white/60 backdrop-blur-[2px]">
+    <section id="pulse" className="scroll-mt-24 border-t glass-panel">
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="PULSE"
@@ -33,6 +34,7 @@ export default function PulsePreview() {
           description="Updates, stories and opportunities worth knowing about."
           viewAllHref="/pulse"
           viewAllLabel="See What's Happening"
+          iconSrc={categoryById("pulse")?.iconSrc}
         />
         <div className="mt-6">
           {loading ? (

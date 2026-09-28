@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
+import { categoryById } from "../../lib/categories";
 import CompactOpportunityCard from "./CompactOpportunityCard";
 import EmptyState from "./EmptyState";
 import CardRowSkeleton from "./CardRowSkeleton";
@@ -31,7 +32,7 @@ export default function AimPreview() {
   }, []);
 
   return (
-    <section id="aim" className="scroll-mt-24 border-t border-surface-border bg-white/60 backdrop-blur-[2px]">
+    <section id="aim" className="scroll-mt-24 border-t glass-panel">
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="AIM"
@@ -39,6 +40,7 @@ export default function AimPreview() {
           description="Internships, jobs, and certifications — verified openings worth your application."
           viewAllHref="/aim"
           viewAllLabel="View All AIM"
+          iconSrc={categoryById("aim")?.iconSrc}
         />
         <div className="mt-6">
           {loading ? (

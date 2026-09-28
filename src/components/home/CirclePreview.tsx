@@ -1,9 +1,10 @@
 import SectionHeader from "./SectionHeader";
+import { categoryById } from "../../lib/categories";
 import EmptyState from "./EmptyState";
 
 export default function CirclePreview() {
   return (
-    <section id="circle" className="scroll-mt-24 border-t border-surface-border bg-white/60 backdrop-blur-[2px]">
+    <section id="circle" className="scroll-mt-24 border-t glass-panel">
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="CIRCLE"
@@ -11,6 +12,7 @@ export default function CirclePreview() {
           description="A directory of students across colleges and courses — by students, for students."
           viewAllHref="/circle"
           viewAllLabel="Explore CIRCLE"
+          iconSrc={categoryById("circle")?.iconSrc}
         />
         <div className="mt-6">
           <EmptyState

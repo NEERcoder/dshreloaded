@@ -29,7 +29,7 @@ export default function TeamSeekCard({ team, action, note }: TeamSeekCardProps) 
   const openSpots = openSpotsFor(team);
   const isFull = openSpots === 0;
 
-  return (    <div className="group relative flex min-w-[78%] snap-start flex-col rounded-2xl border border-surface-border bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift sm:min-w-0">
+  return (    <div className="glass-card group relative flex min-w-[78%] snap-start flex-col p-5 hover:-translate-y-0.5 hover:shadow-lift sm:min-w-0">
       <div className="flex items-center justify-between gap-2">
         <span className="rounded-md bg-brand-blue-soft px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-brand-blue">
           Team

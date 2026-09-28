@@ -18,7 +18,7 @@ function TickerCard({ item }: { item: OpportunityRecord }) {
     <Link
       href={`/opportunities`}
       aria-label={`${item.title} at ${item.organization}`}
-      className="ticker-card group relative flex-shrink-0 w-64 sm:w-72 rounded-2xl border border-surface-border bg-white shadow-card overflow-hidden hover:shadow-lift hover:-translate-y-0.5 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-brand-blue"
+      className="glass-card ticker-card group relative flex-shrink-0 w-64 sm:w-72 overflow-hidden hover:shadow-lift hover:-translate-y-0.5 duration-300 focus-visible:ring-2 focus-visible:ring-brand-blue"
     >
       {/* Poster */}
       {item.imageUrl ? (
