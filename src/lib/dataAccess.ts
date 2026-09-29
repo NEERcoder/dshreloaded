@@ -976,13 +976,46 @@ async function fetchInviteCodeForMember(teamId: string): Promise<string> {
   return data;
 }
 
-const mapCompetitionMember = (row: Record<string, unknown>): CompetitionTeamMemberRecord => ({
+async function fetchProfilesByUserIds(
+  userIds: string[]
+): Promise<Map<string, { full_name?: string; college_id?: string; course?: string }>> {
+  const profiles = new Map<string, { full_name?: string; college_id?: string; course?: string }>();
+
+  if (!supabase || userIds.length === 0) return profiles;
+
+  const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("user_id, full_name, college_id, course")
+    .in("user_id", uniqueIds);
+
+  if (error) {
+    console.error("Profile lookup error:", error);
+    return profiles;
+  }
+
+  for (const row of data ?? []) {
+    profiles.set(String(row.user_id), {
+      full_name: row.full_name ?? undefined,
+      college_id: row.college_id ?? undefined,
+      course: row.course ?? undefined,
+    });
+  }
+
+  return profiles;
+}
+
+const mapCompetitionMember = (
+  row: Record<string, unknown>,
+  profile?: { full_name?: string; college_id?: string; course?: string }
+): CompetitionTeamMemberRecord => ({
   id: String(row.id),
   teamId: String(row.team_id),
   userId: String(row.user_id),
-  fullName: (row.profiles as { full_name?: string } | null)?.full_name ?? "Student",
-  college: (row.profiles as { college_id?: string } | null)?.college_id ?? null,
-  course: (row.profiles as { course?: string } | null)?.course ?? null,
+  fullName: profile?.full_name ?? "Student",
+  college: profile?.college_id ?? null,
+  course: profile?.course ?? null,
   role: (row.role as "captain" | "member") ?? "member",
   joinedAt: String(row.joined_at),
 });
@@ -1065,12 +1098,29 @@ export async function createCompetitionTeam(
       return failure(null, captainJoin.error);
     }
 
-    // Fetch members with profiles
-    const { data: membersRaw } = await supabase
+    // Fetch members and profiles separately. competition_team_members.user_id
+    // references auth.users, so PostgREST cannot embed public.profiles directly.
+    const { data: membersRaw, error: membersError } = await supabase
       .from("competition_team_members")
-      .select("*, profiles(full_name, course, college_id)")
-      .eq("team_id", team.id);
-    const members = (membersRaw || []).map((r) => mapCompetitionMember(r as Record<string, unknown>));
+      .select("id, team_id, user_id, role, joined_at")
+      .eq("team_id", team.id)
+      .order("joined_at", { ascending: true });
+
+    if (membersError) {
+      await supabase.from("competition_teams").update({ status: "closed" }).eq("id", team.id);
+      return failure(null, membersError);
+    }
+
+    const profileMap = await fetchProfilesByUserIds(
+      (membersRaw ?? []).map((member) => String(member.user_id))
+    );
+
+    const members = (membersRaw ?? []).map((member) =>
+      mapCompetitionMember(
+        member as Record<string, unknown>,
+        profileMap.get(String(member.user_id))
+      )
+    );
 
     // Read back the code the database generated, through the authorised RPC.
     const mapped = mapTeam(team, members);
@@ -1086,39 +1136,55 @@ export async function getCompetitionTeam(
   requestingUserId?: string
 ): Promise<DataResult<CompetitionTeamRecord | null>> {
   if (!supabase) return failure(null, new Error("Not connected."));
+
   try {
     const { data: team, error } = await supabase
       .from("competition_teams")
       .select(TEAM_SAFE_COLUMNS)
       .eq("id", teamId)
       .maybeSingle();
+
     if (error) return failure(null, error);
     if (!team) return remoteSuccess(null);
 
-    // Fetch members — use left join on profiles so missing profiles don't drop rows
+    // Fetch members without embedding profiles. The member user_id points to
+    // auth.users, not directly to public.profiles.
     const { data: membersRaw, error: membErr } = await supabase
       .from("competition_team_members")
-      .select("id, team_id, user_id, role, joined_at, profiles(full_name, course, college_id)")
-      .eq("team_id", teamId);
+      .select("id, team_id, user_id, role, joined_at")
+      .eq("team_id", teamId)
+      .order("joined_at", { ascending: true });
 
     if (membErr) {
-      // Return team with 0 members rather than failing completely
-      console.error("members fetch error", membErr);
+      console.error("Members fetch error:", membErr);
+      return failure(null, membErr);
     }
 
-    const members = (membersRaw || []).map((r) => mapCompetitionMember(r as Record<string, unknown>));
+    const profileMap = await fetchProfilesByUserIds(
+      (membersRaw ?? []).map((member) => String(member.user_id))
+    );
 
-    // Determine if the requesting user is a member so we can decide whether to expose invite_code
-    const callerId = requestingUserId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+    const members = (membersRaw ?? []).map((member) =>
+      mapCompetitionMember(
+        member as Record<string, unknown>,
+        profileMap.get(String(member.user_id))
+      )
+    );
+
+    const callerId =
+      requestingUserId ??
+      (await supabase.auth.getUser()).data.user?.id ??
+      null;
+
     const isMemberOrCaptain =
       callerId != null &&
       (team.captain_user_id === callerId ||
-        members.some((m) => m.userId === callerId));
+        members.some((member) => member.userId === callerId));
 
     const mapped = mapTeam(team as Record<string, unknown>, members);
-    // Non-members never receive the code; members get it through the
-    // member-authorised RPC (server-side check, not frontend hiding).
-    mapped.inviteCode = isMemberOrCaptain ? await fetchInviteCodeForMember(teamId) : "";
+    mapped.inviteCode = isMemberOrCaptain
+      ? await fetchInviteCodeForMember(teamId)
+      : "";
 
     return remoteSuccess(mapped);
   } catch (err) {
@@ -1414,13 +1480,16 @@ export type CompetitionTeamJoinRequestRecord = {
   createdAt: string;
 };
 
-const mapJoinRequest = (row: Record<string, unknown>): CompetitionTeamJoinRequestRecord => ({
+const mapJoinRequest = (
+  row: Record<string, unknown>,
+  profile?: { full_name?: string; college_id?: string; course?: string }
+): CompetitionTeamJoinRequestRecord => ({
   id: String(row.id),
   teamId: String(row.team_id),
   userId: String(row.user_id),
-  fullName: (row.profiles as { full_name?: string } | null)?.full_name ?? "Student",
-  college: (row.profiles as { college_id?: string } | null)?.college_id ?? null,
-  course: (row.profiles as { course?: string } | null)?.course ?? null,
+  fullName: profile?.full_name ?? "Student",
+  college: profile?.college_id ?? null,
+  course: profile?.course ?? null,
   status: (row.status as CompetitionTeamJoinRequestRecord["status"]) ?? "pending",
   createdAt: String(row.created_at),
 });
@@ -1533,18 +1602,39 @@ export async function getPendingTeamJoinRequests(
   teamId: string
 ): Promise<DataResult<CompetitionTeamJoinRequestRecord[]>> {
   if (!supabase || !isSupabaseConfigured) return remoteSuccess([]);
+
   try {
-    const { data: userRes } = await supabase.auth.getUser();
-    if (!userRes.user) return remoteSuccess([]);
+    const { data: userRes, error: userError } = await supabase.auth.getUser();
+    if (userError || !userRes.user) {
+      return failure([], new Error("You must be signed in to view join requests."));
+    }
 
     const { data, error } = await supabase
       .from("competition_team_join_requests")
-      .select("*, profiles(full_name, course, college_id)")
+      .select("id, team_id, user_id, status, created_at")
       .eq("team_id", teamId)
       .eq("status", "pending")
       .order("created_at", { ascending: true });
-    if (error) return failure([], error);
-    return remoteSuccess((data || []).map((r) => mapJoinRequest(r as Record<string, unknown>)));
+
+    if (error) {
+      console.error("Join requests fetch error:", error);
+      return failure([], error);
+    }
+
+    const requests = data ?? [];
+
+    const profileMap = await fetchProfilesByUserIds(
+      requests.map((request) => String(request.user_id))
+    );
+
+    const mapped = requests.map((request) =>
+      mapJoinRequest(
+        request as Record<string, unknown>,
+        profileMap.get(String(request.user_id))
+      )
+    );
+
+    return remoteSuccess(mapped);
   } catch (err) {
     return failure([], err);
   }
