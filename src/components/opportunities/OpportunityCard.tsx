@@ -1,7 +1,9 @@
 import TiltCard from "../TiltCard";
 import Icon from "../Icon";
 import DeadlineProgress from "../DeadlineProgress";
+import { Link } from "../../lib/router";
 import { sanitizeExternalUrl } from "../../lib/urlSafety";
+import { opportunityHref } from "../../lib/opportunityRoute";
 import { opportunityCategoryIcon } from "../../data/opportunityCategories";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
@@ -15,15 +17,10 @@ export const CATEGORY_BADGE: Record<string, string> = {
   scholarship: "bg-brand-red-soft text-brand-red",
 };
 
-export default function OpportunityCard({
-  item,
-  onSelect,
-}: {
-  item: OpportunityRecord;
-  onSelect: (id: string) => void;
-}) {
+export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
   const safeUrl = sanitizeExternalUrl(item.applicationUrl);
   const isTeamCompetition = item.category === "competition" && item.teamFormationEnabled;
+  const href = opportunityHref(item.id);
 
   return (
     <TiltCard className="h-full">
@@ -33,13 +30,13 @@ export default function OpportunityCard({
       >
         {/* Poster */}
         {item.imageUrl ? (
-          <div className="h-36 w-full overflow-hidden bg-surface-soft cursor-pointer" onClick={() => onSelect(item.id)}>
+          <Link href={href} className="block h-36 w-full overflow-hidden bg-surface-soft">
             <img
               src={item.imageUrl}
               alt={`${item.title} poster`}
               className="h-full w-full object-cover hover:scale-105 transition-transform duration-500"
             />
-          </div>
+          </Link>
         ) : null}
 
         <div className="p-6 flex flex-col flex-1 justify-between">
@@ -64,12 +61,12 @@ export default function OpportunityCard({
                 )}
               </div>
             </div>
-            <button
-              onClick={() => onSelect(item.id)}
-              className="mt-4 text-left font-bold text-lg leading-snug text-ink-900 hover:text-brand-blue transition-colors w-full"
+            <Link
+              href={href}
+              className="mt-4 block text-left font-bold text-lg leading-snug text-ink-900 hover:text-brand-blue transition-colors w-full"
             >
               {item.title}
-            </button>
+            </Link>
             <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
             <p className="mt-3 text-sm leading-relaxed text-ink-500 line-clamp-3">{item.description}</p>
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-400">
@@ -97,12 +94,12 @@ export default function OpportunityCard({
           <div className="mt-6 pt-4 border-t border-surface-border">
             <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
             <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => onSelect(item.id)}
+              <Link
+                href={href}
                 className="btn-ghost flex-1 justify-center text-xs font-bold"
               >
                 Details {isTeamCompetition ? "& Teams" : ""}
-              </button>
+              </Link>
               {safeUrl && (
                 <a
                   href={safeUrl}

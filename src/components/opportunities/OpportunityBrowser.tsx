@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import Icon from "../Icon";
 import { SkeletonOpportunityGrid } from "../Skeleton";
 import OpportunityCard from "./OpportunityCard";
-import OpportunityDetail, { type TeamMode } from "./OpportunityDetail";
 import { getOpportunities, type OpportunityRecord } from "../../lib/dataAccess";
 import { opportunityCategoryIcon } from "../../data/opportunityCategories";
 
@@ -22,7 +21,6 @@ type OpportunityBrowserProps = {
   showField?: boolean;
   showCourse?: boolean;
   searchPlaceholder?: string;
-  teamMode?: TeamMode;
   emptyTitle: string;
   emptyDescription: string;
   noResultsTitle?: string;
@@ -51,7 +49,6 @@ export default function OpportunityBrowser({
   showField = true,
   showCourse = false,
   searchPlaceholder = "Search by title, organisation, field or location…",
-  teamMode = "manage",
   emptyTitle,
   emptyDescription,
   noResultsTitle = "No matches for those filters",
@@ -67,7 +64,6 @@ export default function OpportunityBrowser({
   const [course, setCourse] = useState("");
   const [compensation, setCompensation] = useState("");
   const [sort, setSort] = useState<SortKey>("featured");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const categoriesKey = categories.join("|");
 
@@ -292,7 +288,7 @@ export default function OpportunityBrowser({
         ) : filtered.length ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((item) => (
-              <OpportunityCard key={item.id} item={item} onSelect={setSelectedId} />
+              <OpportunityCard key={item.id} item={item} />
             ))}
           </div>
         ) : (
@@ -303,14 +299,6 @@ export default function OpportunityBrowser({
           </div>
         )}
       </div>
-
-      {selectedId && (
-        <OpportunityDetail
-          opportunityId={selectedId}
-          teamMode={teamMode}
-          onClose={() => setSelectedId(null)}
-        />
-      )}
     </div>
   );
 }

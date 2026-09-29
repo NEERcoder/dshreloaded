@@ -1,6 +1,7 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
+import { StudentAvatar } from "../components/circle/StudentCard";
 import { useUnreadNotificationCount } from "../components/NotificationBell";
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation } from "../lib/router";
@@ -11,6 +12,8 @@ import {
   updateProfile,
   getMyCompetitionTeams,
   getConnectionSummary,
+  setProfileVisibility,
+  uploadStudentAvatar,
   type CollegeRecord,
   type ProfileRecord,
   type ProfileInput,
@@ -66,6 +69,13 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Privacy + avatar are owner-controlled and separate from the profile form.
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
+  const [visibilityError, setVisibilityError] = useState<string | null>(null);
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Route guard: logged-out visitors never see dashboard content.
   useEffect(() => {
@@ -209,6 +219,54 @@ export default function DashboardPage() {
     });
     setSaveError(null);
     setEditing(false);
+  }
+
+  async function toggleVisibility() {
+    if (!profile) return;
+    const next = !profile.isPublic;
+    setVisibilitySaving(true);
+    setVisibilityError(null);
+    const result = await setProfileVisibility(next);
+    setVisibilitySaving(false);
+    if (result.error) {
+      setVisibilityError(result.error);
+      return;
+    }
+    // Written back from what the owner asked for — the column is the only one
+    // this control touches.
+    setProfile({ ...profile, isPublic: next });
+  }
+
+  async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // let the same file be picked again after a failure
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Choose an image file — PNG, JPG or WebP.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Keep your photo under 2 MB.");
+      return;
+    }
+
+    const preview = URL.createObjectURL(file);
+    setAvatarPreview(preview);
+    setAvatarError(null);
+    setAvatarSaving(true);
+
+    const result = await uploadStudentAvatar(file);
+    setAvatarSaving(false);
+    setAvatarPreview(null);
+    URL.revokeObjectURL(preview);
+
+    const url = result.data;
+    if (result.error || !url) {
+      setAvatarError(result.error ?? "We couldn't upload that photo.");
+      return;
+    }
+    setProfile((current) => (current ? { ...current, avatarUrl: url } : current));
   }
 
   async function handleSignOut() {
@@ -456,6 +514,105 @@ export default function DashboardPage() {
             </div>
           ) : null}
         </div>
+
+        {/* PROFILE PHOTO & VISIBILITY — owner-controlled, separate from the form */}
+        {!dataLoading && !loadError && profile && (
+          <div className="mt-6 max-w-2xl">
+            <div className="card p-6 sm:p-8">
+              <h2 className="text-lg font-bold text-ink-900">Profile photo &amp; visibility</h2>
+              <p className="mt-1 text-sm text-ink-500">
+                How you appear in CIRCLE and on your public profile link.
+              </p>
+
+              <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Your photo, preview"
+                    className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-white"
+                  />
+                ) : (
+                  <StudentAvatar
+                    src={profile.avatarUrl}
+                    name={profile.fullName}
+                    className="h-16 w-16 text-xl ring-2 ring-white"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <label className="field-label" htmlFor="dash-avatar">Profile photo</label>
+                  <input
+                    id="dash-avatar"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={avatarSaving}
+                    onChange={handleAvatarChange}
+                    className="mt-2 block w-full text-xs font-semibold text-ink-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-blue-soft file:px-3 file:py-2 file:text-xs file:font-bold file:text-brand-blue-dark disabled:opacity-60"
+                  />
+                  <p className="mt-1 text-[11px] leading-relaxed text-ink-400">
+                    {avatarSaving
+                      ? "Uploading…"
+                      : profile.avatarUrl
+                        ? "Your photo is live on CIRCLE cards. Square photos crop best."
+                        : "No photo yet — your cards show your initials."}
+                  </p>
+                </div>
+              </div>
+
+              {avatarError && (
+                <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+                  {avatarError}
+                </div>
+              )}
+
+              <div className="mt-6 border-t border-surface-border pt-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-ink-900">Public profile</p>
+                    <p className="mt-1 max-w-md text-xs leading-relaxed text-ink-500">
+                      Off keeps your profile to signed-in JAVLIN students. On lets anyone with your profile link
+                      see your name, college, course, level and the records you mark public.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={profile.isPublic}
+                    aria-label="Public profile"
+                    onClick={toggleVisibility}
+                    disabled={visibilitySaving}
+                    className={`inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors disabled:opacity-60 ${
+                      profile.isPublic ? "bg-brand-blue" : "bg-surface-border"
+                    }`}
+                  >
+                    <span
+                      className={`h-6 w-6 rounded-full bg-white shadow-soft transition-transform duration-200 ${
+                        profile.isPublic ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <p className="mt-3 text-[11px] font-bold" role="status" aria-live="polite">
+                  {visibilityError ? (
+                    <span className="text-brand-red">{visibilityError}</span>
+                  ) : visibilitySaving ? (
+                    <span className="inline-flex items-center gap-1.5 text-ink-500">
+                      <Icon name="loader" className="h-3.5 w-3.5 animate-spin" /> Updating…
+                    </span>
+                  ) : (
+                    <span className="text-ink-400">
+                      {profile.isPublic ? "Visible to anyone with your link." : "Hidden from visitors."}
+                    </span>
+                  )}
+                </p>
+
+                <Link href={`/circle/${profile.userId}`} className="btn-outline-blue mt-4 min-h-[40px] text-xs">
+                  <Icon name="external" className="h-4 w-4" /> View my CIRCLE profile
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* MY TEAMS */}
         <div className="mt-10 max-w-2xl">

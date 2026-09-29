@@ -1,19 +1,19 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Icon from "./Icon";
 import BrandMark from "./BrandMark";
+import CollegeSearch from "./CollegeSearch";
 import MobileMenu from "./MobileMenu";
 import NotificationBell from "./NotificationBell";
-import { Link, useLocation } from "../lib/router";
+import { Link } from "../lib/router";
 
 /**
  * The top bar is deliberately thin: menu, search and notifications. Everything
  * account-related (profile, dashboard, sign in/out, admin) lives in the drawer.
+ * Row height is fixed at h-16 / sm:h-20 — nothing in here may make it taller.
  */
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [term, setTerm] = useState("");
-  const { navigate } = useLocation();
 
   useEffect(() => {
     let ticking = false;
@@ -37,12 +37,6 @@ export default function Navbar() {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
-
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const query = term.trim();
-    navigate(query ? `/explore?q=${encodeURIComponent(query)}` : "/explore");
-  }
 
   return (
     <>
@@ -70,22 +64,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center" role="search">
-            <label className="relative flex w-full items-center">
-              <span className="sr-only">Search colleges</span>
-              <Icon
-                name="search"
-                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400"
-              />
-              <input
-                type="search"
-                value={term}
-                onChange={(event) => setTerm(event.target.value)}
-                placeholder="Search your college..."
-                className="h-11 w-full rounded-full border border-surface-border bg-white/85 pl-10 pr-4 text-sm font-medium text-ink-900 placeholder:text-ink-400 focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
-              />
-            </label>
-          </form>
+          <CollegeSearch />
 
           <div className="shrink-0">
             <NotificationBell className="px-1.5" />

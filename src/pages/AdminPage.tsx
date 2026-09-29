@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import StarRating from "../components/StarRating";
+import PulseAdmin from "../components/admin/PulseAdmin";
 import {
   deleteOpportunity,
   deleteReview,
@@ -15,6 +16,7 @@ import {
   getAdminVideos,
   getAdminTeamMembers,
   getAdminTeamRoles,
+  getAdminPulsePosts,
   getColleges,
   moderateReview,
   saveOpportunity,
@@ -29,6 +31,7 @@ import {
   type CollegeRecord,
   type OpportunityInput,
   type OpportunityRecord,
+  type PulsePostRecord,
   type ReviewRecord,
   type MentorRecord,
   type VideoRecord,
@@ -264,7 +267,7 @@ function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => 
   );
 }
 
-type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "team_roles" | "team_members" | "colleges";
+type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "pulse" | "team_roles" | "team_members" | "colleges";
 
 function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabType>("opportunities");
@@ -273,17 +276,19 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
   const [reviews, setReviews] = useState<ReviewRecord[]>([]);
   const [mentors, setMentors] = useState<MentorRecord[]>([]);
   const [videos, setVideos] = useState<VideoRecord[]>([]);
+  const [pulsePosts, setPulsePosts] = useState<PulsePostRecord[]>([]);
   const [teamRoles, setTeamRoles] = useState<TeamRoleRecord[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMemberRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
   async function refresh() {
-    const [colRes, oppRes, revRes, menRes, vidRes, rolRes, memRes] = await Promise.all([
+    const [colRes, oppRes, revRes, menRes, vidRes, pulseRes, rolRes, memRes] = await Promise.all([
       getColleges(),
       getAdminOpportunities(),
       getAdminReviews(),
       getAdminMentors(),
       getAdminVideos(),
+      getAdminPulsePosts(),
       getAdminTeamRoles(),
       getAdminTeamMembers(),
     ]);
@@ -292,6 +297,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
     setReviews(revRes.data);
     setMentors(menRes.data);
     setVideos(vidRes.data);
+    setPulsePosts(pulseRes.data);
     setTeamRoles(rolRes.data);
     setTeamMembers(memRes.data);
   }
@@ -329,6 +335,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               { key: "reviews" as TabType, label: "Reviews (Moderation)", count: reviews.filter((r) => r.status === "pending").length },
               { key: "mentors" as TabType, label: "Mentors", count: mentors.length },
               { key: "videos" as TabType, label: "Videos (DU Unfiltered)", count: videos.length },
+              { key: "pulse" as TabType, label: "PULSE Posts", count: pulsePosts.length },
               { key: "team_roles" as TabType, label: "Team Roles", count: teamRoles.length },
               { key: "team_members" as TabType, label: "Team Members", count: teamMembers.length },
               { key: "colleges" as TabType, label: "College Images", count: colleges.length },
@@ -381,6 +388,12 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               <VideoManager
                 videos={videos}
                 colleges={colleges}
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "pulse" && (
+              <PulseAdmin
+                items={pulsePosts}
                 onSaved={(msg) => { setMessage(msg); refresh(); }}
               />
             )}

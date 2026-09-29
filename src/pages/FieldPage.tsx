@@ -26,7 +26,6 @@ export default function FieldPage() {
           categories={["competition"]}
           showCompensation
           showCourse
-          teamMode="discover"
           searchPlaceholder="Search competitions, organisers or domains…"
           emptyTitle="No competitions on the field right now"
           emptyDescription="New competitions are listed here as soon as they open. Check back soon."

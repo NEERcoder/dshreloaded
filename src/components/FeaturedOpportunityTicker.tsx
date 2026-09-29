@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "../lib/router";
+import { opportunityHref } from "../lib/opportunityRoute";
 import { getFeaturedOpportunities, type OpportunityRecord } from "../lib/dataAccess";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import OpportunityCarousel from "./home/OpportunityCarousel";
@@ -32,10 +33,10 @@ export default function FeaturedOpportunityTicker() {
   return (
     <section
       ref={sectionRef}
-      className={`pb-14 sm:pb-20 reveal ${isVisible ? "is-visible" : ""}`}
+      className={`pb-10 sm:pb-14 reveal ${isVisible ? "is-visible" : ""}`}
       aria-label="Trending opportunities"
     >
-      <div className="container-px mb-7">
+      <div className="container-px mb-5">
         <p className="eyebrow text-brand-red">TRENDING</p>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
@@ -65,14 +66,14 @@ export default function FeaturedOpportunityTicker() {
         </div>
       ) : (
         <div className="container-px">
-          <OpportunityCarousel items={items} href="/opportunities" />
+          <OpportunityCarousel items={items} />
         </div>
       )}
 
       <ul className="sr-only">
         {items.map((item) => (
           <li key={item.id}>
-            <Link href="/opportunities">{item.title} at {item.organization}</Link>
+            <Link href={opportunityHref(item.id)}>{item.title} at {item.organization}</Link>
           </li>
         ))}
       </ul>

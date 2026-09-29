@@ -62,14 +62,16 @@ export default function NotificationBell({ className = "" }: { className?: strin
     <Link
       href="/notifications"
       aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-      className={`relative inline-flex items-center justify-center rounded-xl transition-colors duration-200 min-h-[40px] min-w-[40px] ${
-        isActive ? "text-brand-blue bg-brand-blue-soft" : "text-ink-700 hover:text-brand-blue"
+      className={`relative inline-flex items-center justify-center rounded-xl transition-colors duration-200 min-h-[44px] min-w-[44px] ${
+        isActive
+          ? "text-brand-blue bg-brand-blue-soft"
+          : "text-ink-900 hover:text-brand-blue hover:bg-brand-blue-soft/60"
       } ${className}`}
     >
-      <Icon name="bell" className="h-5 w-5" />
+      <Icon name="bell" className="h-6 w-6" />
       {unread > 0 && (
         <span
-          className="absolute -top-0.5 right-0 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-black leading-none text-white"
+          className="absolute -top-0.5 right-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-black leading-none text-white"
           aria-hidden="true"
         >
           {badgeLabel(unread)}

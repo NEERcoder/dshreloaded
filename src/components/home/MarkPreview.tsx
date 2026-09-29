@@ -15,7 +15,7 @@ const TRACKS = [
 export default function MarkPreview() {
   return (
     <section id="mark" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-10 sm:py-14">
+      <div className="container-px py-9 sm:py-12">
         <SectionHeader
           eyebrow="MARK"
           title="Document your college years. Build your record."

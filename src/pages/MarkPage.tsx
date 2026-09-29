@@ -1,32 +1,62 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
-import { initialsOf, yearLabel } from "../components/circle/StudentCard";
+import {
+  RECORD_CATEGORY_ICONS,
+  RECORD_CATEGORY_LABELS,
+  StudentRecordList,
+  initialsOf,
+  yearLabel,
+} from "../components/circle/StudentCard";
 import { Link } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
+  STUDENT_RECORD_CATEGORIES,
+  createStudentRecord,
+  deleteStudentRecord,
   getColleges,
   getCurrentUserProfile,
   getMyCompetitionTeams,
   getOpportunities,
+  getStudentRecords,
+  updateStudentRecord,
   type CollegeRecord,
   type CompetitionTeamRecord,
   type ProfileRecord,
+  type StudentRecord,
+  type StudentRecordCategory,
+  type StudentRecordInput,
 } from "../lib/dataAccess";
 import { buildParticipations, resolveTier, type Participation } from "../lib/markTier";
 
 const FUTURE_SECTIONS = [
   { icon: "briefcase", label: "Experience" },
-  { icon: "building", label: "Internships" },
-  { icon: "award", label: "Certifications" },
-  { icon: "palette", label: "Projects" },
-  { icon: "flask", label: "Research" },
-  { icon: "users", label: "Campus Roles & Leadership" },
-  { icon: "trophy", label: "Achievements" },
   { icon: "star", label: "Skills" },
 ];
 
 const EMPTY_RECORD_COPY = "Nothing here yet. Add it as you build.";
+
+type RecordFormState = {
+  category: StudentRecordCategory;
+  title: string;
+  organization: string;
+  description: string;
+  year: string;
+  proofUrl: string;
+  isPublic: boolean;
+};
+
+function blankRecordForm(): RecordFormState {
+  return {
+    category: "internship",
+    title: "",
+    organization: "",
+    description: "",
+    year: String(new Date().getFullYear()),
+    proofUrl: "",
+    isPublic: true,
+  };
+}
 
 function formatDate(value: string | null): string | null {
   if (!value) return null;
@@ -47,9 +77,19 @@ export default function MarkPage() {
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [colleges, setColleges] = useState<CollegeRecord[]>([]);
   const [participations, setParticipations] = useState<Participation[]>([]);
+  const [records, setRecords] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Records form: one short inline form, never a wizard.
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [recordForm, setRecordForm] = useState<RecordFormState>(blankRecordForm());
+  const [recordSaving, setRecordSaving] = useState(false);
+  const [recordError, setRecordError] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -62,19 +102,22 @@ export default function MarkPage() {
     setError(null);
 
     async function load() {
-      // Three concurrent reads, no per-row queries. The opportunity feed is
+      // Four concurrent reads, no per-row queries. The opportunity feed is
       // only fetched when there are team records to enrich.
-      const [profileResult, collegesResult, teamsResult] = await Promise.all([
+      const [profileResult, collegesResult, teamsResult, recordsResult] = await Promise.all([
         getCurrentUserProfile(),
         getColleges(),
         getMyCompetitionTeams(),
+        getStudentRecords(currentUserId),
       ]);
       if (cancelled) return;
 
       if (profileResult.error) setError(profileResult.error);
       if (teamsResult.error) setError(teamsResult.error);
+      if (recordsResult.error) setRecordError(recordsResult.error);
       setProfile(profileResult.data);
       setColleges(collegesResult.data);
+      setRecords(recordsResult.data ?? []);
 
       const teams = teamsResult.data ?? [];
       const published = teams.length ? (await getOpportunities()).data : [];
@@ -108,6 +151,105 @@ export default function MarkPage() {
       profile.graduationYear > 0,
     ].filter(Boolean).length;
   }, [profile, college]);
+
+  const publicRecordCount = useMemo(
+    () => records.filter((record) => record.isPublic).length,
+    [records]
+  );
+
+  function openNewRecord() {
+    setEditingId(null);
+    setRecordForm(blankRecordForm());
+    setRecordError(null);
+    setPendingDeleteId(null);
+    setFormOpen(true);
+  }
+
+  function openEditRecord(record: StudentRecord) {
+    setEditingId(record.id);
+    setRecordForm({
+      category: record.category,
+      title: record.title,
+      organization: record.organization,
+      description: record.description,
+      year: String(record.year || new Date().getFullYear()),
+      proofUrl: record.proofUrl ?? "",
+      isPublic: record.isPublic,
+    });
+    setRecordError(null);
+    setPendingDeleteId(null);
+    setFormOpen(true);
+  }
+
+  function closeRecordForm() {
+    setFormOpen(false);
+    setEditingId(null);
+    setRecordError(null);
+  }
+
+  // Re-read the owner's rows from RLS instead of trusting the write echo.
+  async function refreshRecords(userId: string) {
+    const result = await getStudentRecords(userId);
+    if (result.error) {
+      setRecordError(result.error);
+      return;
+    }
+    setRecords(result.data ?? []);
+  }
+
+  async function submitRecord(event: FormEvent) {
+    event.preventDefault();
+    if (!user) return;
+    setRecordError(null);
+
+    const title = recordForm.title.trim();
+    if (title.length < 2) {
+      setRecordError("Give the record a title.");
+      return;
+    }
+    const year = Number(recordForm.year);
+    if (!Number.isFinite(year) || year < 1990 || year > 2200) {
+      setRecordError("Use a valid year between 1990 and 2200.");
+      return;
+    }
+
+    const input: StudentRecordInput = {
+      category: recordForm.category,
+      title,
+      organization: recordForm.organization.trim(),
+      description: recordForm.description.trim(),
+      year,
+      proofUrl: recordForm.proofUrl.trim(),
+      isPublic: recordForm.isPublic,
+    };
+
+    setRecordSaving(true);
+    const result = editingId
+      ? await updateStudentRecord(editingId, input)
+      : await createStudentRecord(input);
+    setRecordSaving(false);
+
+    if (result.error || !result.data) {
+      setRecordError(result.error ?? "We couldn't save that record.");
+      return;
+    }
+    closeRecordForm();
+    await refreshRecords(user.id);
+  }
+
+  async function deleteRecord(record: StudentRecord) {
+    if (!user) return;
+    setDeleting(true);
+    const result = await deleteStudentRecord(record.id);
+    setDeleting(false);
+    setPendingDeleteId(null);
+    if (result.error) {
+      setRecordError(result.error);
+      return;
+    }
+    if (editingId === record.id) closeRecordForm();
+    await refreshRecords(user.id);
+  }
 
   if (authLoading || loading) {
     return (
@@ -339,12 +481,265 @@ export default function MarkPage() {
               </p>
             </section>
 
+            {/* MY RECORDS — the student's own internships, projects, awards. */}
+            <section className="mt-6 card border border-surface-border bg-white p-6 sm:p-7">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
+                  My records
+                </h2>
+                <p className="text-xs font-bold text-ink-400">
+                  {records.length} added · {publicRecordCount} public
+                </p>
+              </div>
+              <p className="mt-1 text-sm leading-relaxed text-ink-500">
+                What you've done outside JAVLIN — internships, projects, certifications, awards. Public records
+                show on your CIRCLE profile once you've made that profile public.
+              </p>
+
+              {!formOpen && records.length > 0 && (
+                <button type="button" onClick={openNewRecord} className="btn-secondary mt-4 min-h-[40px] text-sm">
+                  <Icon name="plus" className="h-4 w-4" /> Add record
+                </button>
+              )}
+
+              {recordError && (
+                <div
+                  role="alert"
+                  className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-dark"
+                >
+                  {recordError}
+                </div>
+              )}
+
+              {formOpen && (
+                <form
+                  onSubmit={submitRecord}
+                  className="mt-5 rounded-2xl border border-surface-border bg-surface-soft/60 p-5"
+                >
+                  <h3 className="text-sm font-extrabold text-ink-900">
+                    {editingId ? "Edit record" : "New record"}
+                  </h3>
+
+                  <div className="mt-4 grid gap-4">
+                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
+                      <div>
+                        <label className="field-label" htmlFor="mark-record-category">Category</label>
+                        <div className="flex items-center gap-2">
+                          <span className="mt-2 flex h-[46px] w-11 shrink-0 items-center justify-center rounded-xl bg-brand-blue-pale text-brand-blue-dark">
+                            <Icon name={RECORD_CATEGORY_ICONS[recordForm.category]} className="h-4 w-4" />
+                          </span>
+                          <select
+                            id="mark-record-category"
+                            disabled={recordSaving}
+                            value={recordForm.category}
+                            onChange={(e) => setRecordForm({ ...recordForm, category: e.target.value as StudentRecordCategory })}
+                            className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {STUDENT_RECORD_CATEGORIES.map((category) => (
+                              <option key={category} value={category}>
+                                {RECORD_CATEGORY_LABELS[category]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="field-label" htmlFor="mark-record-year">Year</label>
+                        <input
+                          id="mark-record-year"
+                          type="number"
+                          min={1990}
+                          max={2200}
+                          required
+                          disabled={recordSaving}
+                          value={recordForm.year}
+                          onChange={(e) => setRecordForm({ ...recordForm, year: e.target.value })}
+                          className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="field-label" htmlFor="mark-record-title">Title</label>
+                      <input
+                        id="mark-record-title"
+                        type="text"
+                        required
+                        maxLength={140}
+                        disabled={recordSaving}
+                        value={recordForm.title}
+                        onChange={(e) => setRecordForm({ ...recordForm, title: e.target.value })}
+                        className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                        placeholder="e.g. Machine Learning Intern"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="field-label" htmlFor="mark-record-organization">Organization</label>
+                      <input
+                        id="mark-record-organization"
+                        type="text"
+                        maxLength={140}
+                        disabled={recordSaving}
+                        value={recordForm.organization}
+                        onChange={(e) => setRecordForm({ ...recordForm, organization: e.target.value })}
+                        className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                        placeholder="e.g. Zoho, IIT Madras, your college team"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="field-label" htmlFor="mark-record-description">What you did (optional)</label>
+                      <textarea
+                        id="mark-record-description"
+                        rows={3}
+                        maxLength={600}
+                        disabled={recordSaving}
+                        value={recordForm.description}
+                        onChange={(e) => setRecordForm({ ...recordForm, description: e.target.value })}
+                        className="field-input resize-y disabled:opacity-60 disabled:cursor-not-allowed"
+                        placeholder="One or two lines — scope, your role, the outcome."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="field-label" htmlFor="mark-record-proof">Proof link (optional)</label>
+                      <input
+                        id="mark-record-proof"
+                        type="url"
+                        disabled={recordSaving}
+                        value={recordForm.proofUrl}
+                        onChange={(e) => setRecordForm({ ...recordForm, proofUrl: e.target.value })}
+                        className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                        placeholder="https://certificate-or-post-url"
+                      />
+                    </div>
+
+                    <label className="flex items-start gap-3 rounded-xl border border-surface-border bg-white p-4">
+                      <input
+                        type="checkbox"
+                        checked={recordForm.isPublic}
+                        disabled={recordSaving}
+                        onChange={(e) => setRecordForm({ ...recordForm, isPublic: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-brand-blue"
+                      />
+                      <span>
+                        <span className="block text-sm font-bold text-ink-900">Show on my profile</span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-ink-500">
+                          Public records are the only ones anyone else can read, and only when your CIRCLE
+                          profile is public.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <button type="submit" disabled={recordSaving} className="btn-primary min-h-[40px] disabled:opacity-60">
+                      {recordSaving ? (
+                        <>
+                          <Icon name="loader" className="h-4 w-4 animate-spin" /> Saving…
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="check" className="h-4 w-4" /> {editingId ? "Save changes" : "Add record"}
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={closeRecordForm}
+                      disabled={recordSaving}
+                      className="btn-ghost min-h-[40px] disabled:opacity-60"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              <div className="mt-5">
+                {records.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-surface-border bg-surface-soft/60 p-6 text-center">
+                    <p className="text-sm font-bold text-ink-700">{EMPTY_RECORD_COPY}</p>
+                    <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink-400">
+                      Record an internship, a project, a certification — you choose whether each one is public.
+                    </p>
+                    {!formOpen && (
+                      <button
+                        type="button"
+                        onClick={openNewRecord}
+                        className="btn-secondary mt-4 inline-flex min-h-[40px] text-sm"
+                      >
+                        <Icon name="plus" className="h-4 w-4" /> Add your first record
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <StudentRecordList
+                    records={records}
+                    showPrivacyFlag
+                    renderActions={(record) =>
+                      pendingDeleteId === record.id ? (
+                        <>
+                          <span className="text-[11px] font-bold text-ink-500">Delete “{record.title}”?</span>
+                          <button
+                            type="button"
+                            disabled={deleting}
+                            onClick={() => deleteRecord(record)}
+                            className="btn-secondary min-h-[34px] px-3 text-xs text-brand-red-dark disabled:opacity-60"
+                          >
+                            {deleting ? (
+                              <>
+                                <Icon name="loader" className="h-3.5 w-3.5 animate-spin" /> Deleting…
+                              </>
+                            ) : (
+                              "Confirm delete"
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPendingDeleteId(null)}
+                            className="btn-ghost min-h-[34px] px-3 text-xs"
+                          >
+                            Keep
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openEditRecord(record)}
+                            className="btn-ghost min-h-[34px] px-3 text-xs"
+                          >
+                            <Icon name="pen" className="h-3.5 w-3.5" /> Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPendingDeleteId(record.id)}
+                            className="btn-ghost min-h-[34px] px-3 text-xs text-brand-red"
+                          >
+                            <Icon name="trash" className="h-3.5 w-3.5" /> Delete
+                          </button>
+                        </>
+                      )
+                    }
+                  />
+                )}
+              </div>
+
+              <p className="mt-5 text-[11px] leading-relaxed text-ink-400">
+                Records are yours to write and yours to hide. JAVLIN doesn't verify them against an issuer, so a
+                record states what you said you did.
+              </p>
+            </section>
+
             <section className="mt-6">
               <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
                 The rest of your record
               </h2>
               <p className="mt-1 text-sm text-ink-500">
-                {EMPTY_RECORD_COPY} These sections fill in as JAVLIN opens each record type.
+                {EMPTY_RECORD_COPY} Competitions are counted for you; everything else you add under My records.
+                These sections are the next record types JAVLIN will open.
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {FUTURE_SECTIONS.map((section) => (
@@ -380,6 +775,14 @@ export default function MarkPage() {
                   <div className="flex items-center justify-between gap-2">
                     <dt className="font-semibold text-ink-500">Profile fields</dt>
                     <dd className="font-extrabold text-ink-900">{profile ? `${profileFieldCount} / 5` : "0 / 5"}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="font-semibold text-ink-500">Records you added</dt>
+                    <dd className="font-extrabold text-ink-900">{records.length}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="font-semibold text-ink-500">Public on profile</dt>
+                    <dd className="font-extrabold text-ink-900">{publicRecordCount}</dd>
                   </div>
                 </dl>
                 <Link href="/dashboard" className="btn-secondary mt-4 min-h-[40px] w-full text-sm">

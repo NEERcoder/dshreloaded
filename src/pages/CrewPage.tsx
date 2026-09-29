@@ -364,7 +364,7 @@ export default function CrewPage() {
           ) : (
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {competitions.slice(0, 8).map((item) => (
-                <CompactOpportunityCard key={item.id} item={item} href="/field" />
+                <CompactOpportunityCard key={item.id} item={item} />
               ))}
             </div>
           )}

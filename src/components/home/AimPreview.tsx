@@ -33,7 +33,7 @@ export default function AimPreview() {
 
   return (
     <section id="aim" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-10 sm:py-14">
+      <div className="container-px py-9 sm:py-12">
         <SectionHeader
           eyebrow="AIM"
           title="Internships, jobs, certifications"
@@ -42,7 +42,7 @@ export default function AimPreview() {
           viewAllLabel="View All AIM"
           iconSrc={categoryById("aim")?.iconSrc}
         />
-        <div className="mt-6">
+        <div className="mt-5">
           {loading ? (
             <CardRowSkeleton />
           ) : items.length === 0 ? (
@@ -54,7 +54,7 @@ export default function AimPreview() {
               ctaHref="/field"
             />
           ) : (
-            <OpportunityCarousel items={items} href="/aim" />
+            <OpportunityCarousel items={items} />
           )}
         </div>
       </div>

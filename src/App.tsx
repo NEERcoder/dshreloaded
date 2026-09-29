@@ -20,6 +20,8 @@ import ExplorePage from "./pages/ExplorePage";
 import CollegePage from "./pages/CollegePage";
 import JoinPage from "./pages/JoinPage";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
+import OpportunityDetailPage from "./pages/OpportunityDetailPage";
+import { isOpportunityCategoryParam } from "./lib/opportunityRoute";
 import AimPage from "./pages/AimPage";
 import FieldPage from "./pages/FieldPage";
 import CrewPage from "./pages/CrewPage";
@@ -88,8 +90,17 @@ function AppRouter() {
   else if (path.startsWith("/explore/")) page = <CollegePage slug={path.replace("/explore/", "").replace(/\/$/, "")} />;
   else if (path === "/join") page = <JoinPage />;
   else if (path.startsWith("/join/")) page = <JoinPage roleId={path.replace("/join/", "").replace(/\/$/, "")} />;
-  else if (path === "/opportunities" || path.startsWith("/opportunities/")) {
-    page = <OpportunitiesPage categoryId={path.replace("/opportunities", "").replace(/^\/|\/$/g, "") || undefined} />;
+  else if (path === "/opportunities") page = <OpportunitiesPage />;
+  else if (path.startsWith("/opportunities/")) {
+    // One path, two meanings: the four known slugs are category filters, and
+    // anything else on this path is an opportunity id — which keeps the
+    // category route intact while making a pasted detail link refreshable.
+    const param = path.replace("/opportunities/", "").replace(/\/$/, "");
+    page = isOpportunityCategoryParam(param) ? (
+      <OpportunitiesPage categoryId={param} />
+    ) : (
+      <OpportunityDetailPage opportunityId={param} />
+    );
   }
   else if (path === "/admin") page = <AdminPage />;
   else if (path === "/login" || path === "/signin") page = <LoginPage />;

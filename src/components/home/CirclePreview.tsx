@@ -5,12 +5,13 @@ import { categoryById } from "../../lib/categories";
 import { Link } from "../../lib/router";
 import { useAuth } from "../../context/AuthContext";
 import EmptyState from "./EmptyState";
-import { initialsOf, yearLabel } from "../circle/StudentCard";
+import { LevelBadge, StudentAvatar, VerifiedMark, yearLabel } from "../circle/StudentCard";
 import {
   acceptConnectionRequest,
   cancelConnectionRequest,
   getConnectionStates,
   getStudentDirectory,
+  getStudentLevels,
   sendConnectionRequest,
   type ConnectionRef,
   type StudentProfileRecord,
@@ -23,11 +24,13 @@ function ProfileCard({
   student,
   connection,
   busy,
+  competitions,
   onConnect,
 }: {
   student: StudentProfileRecord;
   connection: ConnectionRef | undefined;
   busy: ConnectAction | null;
+  competitions: number;
   onConnect: (student: StudentProfileRecord, action: ConnectAction) => void;
 }) {
   const state = connection?.state ?? "none";
@@ -40,9 +43,11 @@ function ProfileCard({
         aria-label={`View ${student.fullName}'s profile`}
         className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue rounded-full"
       >
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-blue-soft text-xl font-extrabold text-brand-blue ring-2 ring-white transition-transform duration-300 group-hover:scale-[1.03]">
-          {initialsOf(student.fullName)}
-        </span>
+        <StudentAvatar
+          src={student.avatarUrl}
+          name={student.fullName}
+          className="h-20 w-20 text-xl ring-2 ring-white transition-transform duration-300 group-hover:scale-[1.03]"
+        />
         <h3 className="mt-3 line-clamp-2 text-sm font-extrabold leading-snug text-ink-900 transition-colors group-hover:text-brand-blue">
           {student.fullName}
         </h3>
@@ -54,6 +59,15 @@ function ProfileCard({
       <p className="mt-0.5 text-[11px] font-semibold text-ink-400">
         {student.yearOfStudy ? yearLabel(student.yearOfStudy) : "Year not listed"}
       </p>
+
+      <div className="mt-2 flex min-h-[18px] flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
+        {(competitions > 0 || student.isPublic) && (
+          <>
+            <LevelBadge competitions={competitions} />
+            {student.isPublic && <VerifiedMark />}
+          </>
+        )}
+      </div>
 
       <div className="mt-4 w-full">
         {state === "accepted" ? (
@@ -122,6 +136,7 @@ export default function CirclePreview() {
   const { user } = useAuth();
   const [students, setStudents] = useState<StudentProfileRecord[]>([]);
   const [connectionStates, setConnectionStates] = useState<Record<string, ConnectionRef>>({});
+  const [levels, setLevels] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<{ id: string; action: ConnectAction } | null>(null);
@@ -130,18 +145,31 @@ export default function CirclePreview() {
     if (!user) {
       setStudents([]);
       setConnectionStates({});
+      setLevels({});
       setLoading(false);
       return;
     }
     let cancelled = false;
+    const currentUserId = user.id;
     setLoading(true);
-    Promise.all([getStudentDirectory(), getConnectionStates()]).then(([directory, connections]) => {
+
+    async function load() {
+      const [directory, connections] = await Promise.all([getStudentDirectory(), getConnectionStates()]);
       if (cancelled) return;
       if (directory.error) setError(directory.error);
-      setStudents((directory.data ?? []).filter((student) => student.userId !== user.id).slice(0, 10));
+      const visible = (directory.data ?? []).filter((student) => student.userId !== currentUserId).slice(0, 10);
+      setStudents(visible);
       setConnectionStates(connections.data ?? {});
       setLoading(false);
-    });
+
+      // One batched RPC for the whole row of cards — never one per profile.
+      // The carousel paints first and the level badges land a moment later.
+      const levelResult = await getStudentLevels(visible.map((student) => student.userId));
+      if (cancelled) return;
+      setLevels(levelResult.data ?? {});
+    }
+
+    load();
     return () => {
       cancelled = true;
     };
@@ -167,8 +195,8 @@ export default function CirclePreview() {
   const loopStudents = shouldLoop ? [...students, ...students] : students;
 
   return (
-    <section id="circle" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-10 sm:py-14">
+    <section id="circle" className="scroll-mt-24 border-t glass-panel-tint">
+      <div className="container-px py-9 sm:py-12">
         <SectionHeader
           eyebrow="CIRCLE"
           title="Find your people with common interests"
@@ -178,7 +206,7 @@ export default function CirclePreview() {
           iconSrc={categoryById("circle")?.iconSrc}
         />
 
-        <div className="mt-6">
+        <div className="mt-5">
           {loading ? (
             <div className="flex gap-4">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -216,6 +244,7 @@ export default function CirclePreview() {
                     student={student}
                     connection={connectionStates[student.userId]}
                     busy={busy?.id === student.userId ? busy.action : null}
+                    competitions={levels[student.userId] ?? 0}
                     onConnect={handleConnect}
                   />
                 ))}
@@ -229,6 +258,7 @@ export default function CirclePreview() {
                       student={student}
                       connection={connectionStates[student.userId]}
                       busy={busy?.id === student.userId ? busy.action : null}
+                      competitions={levels[student.userId] ?? 0}
                       onConnect={handleConnect}
                     />
                   ))}

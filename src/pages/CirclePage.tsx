@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import {
   getConnectionStates,
   getStudentDirectory,
+  getStudentLevels,
   type ConnectionRef,
   type StudentProfileRecord,
 } from "../lib/dataAccess";
@@ -22,6 +23,7 @@ export default function CirclePage() {
 
   const [students, setStudents] = useState<StudentProfileRecord[]>([]);
   const [connectionStates, setConnectionStates] = useState<Record<string, ConnectionRef>>({});
+  const [levels, setLevels] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,20 +37,33 @@ export default function CirclePage() {
     if (!user) {
       setStudents([]);
       setConnectionStates({});
+      setLevels({});
       setLoading(false);
       return;
     }
     let cancelled = false;
     setLoading(true);
-    // Two queries for the whole page, not one per card: the directory plus the
-    // viewer's own relationship rows.
-    Promise.all([getStudentDirectory(), getConnectionStates()]).then(([directory, connections]) => {
+
+    async function load() {
+      // Two queries for the whole page, not one per card: the directory plus
+      // the viewer's own relationship rows.
+      const [directory, connections] = await Promise.all([
+        getStudentDirectory(),
+        getConnectionStates(),
+      ]);
       if (cancelled) return;
       if (directory.error) setError(directory.error);
       setStudents(directory.data);
       setConnectionStates(connections.data);
       setLoading(false);
-    });
+
+      // Competition counts for every card in ONE batched RPC.
+      const levelResult = await getStudentLevels(directory.data.map((student) => student.userId));
+      if (cancelled) return;
+      setLevels(levelResult.data ?? {});
+    }
+
+    load();
     return () => {
       cancelled = true;
     };
@@ -269,6 +284,7 @@ export default function CirclePage() {
                       student={student}
                       isSelf={student.userId === user.id}
                       connectionState={student.userId === user.id ? undefined : connectionStates[student.userId]?.state}
+                      competitions={levels[student.userId] ?? 0}
                     />
                   ))}
                 </div>

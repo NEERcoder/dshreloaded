@@ -509,7 +509,8 @@ export default function ExplorePage() {
   const [collegeError, setCollegeError] = useState<string | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
-  // The navbar search bar arrives as ?q= — keep the local filter in sync with it.
+  // A pasted or bookmarked /explore?q= still pre-fills the directory filter.
+  // The navbar no longer uses it: its combobox routes straight to /explore/:slug.
   useEffect(() => {
     setSearch(new URLSearchParams(locationSearch).get("q") ?? "");
   }, [locationSearch]);

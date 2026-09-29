@@ -4,21 +4,31 @@ import Icon from "../components/Icon";
 import EmptyState from "../components/home/EmptyState";
 import { SkeletonOpportunityGrid } from "../components/Skeleton";
 import OpportunityCard from "../components/opportunities/OpportunityCard";
-import OpportunityDetail from "../components/opportunities/OpportunityDetail";
 import { Link } from "../lib/router";
 import {
   getOpportunities,
   getOpenTeamRoles,
+  getPulsePosts,
   getVideos,
   type OpportunityRecord,
+  type PulsePostRecord,
   type VideoRecord,
 } from "../lib/dataAccess";
+import { opportunityHref } from "../lib/opportunityRoute";
 import { getYouTubeThumbnailUrl, sanitizeExternalUrl, sanitizeYouTubeUrl } from "../lib/urlSafety";
 
 const CAMPUS_FILTER = "campus";
 
 function capitalise(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+/** "campus_story" -> "Campus Story". Labels derive from the stored slug. */
+function categoryLabel(value: string): string {
+  return value
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function postedLabel(createdAt: string): string {
@@ -28,19 +38,22 @@ function postedLabel(createdAt: string): string {
 }
 
 export default function PulsePage() {
+  const [posts, setPosts] = useState<PulsePostRecord[]>([]);
   const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([]);
   const [videos, setVideos] = useState<VideoRecord[]>([]);
   const [openRoleCount, setOpenRoleCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([getOpportunities(), getVideos(), getOpenTeamRoles()]).then(
-      ([opportunitiesResult, videosResult, rolesResult]) => {
+    Promise.all([getPulsePosts(24), getOpportunities(), getVideos(), getOpenTeamRoles()]).then(
+      ([postsResult, opportunitiesResult, videosResult, rolesResult]) => {
         if (cancelled) return;
+        // Published rows only — RLS never returns a draft to this query.
+        setPosts(postsResult.data);
         setOpportunities(
           [...opportunitiesResult.data].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         );
@@ -74,7 +87,13 @@ export default function PulsePage() {
     return videos.slice(0, filter === CAMPUS_FILTER ? 12 : 4);
   }, [videos, filter]);
 
-  const isEmpty = !loading && opportunities.length === 0 && videos.length === 0;
+  const isEmpty =
+    !loading && posts.length === 0 && opportunities.length === 0 && videos.length === 0;
+
+  const selectedPost = useMemo(
+    () => posts.find((post) => post.id === selectedPostId) ?? null,
+    [posts, selectedPostId]
+  );
 
   // On the default view an empty "Latest" list isn't an empty page: Featured or Campus content
   // is already shown, so the "Nothing here yet." block would sit above real cards.
@@ -132,6 +151,27 @@ export default function PulsePage() {
           />
         ) : (
           <>
+            {filter === "all" && posts.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <p className="eyebrow text-brand-red">The feed</p>
+                    <h2 className="font-display mt-1 text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
+                      News &amp; stories
+                    </h2>
+                  </div>
+                  <p className="text-xs font-bold text-ink-400">
+                    {posts.length} post{posts.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {posts.map((post) => (
+                    <PulsePostCard key={post.id} post={post} onSelect={setSelectedPostId} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {opportunities.length > 0 && categoryOptions.length > 1 && (
               <div className="mb-8 flex flex-wrap items-center gap-2">
                 <span className="sr-only" id="pulse-filter-label">
@@ -163,7 +203,7 @@ export default function PulsePage() {
                 </h2>
                 <div className="mt-4 grid gap-4 lg:grid-cols-3">
                   {featured.map((item) => (
-                    <FeaturedCard key={item.id} item={item} onSelect={setSelectedId} />
+                    <FeaturedCard key={item.id} item={item} />
                   ))}
                 </div>
               </div>
@@ -183,7 +223,7 @@ export default function PulsePage() {
                 {latest.length > 0 ? (
                   <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {latest.map((item) => (
-                      <OpportunityCard key={item.id} item={item} onSelect={setSelectedId} />
+                      <OpportunityCard key={item.id} item={item} />
                     ))}
                   </div>
                 ) : (
@@ -219,10 +259,128 @@ export default function PulsePage() {
         )}
       </section>
 
-      {selectedId && (
-        <OpportunityDetail opportunityId={selectedId} onClose={() => setSelectedId(null)} />
+      {selectedPost && (
+        <PulsePostDetail post={selectedPost} onClose={() => setSelectedPostId(null)} />
       )}
     </PageShell>
+  );
+}
+
+function PulsePostCard({ post, onSelect }: { post: PulsePostRecord; onSelect: (id: string) => void }) {
+  const externalUrl = sanitizeExternalUrl(post.externalUrl);
+  const posted = postedLabel(post.publishedAt ?? post.createdAt);
+
+  return (
+    <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+      {post.imageUrl ? (
+        <button
+          type="button"
+          onClick={() => onSelect(post.id)}
+          className="block h-40 w-full cursor-pointer bg-surface-soft"
+        >
+          <img
+            src={post.imageUrl}
+            alt={`${post.title} cover`}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+          />
+        </button>
+      ) : null}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+          <span className="rounded-md bg-brand-blue-soft px-2 py-0.5 text-brand-blue">
+            {categoryLabel(post.category)}
+          </span>
+          {externalUrl && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-brand-red-soft px-2 py-0.5 text-brand-red">
+              <Icon name="external" className="h-3 w-3" /> External source
+            </span>
+          )}
+          {posted && <span className="font-bold text-ink-400">{posted}</span>}
+        </div>
+        <h3 className="font-display mt-3 text-lg font-extrabold leading-snug tracking-tight text-ink-900">
+          {post.title}
+        </h3>
+        {post.summary && (
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-500">{post.summary}</p>
+        )}
+        <button
+          type="button"
+          onClick={() => onSelect(post.id)}
+          className="btn-primary mt-4 min-h-[40px] self-start px-4 text-sm"
+        >
+          Read More <Icon name="arrow" className="h-4 w-4" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function PulsePostDetail({ post, onClose }: { post: PulsePostRecord; onClose: () => void }) {
+  const externalUrl = sanitizeExternalUrl(post.externalUrl);
+  const posted = postedLabel(post.publishedAt ?? post.createdAt);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="PULSE post"
+    >
+      <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative z-10 max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-lift sm:max-w-2xl sm:rounded-3xl">
+        {post.imageUrl ? (
+          <div className="h-44 w-full overflow-hidden rounded-t-3xl bg-surface-soft">
+            <img src={post.imageUrl} alt={post.title} className="h-full w-full object-cover" />
+          </div>
+        ) : null}
+
+        <div className="p-6 sm:p-8">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-md bg-brand-blue-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-blue">
+                  {categoryLabel(post.category)}
+                </span>
+                {posted && <span className="text-xs font-bold text-ink-400">{posted}</span>}
+              </div>
+              <h2 className="font-display mt-3 text-2xl font-extrabold tracking-tight text-ink-900">
+                {post.title}
+              </h2>
+              {post.summary && (
+                <p className="mt-1 text-base font-semibold text-ink-600">{post.summary}</p>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-surface-border bg-surface-soft text-ink-500 transition-colors hover:bg-brand-red-soft hover:text-brand-red"
+              aria-label="Close"
+            >
+              <Icon name="close" className="h-4 w-4" />
+            </button>
+          </div>
+
+          {post.content && (
+            <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-ink-600">
+              {post.content}
+            </p>
+          )}
+
+          {externalUrl && (
+            <a
+              href={externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-primary mt-6 w-full justify-center"
+            >
+              Open source <Icon name="external" className="h-4 w-4" />
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -243,20 +401,21 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
   );
 }
 
-function FeaturedCard({ item, onSelect }: { item: OpportunityRecord; onSelect: (id: string) => void }) {
+function FeaturedCard({ item }: { item: OpportunityRecord }) {
   const cover = item.imageUrl;
   const posted = postedLabel(item.createdAt);
+  const href = opportunityHref(item.id);
 
   return (
     <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card">
       {cover ? (
-        <button type="button" onClick={() => onSelect(item.id)} className="block h-36 w-full cursor-pointer bg-surface-soft">
+        <Link href={href} className="block h-36 w-full bg-surface-soft">
           <img
             src={cover}
             alt={`${item.title} cover`}
             className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
           />
-        </button>
+        </Link>
       ) : null}
       <div className="flex flex-1 flex-col p-5">
         <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest">
@@ -269,13 +428,11 @@ function FeaturedCard({ item, onSelect }: { item: OpportunityRecord; onSelect: (
         </h3>
         <p className="mt-1 text-xs font-bold text-ink-600">{item.organization}</p>
         <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-500">{item.description}</p>
-        <button
-          type="button"
-          onClick={() => onSelect(item.id)}
-          className="btn-primary mt-4 min-h-[40px] self-start px-4 text-sm"
-        >
-          Read More <Icon name="arrow" className="h-4 w-4" />
-        </button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href={href} className="btn-primary min-h-[40px] px-4 text-sm">
+            Read More <Icon name="arrow" className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </article>
   );

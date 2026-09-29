@@ -23,8 +23,8 @@ export default function FieldPreview() {
   }, []);
 
   return (
-    <section id="field" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-10 sm:py-14">
+    <section id="field" className="scroll-mt-24 border-t glass-panel-tint">
+      <div className="container-px py-9 sm:py-12">
         <SectionHeader
           eyebrow="FIELD"
           title="Case competitions, hackathons, contests"
@@ -33,7 +33,7 @@ export default function FieldPreview() {
           viewAllLabel="Explore FIELD"
           iconSrc={categoryById("field")?.iconSrc}
         />
-        <div className="mt-6">
+        <div className="mt-5">
           {loading ? (
             <CardRowSkeleton />
           ) : items.length === 0 ? (
@@ -43,7 +43,7 @@ export default function FieldPreview() {
               description="New competitions land on FIELD as soon as they open. Check back soon."
             />
           ) : (
-            <OpportunityCarousel items={items} href="/field" />
+            <OpportunityCarousel items={items} />
           )}
         </div>
       </div>

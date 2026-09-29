@@ -1,6 +1,7 @@
 import Icon from "../Icon";
 import { Link } from "../../lib/router";
 import { CATEGORY_BADGE } from "../opportunities/OpportunityCard";
+import { opportunityHref } from "../../lib/opportunityRoute";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
 function deadlineLabel(deadline: string | null): { text: string; urgent: boolean } | null {
@@ -15,17 +16,16 @@ function deadlineLabel(deadline: string | null): { text: string; urgent: boolean
 
 type CompactOpportunityCardProps = {
   item: OpportunityRecord;
-  href: string;
   isNew?: boolean;
   imageForward?: boolean;
 };
 
-export default function CompactOpportunityCard({ item, href, isNew, imageForward = false }: CompactOpportunityCardProps) {
+export default function CompactOpportunityCard({ item, isNew, imageForward = false }: CompactOpportunityCardProps) {
   const deadline = deadlineLabel(item.deadline);
 
   return (
     <Link
-      href={href}
+      href={opportunityHref(item.id)}
       data-cursor="view"
       className={`glass-card group flex snap-start flex-col overflow-hidden hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
         imageForward ? "homepage-opportunity-card" : "min-w-[78%] p-5 sm:min-w-0"

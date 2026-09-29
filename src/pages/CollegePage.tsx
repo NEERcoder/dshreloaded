@@ -20,6 +20,7 @@ import {
   type VideoRecord,
 } from "../lib/dataAccess";
 import { isSupabaseConfigured } from "../lib/supabase";
+import { opportunityHref } from "../lib/opportunityRoute";
 import { sanitizeExternalUrl, sanitizeYouTubeUrl, getYouTubeThumbnailUrl } from "../lib/urlSafety";
 
 const videoLabels: Record<string, string> = {
@@ -54,14 +55,14 @@ function ComingSoon({
   );
 }
 
-// Section quick-nav tabs
+// Section quick-nav tabs — kept in exact DOM order so the scroll-spy is honest.
 const sectionTabs = [
+  { id: "reviews", label: "Reviews" },
   { id: "overview", label: "Overview" },
   { id: "courses", label: "Courses" },
-  { id: "reviews", label: "Student Takes" },
-  { id: "videos", label: "Campus Media" },
-  { id: "mentors-section", label: "Mentors" },
   { id: "related-opps", label: "Opportunities" },
+  { id: "videos", label: "Videos" },
+  { id: "mentors-section", label: "Mentors" },
 ];
 
 export default function CollegePage({ slug }: { slug: string }) {
@@ -103,7 +104,7 @@ export default function CollegePage({ slug }: { slug: string }) {
     };
   }, [slug]);
   
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("reviews");
  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -236,15 +237,22 @@ export default function CollegePage({ slug }: { slug: string }) {
               </p>
             </div>
 
+            {/* Rendered at every breakpoint: object-cover inside a fixed-height
+                frame keeps the real aspect ratio without stretching. */}
             <div
-              className="hidden min-h-56 items-center justify-center rounded-3xl border border-brand-blue/10 p-8 shadow-card sm:flex overflow-hidden transition-transform duration-300 hover:scale-[1.02]"
+              className="flex h-52 w-full items-center justify-center overflow-hidden rounded-3xl border border-brand-blue/10 shadow-card transition-transform duration-300 sm:h-60 sm:hover:scale-[1.02] lg:h-[22rem]"
               style={{ backgroundColor: collegeColor(college.name, 0.08) }}
             >
               {college.heroImageUrl ? (
-                <img src={college.heroImageUrl} alt={college.name} className="h-52 w-full rounded-2xl object-cover shadow-sm" />
+                <img
+                  src={college.heroImageUrl}
+                  alt={college.name}
+                  loading="lazy"
+                  className="h-full w-full rounded-3xl object-cover object-center"
+                />
               ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <span className="text-8xl font-black" style={{ color: collegeColor(college.name, 0.4) }}>
+                <div className="flex flex-col items-center gap-2 py-6">
+                  <span className="text-7xl font-black sm:text-8xl" style={{ color: collegeColor(college.name, 0.4) }}>
                     {college.name.charAt(0)}
                   </span>
                   <span className="text-xs font-extrabold uppercase tracking-widest text-ink-400">
@@ -282,55 +290,8 @@ export default function CollegePage({ slug }: { slug: string }) {
         </div>
       </div>
 
-      {/* 2. QUICK FACTS & COURSES */}
-      <section id="overview" className="scroll-mt-32 py-14 sm:py-20">
-        <div className="container-px">
-          <SectionHeading
-            eyebrow="QUICK FACTS"
-            title="Start with what's verified."
-            description="Essential college attributes verified directly from official University of Delhi bulletins."
-          />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Fact label="Campus Zone" value={college.campus} icon="building" />
-            <Fact label="Location" value={college.location} icon="target" />
-            <Fact label="College Type" value={college.type} icon="users" />
-            <Fact label="Academic Areas" value={categories} icon="award" />
-          </div>
-
-          {/* About & Courses */}
-          <div id="courses" className="scroll-mt-32 mt-16 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="card p-6 sm:p-8 bg-white shadow-card">
-              <SectionHeading align="left" eyebrow="ABOUT THE CAMPUS" title="The campus briefing." />
-              <p className="mt-4 text-base leading-relaxed text-ink-600 font-normal">
-                {college.about || "A verified overview of this college will be added when an approved university source is published."}
-              </p>
-            </div>
-
-            <div className="card p-6 sm:p-8 bg-white shadow-card">
-              <SectionHeading align="left" eyebrow="COURSES OFFERED" title="What can you study here?" />
-              <div className="mt-4">
-                {college.courses.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {college.courses.map((course: string) => (
-                      <span
-                        key={course}
-                        className="rounded-xl bg-brand-blue-soft px-3.5 py-2 text-xs sm:text-sm font-bold text-brand-blue border border-brand-blue/10"
-                      >
-                        {course}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <ComingSoon label="Courses" copy="Course information will be populated directly from official DU admission bulletins." />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. REAL STUDENT TAKES & REVIEWS */}
-      <section id="reviews" className="scroll-mt-32 py-16 sm:py-24 border-t border-surface-border bg-surface-soft/60 backdrop-blur-[2px]">
+      {/* 2. REAL STUDENT TAKES & REVIEWS — first, because it decides visits */}
+      <section id="reviews" className="scroll-mt-32 py-16 sm:py-24 bg-surface-soft/60 backdrop-blur-[2px]">
         <div className="container-px grid gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -373,7 +334,86 @@ export default function CollegePage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      {/* 4. DU UNFILTERED MEDIA */}
+      {/* 3. QUICK FACTS & ABOUT */}
+      <section id="overview" className="scroll-mt-32 py-14 sm:py-20 border-t border-surface-border">
+        <div className="container-px">
+          <SectionHeading
+            eyebrow="QUICK FACTS"
+            title="Start with what's verified."
+            description="Essential college attributes verified directly from official University of Delhi bulletins."
+          />
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Fact label="Campus Zone" value={college.campus} icon="building" />
+            <Fact label="Location" value={college.location} icon="target" />
+            <Fact label="College Type" value={college.type} icon="users" />
+            <Fact label="Academic Areas" value={categories} icon="award" />
+          </div>
+
+          <div className="mt-10 card p-6 sm:p-8 bg-white shadow-card">
+            <SectionHeading align="left" eyebrow="ABOUT THE CAMPUS" title="The campus briefing." />
+            <p className="mt-4 text-base leading-relaxed text-ink-600 font-normal">
+              {college.about || "A verified overview of this college will be added when an approved university source is published."}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. COURSES OFFERED */}
+      <section id="courses" className="scroll-mt-32 py-16 sm:py-24 border-t border-surface-border bg-white">
+        <div className="container-px">
+          <div className="card p-6 sm:p-8 bg-white shadow-card border border-surface-border">
+            <SectionHeading align="left" eyebrow="COURSES OFFERED" title="What can you study here?" />
+            <div className="mt-4">
+              {college.courses.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {college.courses.map((course: string) => (
+                    <span
+                      key={course}
+                      className="rounded-xl bg-brand-blue-soft px-3.5 py-2 text-xs sm:text-sm font-bold text-brand-blue border border-brand-blue/10"
+                    >
+                      {course}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <ComingSoon label="Courses" copy="Course information will be populated directly from official DU admission bulletins." />
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. OPPORTUNITY RADAR FOR THIS COLLEGE */}
+      <section id="related-opps" className="scroll-mt-32 border-t border-surface-border bg-surface-soft/60 backdrop-blur-[2px] py-16 sm:py-24">
+        <div className="container-px">
+          <SectionHeading
+            eyebrow="OPPORTUNITY RADAR"
+            title="Relevant moves for this campus."
+            subtitle="Internships, competitions and research matching your courses."
+            description="Opportunities filtered by course relevance and academic area."
+          />
+          <div className="mt-10">
+            {relatedOpportunities.length ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                {relatedOpportunities.map((item) => (
+                  <CollegeOpportunityCard item={item} key={item.id} />
+                ))}
+              </div>
+            ) : (
+              <ComingSoon
+                label="Related Opportunities"
+                copy={
+                  opportunities.length
+                    ? "Published opportunities exist, but none are directly matched with this college's disciplines yet."
+                    : "Published opportunities connected to this college are coming soon."
+                }
+              />
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. DU UNFILTERED MEDIA */}
       <section id="videos" className="scroll-mt-32 border-t border-surface-border bg-white py-16 sm:py-24">
         <div className="container-px">
           <SectionHeading
@@ -449,7 +489,7 @@ export default function CollegePage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      {/* 5. SENIORS & MENTORS */}
+      {/* 7. SENIORS & MENTORS */}
       <section id="mentors-section" className="scroll-mt-32 border-t border-surface-border bg-surface-soft/60 backdrop-blur-[2px] py-16 sm:py-24">
         <div className="container-px">
           <SectionHeading
@@ -500,48 +540,21 @@ export default function CollegePage({ slug }: { slug: string }) {
           </div>
         </div>
       </section>
-
-      {/* 6. OPPORTUNITY RADAR FOR THIS COLLEGE */}
-      <section id="related-opps" className="scroll-mt-32 border-t border-surface-border bg-white py-16 sm:py-24">
-        <div className="container-px">
-          <SectionHeading
-            eyebrow="OPPORTUNITY RADAR"
-            title="Relevant moves for this campus."
-            subtitle="Internships, competitions and research matching your courses."
-            description="Opportunities filtered by course relevance and academic area."
-          />
-          <div className="mt-10">
-            {relatedOpportunities.length ? (
-              <div className="grid gap-5 sm:grid-cols-2">
-                {relatedOpportunities.map((item) => (
-                  <CollegeOpportunityCard item={item} key={item.id} />
-                ))}
-              </div>
-            ) : (
-              <ComingSoon
-                label="Related Opportunities"
-                copy={
-                  opportunities.length
-                    ? "Published opportunities exist, but none are directly matched with this college's disciplines yet."
-                    : "Published opportunities connected to this college are coming soon."
-                }
-              />
-            )}
-          </div>
-        </div>
-      </section>
     </PageShell>
   );
 }
 
 function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
+  // A real application URL is always http(s) (enforced by sanitizeExternalUrl),
+  // so it can never turn into an in-app navigation. The card itself is the
+  // canonical JAVLIN detail route.
   const safeAppUrl = sanitizeExternalUrl(item.applicationUrl);
   return (
     <article
       data-cursor="view"
       className="card card-hover p-6 border border-surface-border bg-white shadow-card flex flex-col justify-between"
     >
-      <div>
+      <Link href={opportunityHref(item.id)} className="group block" aria-label={`View ${item.title} on JAVLIN`}>
         <div className="flex items-center justify-between gap-2">
           <span className="rounded-md bg-brand-blue-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-blue">
             {item.category}
@@ -552,24 +565,34 @@ function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
             </span>
           )}
         </div>
-        <h3 className="mt-3 font-bold text-lg text-ink-900 leading-snug">{item.title}</h3>
+        <h3 className="mt-3 font-bold text-lg text-ink-900 leading-snug transition-colors group-hover:text-brand-blue">
+          {item.title}
+        </h3>
         <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
         <p className="mt-3 text-sm leading-relaxed text-ink-500 line-clamp-2">{item.description}</p>
         <div className="mt-4 flex flex-wrap gap-3 text-xs text-ink-400">
           {item.field && <span>{item.field}</span>}
           {item.mode && <span className="font-semibold text-ink-600">{item.mode}</span>}
         </div>
-      </div>
+      </Link>
 
       <div className="mt-6 pt-4 border-t border-surface-border">
         <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
         {safeAppUrl ? (
-          <a href={safeAppUrl} target="_blank" rel="noreferrer" className="btn-outline-blue mt-4 w-full justify-center">
-            View Details <Icon name="external" className="h-4 w-4" />
+          <a
+            href={safeAppUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-outline-blue mt-4 w-full justify-center"
+          >
+            Apply on Official Site <Icon name="external" className="h-4 w-4" />
           </a>
         ) : (
-          <Link href="/opportunities" className="btn-ghost mt-4 w-full justify-center">
-            Open Radar <Icon name="arrow" className="h-4 w-4" />
+          <Link
+            href={opportunityHref(item.id)}
+            className="btn-ghost mt-4 w-full justify-center"
+          >
+            View Full Details <Icon name="arrow" className="h-4 w-4" />
           </Link>
         )}
       </div>

@@ -23,7 +23,7 @@ export default function ReviewsPreview() {
 
   return (
     <section id="college-reviews" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-10 sm:py-14">
+      <div className="container-px py-9 sm:py-12">
         <SectionHeader
           eyebrow="COLLEGE REVIEWS"
           title="Before you choose, hear from students."
@@ -31,7 +31,7 @@ export default function ReviewsPreview() {
           viewAllHref="/college-reviews"
           viewAllLabel="Explore College Reviews"
         />
-        <div className="mt-6">
+        <div className="mt-5">
           {loading ? (
             <CardRowSkeleton />
           ) : reviews.length === 0 ? (
