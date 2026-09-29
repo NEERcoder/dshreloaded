@@ -1646,63 +1646,25 @@ export async function getPendingTeamJoinRequests(
 export async function approveCompetitionTeamJoinRequest(
   requestId: string
 ): Promise<DataResult<boolean>> {
-  if (!supabase || !isSupabaseConfigured) return failure(false, new Error("Authentication required."));
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(false, new Error("Authentication required."));
+  }
+
   try {
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userRes.user) return failure(false, new Error("Not authenticated."));
-    const captainId = userRes.user.id;
-
-    // Fetch the request
-    const { data: req } = await supabase
-      .from("competition_team_join_requests")
-      .select("id, team_id, user_id, status")
-      .eq("id", requestId)
-      .maybeSingle();
-    if (!req || req.status !== "pending") return failure(false, new Error("Request not found or already processed."));
-
-    // Verify caller is captain
-    const { data: team } = await supabase
-      .from("competition_teams")
-      .select("captain_user_id, competition_id, opportunities(max_team_size)")
-      .eq("id", req.team_id)
-      .maybeSingle();
-    if (!team || team.captain_user_id !== captainId) {
-      return failure(false, new Error("Only the team captain can approve requests."));
+    if (userErr || !userRes.user) {
+      return failure(false, new Error("Not authenticated."));
     }
 
-    // Check not already a member (race condition guard)
-    const { data: existingMember } = await supabase
-      .from("competition_team_members")
-      .select("id")
-      .eq("team_id", req.team_id)
-      .eq("user_id", req.user_id)
-      .maybeSingle();
-    if (existingMember) {
-      await supabase.from("competition_team_join_requests").update({ status: "approved" }).eq("id", requestId);
-      return remoteSuccess(true);
-    }
-
-    // Check capacity again at approval time
-    const { count } = await supabase
-      .from("competition_team_members")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", req.team_id);
-    const opp = (Array.isArray(team.opportunities) ? team.opportunities[0] : team.opportunities) as { max_team_size: number | null } | null;
-    if (opp?.max_team_size && (count ?? 0) >= opp.max_team_size) {
-      return failure(false, new Error("The team is now full. Cannot approve this request."));
-    }
-
-    // Add as member
-    const { error: memberErr } = await supabase.from("competition_team_members").insert({
-      team_id: req.team_id,
-      user_id: req.user_id,
-      role: "member",
+    // Approval is performed by the SECURITY DEFINER database function.
+    // The browser must never INSERT directly into competition_team_members:
+    // that direct INSERT is what caused the RLS violation.
+    const { data, error } = await supabase.rpc("approve_team_join_request", {
+      p_request_id: requestId,
     });
-    if (memberErr) return failure(false, memberErr);
 
-    // Mark approved
-    await supabase.from("competition_team_join_requests").update({ status: "approved" }).eq("id", requestId);
-    return remoteSuccess(true);
+    if (error) return failure(false, error);
+    return remoteSuccess(data === true);
   } catch (err) {
     return failure(false, err);
   }
