@@ -34,31 +34,33 @@ export default function CirclePage() {
   const [graduation, setGraduation] = useState("");
 
   useEffect(() => {
-    if (!user) {
-      setStudents([]);
-      setConnectionStates({});
-      setLevels({});
-      setLoading(false);
-      return;
-    }
     let cancelled = false;
     setLoading(true);
+    setError(null);
 
     async function load() {
-      // Two queries for the whole page, not one per card: the directory plus
-      // the viewer's own relationship rows.
-      const [directory, connections] = await Promise.all([
-        getStudentDirectory(),
-        getConnectionStates(),
-      ]);
+      // Public directory is available to signed-out visitors.
+      // Connection states are only requested when a viewer is authenticated.
+      const directory = await getStudentDirectory();
       if (cancelled) return;
+
       if (directory.error) setError(directory.error);
       setStudents(directory.data);
-      setConnectionStates(connections.data);
+
+      if (user) {
+        const connections = await getConnectionStates();
+        if (cancelled) return;
+        if (connections.error) setError(connections.error);
+        setConnectionStates(connections.data);
+      } else {
+        setConnectionStates({});
+      }
+
       setLoading(false);
 
-      // Competition counts for every card in ONE batched RPC.
-      const levelResult = await getStudentLevels(directory.data.map((student) => student.userId));
+      const levelResult = await getStudentLevels(
+        directory.data.map((student) => student.userId)
+      );
       if (cancelled) return;
       setLevels(levelResult.data ?? {});
     }
