@@ -1,0 +1,40 @@
+import CompactOpportunityCard from "./CompactOpportunityCard";
+import type { OpportunityRecord } from "../../lib/dataAccess";
+
+type OpportunityCarouselProps = {
+  items: OpportunityRecord[];
+  href: string;
+};
+
+/**
+ * One poster-forward card row, two ways: a snap-scroll strip below lg and a
+ * continuous right-to-left loop on desktop. Items are duplicated only for the
+ * loop, so the scroll strip never shows the same opportunity twice.
+ */
+export default function OpportunityCarousel({ items, href }: OpportunityCarouselProps) {
+  const shouldLoop = items.length > 1;
+  const loopItems = shouldLoop ? [...items, ...items] : items;
+
+  return (
+    <div aria-label="Opportunities">
+      <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1 lg:hidden">
+        {items.map((item) => (
+          <CompactOpportunityCard key={item.id} item={item} href={href} imageForward />
+        ))}
+      </div>
+
+      <div className="homepage-carousel-window hidden lg:block">
+        <div className={`homepage-carousel-track ${shouldLoop ? "homepage-carousel-animate" : ""}`}>
+          {loopItems.map((item, index) => (
+            <CompactOpportunityCard
+              key={`${item.id}-${index}`}
+              item={item}
+              href={href}
+              imageForward
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
 import { categoryById } from "../../lib/categories";
-import CompactOpportunityCard from "./CompactOpportunityCard";
+import OpportunityCarousel from "./OpportunityCarousel";
 import EmptyState from "./EmptyState";
 import CardRowSkeleton from "./CardRowSkeleton";
 import { getOpportunities, type OpportunityRecord } from "../../lib/dataAccess";
@@ -27,8 +27,8 @@ export default function FieldPreview() {
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="FIELD"
-          title="Ready for a challenge?"
-          description="Hackathons, case competitions, and contests where you can test your skills."
+          title="Case competitions, hackathons, contests"
+          description="Challenges where you can test your skills."
           viewAllHref="/field"
           viewAllLabel="Explore FIELD"
           iconSrc={categoryById("field")?.iconSrc}
@@ -43,11 +43,7 @@ export default function FieldPreview() {
               description="New competitions land on FIELD as soon as they open. Check back soon."
             />
           ) : (
-            <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
-              {items.map((item) => (
-                <CompactOpportunityCard key={item.id} item={item} href="/field" />
-              ))}
-            </div>
+            <OpportunityCarousel items={items} href="/field" />
           )}
         </div>
       </div>

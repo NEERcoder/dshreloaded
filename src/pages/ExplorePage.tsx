@@ -5,7 +5,7 @@ import StarRating from "../components/StarRating";
 import SectionHeading from "../components/SectionHeading";
 import TiltCard from "../components/TiltCard";
 import { SkeletonCollegeGrid } from "../components/Skeleton";
-import { Link } from "../lib/router";
+import { Link, useLocation } from "../lib/router";
 import {
   getColleges,
   getMentors,
@@ -494,12 +494,13 @@ function WriteReviewModal({
 }
 
 export default function ExplorePage() {
+  const { search: locationSearch } = useLocation();
   const [colleges, setColleges] = useState<CollegeRecord[]>([]);
   const [mentors, setMentors] = useState<MentorRecord[]>([]);
   const [videos, setVideos] = useState<VideoRecord[]>([]);
   const [recentReviews, setRecentReviews] = useState<ReviewRecord[]>([]);
   const [videoCategory, setVideoCategory] = useState("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => new URLSearchParams(locationSearch).get("q") ?? "");
   const [campus, setCampus] = useState("");
   const [academicArea, setAcademicArea] = useState("");
   const [collegeType, setCollegeType] = useState("");
@@ -507,6 +508,11 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [collegeError, setCollegeError] = useState<string | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  // The navbar search bar arrives as ?q= — keep the local filter in sync with it.
+  useEffect(() => {
+    setSearch(new URLSearchParams(locationSearch).get("q") ?? "");
+  }, [locationSearch]);
 
   useEffect(() => {
     let cancelled = false;

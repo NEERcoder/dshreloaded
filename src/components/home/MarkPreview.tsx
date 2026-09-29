@@ -18,7 +18,7 @@ export default function MarkPreview() {
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="MARK"
-          title="Build your record."
+          title="Document your college years. Build your record."
           description="One place for everything you've done — competitions, projects, certifications, and more."
           viewAllHref="/mark"
           viewAllLabel="Build Your MARK"

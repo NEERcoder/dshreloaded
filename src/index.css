@@ -393,30 +393,77 @@
 }
 
 /* ============================================================
-   OPPORTUNITY TICKER
+   HOMEPAGE CAROUSELS — poster-forward opportunity rows and the
+   CIRCLE profile row. Below the desktop breakpoint the same cards
+   live in a snap-scroll strip, so nothing here forces page overflow.
    ============================================================ */
-.opportunity-ticker-carousel {
+.homepage-carousel-window {
   width: 100%;
-  padding: 0.75rem 0 1rem;
-  cursor: default;
+  overflow: hidden;
 }
 
-@keyframes opportunity-scroll {
+.homepage-carousel-track {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+}
+
+@keyframes homepage-carousel-scroll {
   from { transform: translateX(0); }
   to   { transform: translateX(calc(-50% - 0.5rem)); }
 }
 
-.opportunity-ticker-animate {
-  animation: opportunity-scroll 32s linear infinite;
+.homepage-carousel-animate {
+  animation: homepage-carousel-scroll 46s linear infinite;
 }
 
-.opportunity-ticker-carousel:hover .opportunity-ticker-animate,
-.opportunity-ticker-carousel:focus-within .opportunity-ticker-animate {
-  animation-duration: 80s;
+/* CIRCLE runs ahead of the opportunity rows, but still reads as a glide. */
+.homepage-carousel-fast.homepage-carousel-animate {
+  animation-duration: 30s;
+}
+
+.homepage-carousel-window:hover .homepage-carousel-animate,
+.homepage-carousel-window:focus-within .homepage-carousel-animate {
+  animation-duration: 120s;
+}
+
+.homepage-opportunity-card {
+  flex: 0 0 78%;
+  min-width: 0;
+}
+
+.homepage-profile-card {
+  flex: 0 0 68%;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .homepage-opportunity-card,
+  .homepage-profile-card {
+    flex-basis: 45%;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Four poster cards across the container. */
+  .homepage-opportunity-card {
+    flex-basis: calc((min(80rem, 100vw) - 7rem) / 4);
+  }
+
+  .homepage-profile-card {
+    flex-basis: 32%;
+  }
+}
+
+@media (min-width: 1280px) {
+  /* Five student profiles across the container. */
+  .homepage-profile-card {
+    flex-basis: calc((min(80rem, 100vw) - 8rem) / 5);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .opportunity-ticker-animate {
+  .homepage-carousel-animate {
     animation: none !important;
   }
 }

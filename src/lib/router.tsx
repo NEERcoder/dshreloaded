@@ -3,36 +3,52 @@ import { smoothScrollToElement } from "./motion";
 
 type RouterContextType = {
   path: string;
+  search: string;
   navigate: (to: string, opts?: { replace?: boolean }) => void;
 };
 
 const RouterContext = createContext<RouterContextType>({
   path: window.location.pathname,
+  search: window.location.search,
   navigate: () => {},
 });
 
+/** "/explore?q=hindu" → ["/explore", "?q=hindu"] */
+function splitLocation(to: string): [string, string] {
+  const index = to.search(/[?#]/);
+  return index === -1 ? [to, ""] : [to.slice(0, index), to.slice(index)];
+}
+
 export function RouterProvider({ children }: { children: ReactNode }) {
   const [path, setPath] = useState(window.location.pathname);
+  const [search, setSearch] = useState(window.location.search);
 
   useEffect(() => {
-    const onPopState = () => setPath(window.location.pathname);
+    const onPopState = () => {
+      setPath(window.location.pathname);
+      setSearch(window.location.search);
+    };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   const navigate = useCallback((to: string, opts?: { replace?: boolean }) => {
-    if (to === path) return;
+    const current = path + search;
+    if (to === current) return;
+    const [nextPath, nextQuery] = splitLocation(to);
+    const url = nextPath + nextQuery;
     if (opts?.replace) {
-      window.history.replaceState(null, "", to);
+      window.history.replaceState(null, "", url);
     } else {
-      window.history.pushState(null, "", to);
+      window.history.pushState(null, "", url);
     }
-    setPath(to);
+    setPath(nextPath);
+    setSearch(nextQuery);
     // Scroll-to-top is handled by PageTransition after exit animation
-  }, [path]);
+  }, [path, search]);
 
   return (
-    <RouterContext.Provider value={{ path, navigate }}>
+    <RouterContext.Provider value={{ path, search, navigate }}>
       {children}
     </RouterContext.Provider>
   );

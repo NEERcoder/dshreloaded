@@ -17,11 +17,11 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
     <Link
       href={category.href}
       data-cursor="view"
-      className="glass-card glass-edge group flex animate-fade-up flex-col p-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue sm:p-4"
+      className="glass-card glass-edge group flex min-w-[43%] snap-start animate-fade-up flex-col p-3.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue sm:min-w-0 sm:p-4"
       style={{ animationDelay: `${index * 60}ms` }}
       aria-label={`${category.label} — ${category.description}`}
     >
-      <span className="flex w-full items-center justify-center rounded-xl bg-white px-2 py-2 ring-1 ring-inset ring-surface-border/50 sm:py-3">
+      <span className="flex w-full items-center justify-center rounded-xl bg-white px-2 py-2.5 ring-1 ring-inset ring-surface-border/50 sm:py-3">
         <img
           src={category.iconSrc}
           alt=""
@@ -29,11 +29,11 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
           height={668}
           loading="eager"
           decoding="async"
-          className="h-16 w-16 object-contain mix-blend-multiply transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06] sm:h-20 sm:w-20"
+          className="h-20 w-20 object-contain mix-blend-multiply transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06] sm:h-[5.5rem] sm:w-[5.5rem]"
         />
       </span>
 
-      <span className="mt-3 flex items-center gap-1 text-[13px] font-extrabold uppercase tracking-[0.14em] text-ink-900 transition-colors group-hover:text-brand-blue sm:mt-3.5 sm:text-sm">
+      <span className="mt-3 flex items-center gap-1 text-[13px] font-extrabold uppercase tracking-[0.12em] text-ink-900 transition-colors group-hover:text-brand-blue sm:text-sm">
         {category.label}
         <Icon
           name="arrow"

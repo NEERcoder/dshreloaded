@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
 import { categoryById } from "../../lib/categories";
-import CompactOpportunityCard from "./CompactOpportunityCard";
+import OpportunityCarousel from "./OpportunityCarousel";
 import EmptyState from "./EmptyState";
 import CardRowSkeleton from "./CardRowSkeleton";
 import { getOpportunities, type OpportunityRecord } from "../../lib/dataAccess";
@@ -36,8 +36,8 @@ export default function AimPreview() {
       <div className="container-px py-10 sm:py-14">
         <SectionHeader
           eyebrow="AIM"
-          title="Find something worth going after."
-          description="Internships, jobs, and certifications — verified openings worth your application."
+          title="Internships, jobs, certifications"
+          description="Verified openings worth your application."
           viewAllHref="/aim"
           viewAllLabel="View All AIM"
           iconSrc={categoryById("aim")?.iconSrc}
@@ -54,11 +54,7 @@ export default function AimPreview() {
               ctaHref="/field"
             />
           ) : (
-            <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
-              {items.map((item) => (
-                <CompactOpportunityCard key={item.id} item={item} href="/aim" />
-              ))}
-            </div>
+            <OpportunityCarousel items={items} href="/aim" />
           )}
         </div>
       </div>
