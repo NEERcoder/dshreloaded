@@ -976,36 +976,6 @@ async function fetchInviteCodeForMember(teamId: string): Promise<string> {
   return data;
 }
 
-async function fetchProfilesByUserIds(
-  userIds: string[]
-): Promise<Map<string, { full_name?: string; college_id?: string; course?: string }>> {
-  const profiles = new Map<string, { full_name?: string; college_id?: string; course?: string }>();
-
-  if (!supabase || userIds.length === 0) return profiles;
-
-  const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("user_id, full_name, college_id, course")
-    .in("user_id", uniqueIds);
-
-  if (error) {
-    console.error("Profile lookup error:", error);
-    return profiles;
-  }
-
-  for (const row of data ?? []) {
-    profiles.set(String(row.user_id), {
-      full_name: row.full_name ?? undefined,
-      college_id: row.college_id ?? undefined,
-      course: row.course ?? undefined,
-    });
-  }
-
-  return profiles;
-}
-
 async function fetchTeamProfiles(
   teamId: string,
   userIds: string[]
