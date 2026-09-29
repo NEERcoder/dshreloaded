@@ -1006,6 +1006,36 @@ async function fetchProfilesByUserIds(
   return profiles;
 }
 
+async function fetchTeamProfiles(
+  teamId: string,
+  userIds: string[]
+): Promise<Map<string, { full_name?: string; college_id?: string; course?: string }>> {
+  const profiles = new Map<string, { full_name?: string; college_id?: string; course?: string }>();
+
+  if (!supabase || !teamId || userIds.length === 0) return profiles;
+
+  const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
+  const { data, error } = await supabase.rpc("get_team_member_profiles", {
+    p_team_id: teamId,
+    p_user_ids: uniqueIds,
+  });
+
+  if (error) {
+    console.error("Team profile lookup error:", error);
+    return profiles;
+  }
+
+  for (const row of data ?? []) {
+    profiles.set(String(row.user_id), {
+      full_name: row.full_name ?? undefined,
+      college_id: row.college_id ?? undefined,
+      course: row.course ?? undefined,
+    });
+  }
+
+  return profiles;
+}
+
 const mapCompetitionMember = (
   row: Record<string, unknown>,
   profile?: { full_name?: string; college_id?: string; course?: string }
@@ -1111,7 +1141,8 @@ export async function createCompetitionTeam(
       return failure(null, membersError);
     }
 
-    const profileMap = await fetchProfilesByUserIds(
+    const profileMap = await fetchTeamProfiles(
+      String(team.id),
       (membersRaw ?? []).map((member) => String(member.user_id))
     );
 
@@ -1160,7 +1191,8 @@ export async function getCompetitionTeam(
       return failure(null, membErr);
     }
 
-    const profileMap = await fetchProfilesByUserIds(
+    const profileMap = await fetchTeamProfiles(
+      teamId,
       (membersRaw ?? []).map((member) => String(member.user_id))
     );
 
@@ -1623,7 +1655,8 @@ export async function getPendingTeamJoinRequests(
 
     const requests = data ?? [];
 
-    const profileMap = await fetchProfilesByUserIds(
+    const profileMap = await fetchTeamProfiles(
+      teamId,
       requests.map((request) => String(request.user_id))
     );
 
