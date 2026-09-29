@@ -32,6 +32,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
   // Pending join requests (captain only)
   const [requests, setRequests] = useState<CompetitionTeamJoinRequestRecord[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
 
   // Non-member join request status
   const [myRequestStatus, setMyRequestStatus] = useState<"none" | "pending" | "approved" | "rejected" | "member">("none");
@@ -63,10 +64,24 @@ export default function TeamPage({ teamId }: { teamId: string }) {
   }
 
   async function loadRequests(isCaptain: boolean) {
-    if (!isCaptain) return;
+    if (!isCaptain) {
+      setRequests([]);
+      setRequestsError(null);
+      return;
+    }
+
     setRequestsLoading(true);
+    setRequestsError(null);
+
     const res = await getPendingTeamJoinRequests(teamId);
-    setRequests(res.data ?? []);
+
+    if (res.error) {
+      setRequestsError(res.error);
+      setRequests([]);
+    } else {
+      setRequests(res.data ?? []);
+    }
+
     setRequestsLoading(false);
   }
 
@@ -75,12 +90,27 @@ export default function TeamPage({ teamId }: { teamId: string }) {
       setMyRequestStatus("member");
       return;
     }
+
     const res = await getMyJoinRequestStatus(teamId);
+    if (res.error) {
+      setActionError(res.error);
+      setMyRequestStatus("none");
+      return;
+    }
+
     setMyRequestStatus(res.data ?? "none");
   }
 
   useEffect(() => {
-    if (user) load();
+    setTeam(null);
+    setRequests([]);
+    setRequestsError(null);
+    setMyRequestStatus("none");
+    setError(null);
+
+    if (user) {
+      void load();
+    }
   }, [teamId, user]);
 
   useEffect(() => {
@@ -123,6 +153,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
       setActionSuccess("Request sent! Waiting for captain approval.");
     } else if (result.data?.status === "already_pending") {
       setMyRequestStatus("pending");
+      setActionSuccess("You already have a pending request.");
     } else if (result.data?.status === "already_member") {
       setMyRequestStatus("member");
       await load();
@@ -147,7 +178,9 @@ export default function TeamPage({ teamId }: { teamId: string }) {
     if (result.error) {
       setActionError(result.error);
     } else {
+      setActionSuccess("Join request rejected.");
       setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      await loadRequests(true);
     }
   }
 
@@ -307,6 +340,19 @@ export default function TeamPage({ teamId }: { teamId: string }) {
                 </h2>
                 {requestsLoading ? (
                   <p className="mt-3 text-sm text-ink-400 animate-pulse">Loading requests…</p>
+                ) : requestsError ? (
+                  <div className="mt-3 rounded-xl border border-brand-red/20 bg-brand-red-soft px-3 py-3">
+                    <p className="text-sm font-semibold text-brand-red">
+                      We couldn't load join requests.
+                    </p>
+                    <p className="mt-1 text-xs text-brand-red/80">{requestsError}</p>
+                    <button
+                      onClick={() => void loadRequests(true)}
+                      className="mt-3 btn-outline-blue text-xs"
+                    >
+                      Retry
+                    </button>
+                  </div>
                 ) : requests.length === 0 ? (
                   <p className="mt-3 text-sm text-ink-400">No pending requests.</p>
                 ) : (
