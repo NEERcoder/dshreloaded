@@ -149,25 +149,6 @@ export default function CirclePage() {
               <StudentCardSkeleton key={index} />
             ))}
           </div>
-        ) : !user ? (
-          <div className="mx-auto max-w-xl card border-dashed p-8 sm:p-10 text-center bg-white">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue-soft text-brand-blue">
-              <Icon name="users" className="h-6 w-6" />
-            </div>
-            <h2 className="mt-4 text-lg font-extrabold text-ink-900">CIRCLE is for signed-in students</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-500">
-              The directory shows real student profiles, so it sits behind your JAVLIN login — names, colleges and
-              courses never become public browsing material. Sign in to see your people.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link href="/login" className="btn-primary">
-                Sign in
-              </Link>
-              <Link href="/signup" className="btn-secondary">
-                Create your profile
-              </Link>
-            </div>
-          </div>
         ) : (
           <>
             {error && (
@@ -282,8 +263,12 @@ export default function CirclePage() {
                     <StudentCard
                       key={student.userId}
                       student={student}
-                      isSelf={student.userId === user.id}
-                      connectionState={student.userId === user.id ? undefined : connectionStates[student.userId]?.state}
+                      isSelf={student.userId === user?.id}
+                      connectionState={
+                        user && student.userId !== user.id
+                          ? connectionStates[student.userId]?.state
+                          : undefined
+                      }
                       competitions={levels[student.userId] ?? 0}
                     />
                   ))}
