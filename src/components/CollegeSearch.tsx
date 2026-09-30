@@ -140,7 +140,7 @@ export default function CollegeSearch({ className = "" }: { className?: string }
   const statusText = loading
     ? "Searching colleges"
     : results.length === 0
-      ? "No colleges match that name"
+      ? "No colleges match that search"
       : `${results.length} ${results.length === 1 ? "college" : "colleges"} found`;
 
   return (
@@ -261,7 +261,7 @@ export default function CollegeSearch({ className = "" }: { className?: string }
             </ul>
           ) : (
             <p className="px-4 py-4 text-[13px] font-semibold text-ink-500">
-              No colleges match that name.
+              No colleges match that search.
             </p>
           )}
         </div>

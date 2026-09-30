@@ -1,6 +1,11 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { sanitizeExternalUrl } from "./urlSafety";
 import {
+  buildCollegeSearchIndex,
+  searchColleges as scoreCollegeIndex,
+  type CollegeSearchIndex,
+} from "./collegeSearch";
+import {
   LocalProvider,
   type CollegeRecord,
   type ReviewRecord,
@@ -2332,46 +2337,40 @@ function toCollegeSearchResult(row: { name?: string; slug?: string; location?: s
   };
 }
 
-/** Prefix hits first, then the rest of the contains matches — a short type
- *  should surface the college the user is clearly aiming at, not the alphabet. */
-function rankCollegeResults(results: CollegeSearchResult[], term: string): CollegeSearchResult[] {
-  const lower = term.toLowerCase();
-  return [...results].sort((a, b) => {
-    const aPrefix = a.name.toLowerCase().startsWith(lower) ? 0 : 1;
-    const bPrefix = b.name.toLowerCase().startsWith(lower) ? 0 : 1;
-    if (aPrefix !== bPrefix) return aPrefix - bPrefix;
-    return a.name.localeCompare(b.name);
-  });
+/**
+ * The directory is searched in the browser because it has to be: an alias like
+ * "SRCC" or "IIT Delhi" is not a substring of any stored name, so no SQL LIKE
+ * can find it. One fetch per session — the same list the /explore grid already
+ * loads — then one index, then every keystroke is answered locally.
+ */
+let collegeIndexPromise: Promise<{ index: CollegeSearchIndex; configured: boolean }> | null = null;
+
+function collegeDirectoryIndex() {
+  if (!collegeIndexPromise) {
+    collegeIndexPromise = getColleges()
+      .then((result) => ({
+        index: buildCollegeSearchIndex(result.data ?? []),
+        configured: result.configured,
+      }))
+      .catch(() => {
+        collegeIndexPromise = null;
+        return { index: buildCollegeSearchIndex([]), configured: isSupabaseConfigured };
+      });
+  }
+  return collegeIndexPromise;
 }
 
-export async function searchColleges(query: string, limit = 8): Promise<DataResult<CollegeSearchResult[]>> {
+export async function searchColleges(
+  query: string,
+  limit = 8
+): Promise<DataResult<CollegeSearchResult[]>> {
   const term = sanitizeSearchTerm(query);
   if (!term) return remoteSuccess([]);
-
-  if (supabase) {
-    try {
-      // One indexed, filtered query per keystroke burst instead of shipping
-      // the whole directory to the browser to filter locally.
-      const { data, error } = await supabase
-        .from("colleges")
-        .select("name, slug, location, campus")
-        .ilike("name", `%${term}%`)
-        .order("name")
-        .limit(limit);
-      if (!error && data) {
-        return remoteSuccess(rankCollegeResults(data.map(toCollegeSearchResult), term));
-      }
-    } catch {
-      // fall through to the local seed list
-    }
-  }
-
-  const localColleges = await LocalProvider.getColleges();
-  const lower = term.toLowerCase();
-  const matches = localColleges
-    .filter((college) => college.name.toLowerCase().includes(lower))
-    .map((college) => toCollegeSearchResult(college));
-  return localSuccess(rankCollegeResults(matches, lower).slice(0, limit));
+  const { index, configured } = await collegeDirectoryIndex();
+  const matches = scoreCollegeIndex(index, term, limit).map((match) =>
+    toCollegeSearchResult(match.college)
+  );
+  return { data: matches, error: null, configured };
 }
 
 // ==========================================

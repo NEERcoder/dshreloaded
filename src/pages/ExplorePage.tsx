@@ -19,6 +19,7 @@ import {
 } from "../lib/dataAccess";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { sanitizeYouTubeUrl, getYouTubeThumbnailUrl } from "../lib/urlSafety";
+import { buildCollegeSearchIndex, searchColleges as rankColleges } from "../lib/collegeSearch";
 
 const campusOptions = ["North Campus", "South Campus", "Off Campus", "Other / Specialized"];
 const academicOptions = [
@@ -44,10 +45,6 @@ const videoCategoryMap: Record<string, string> = {
   cuet_guidance: "CUET Guidance",
   campus_story: "Campus Stories",
 };
-
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, " ").trim();
-}
 
 /** Generate a deterministic color from a college name */
 function collegeColor(name: string, alpha: number): string {
@@ -534,34 +531,29 @@ export default function ExplorePage() {
     };
   }, []);
 
+  // Built once per directory load, not once per keystroke.
+  const collegeIndex = useMemo(() => buildCollegeSearchIndex(colleges), [colleges]);
+
   const filteredColleges = useMemo(() => {
-    const terms = normalize(search).split(" ").filter(Boolean);
-    return colleges
-      .filter((college) => {
-        const searchable = normalize(
-          [
-            college.name,
-            college.about || "",
-            college.campus,
-            college.location,
-            college.type,
-            ...college.courses,
-            ...college.academicAreas,
-          ].join(" ")
-        );
-        return (
-          terms.every((term) => searchable.includes(term)) &&
-          (!campus || college.campus === campus) &&
-          (!academicArea || college.academicAreas.includes(academicArea)) &&
-          (!collegeType || college.type === collegeType)
-        );
-      })
-      .sort((a, b) => {
-        if (sort === "location") return a.location.localeCompare(b.location) || a.name.localeCompare(b.name);
-        if (sort === "recent") return (b.createdAt || "").localeCompare(a.createdAt || "") || a.name.localeCompare(b.name);
-        return a.name.localeCompare(b.name);
-      });
-  }, [academicArea, campus, collegeType, colleges, search, sort]);
+    const query = search.trim();
+    const searched = query
+      ? rankColleges(collegeIndex, query, colleges.length).map((match) => match.college)
+      : [...colleges];
+    const filtered = searched.filter(
+      (college) =>
+        (!campus || college.campus === campus) &&
+        (!academicArea || college.academicAreas.includes(academicArea)) &&
+        (!collegeType || college.type === collegeType)
+    );
+    // A relevance ranking is the answer to the query. Any other sort is an
+    // order the student explicitly asked for, and that wins.
+    if (query && sort === "name") return filtered;
+    return filtered.sort((a, b) => {
+      if (sort === "location") return a.location.localeCompare(b.location) || a.name.localeCompare(b.name);
+      if (sort === "recent") return (b.createdAt || "").localeCompare(a.createdAt || "") || a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name);
+    });
+  }, [academicArea, campus, collegeIndex, collegeType, colleges, search, sort]);
 
   const hasFilters = Boolean(search || campus || academicArea || collegeType);
   function clearFilters() {

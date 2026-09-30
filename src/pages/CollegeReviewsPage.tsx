@@ -10,6 +10,7 @@ import {
   type CollegeRecord,
   type ReviewRecord,
 } from "../lib/dataAccess";
+import { buildCollegeSearchIndex, searchColleges as rankColleges } from "../lib/collegeSearch";
 
 const PAGE_SIZE = 12;
 
@@ -64,15 +65,21 @@ export default function CollegeReviewsPage() {
     );
   }, [colleges, reviews]);
 
+  const collegeIndex = useMemo(
+    () => buildCollegeSearchIndex(summaries.map((row) => row.college)),
+    [summaries]
+  );
+
   const visibleColleges = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = search.trim();
     if (!query) return summaries;
-    return summaries.filter((row) =>
-      [row.college.name, row.college.campus, row.college.location]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(query))
-    );
-  }, [summaries, search]);
+    // Relevance order: a student typing "SRCC" wants that row first, not the
+    // row with the most reviews that happens to contain the letters.
+    const bySlug = new Map(summaries.map((row) => [row.college.slug, row]));
+    return rankColleges(collegeIndex, query, summaries.length)
+      .map((match) => bySlug.get(match.college.slug))
+      .filter((row): row is CollegeSummary => Boolean(row));
+  }, [collegeIndex, search, summaries]);
 
   const pagedColleges = visibleColleges.slice(0, visibleCount);
   const remainingColleges = Math.max(0, visibleColleges.length - pagedColleges.length);
