@@ -41,8 +41,8 @@ export default function PulsePreview() {
   }, []);
 
   return (
-    <section id="pulse" className="scroll-mt-24 border-t glass-panel-tint">
-      <div className="container-px py-9 sm:py-12">
+    <section id="pulse" className="band pillar-pulse scroll-mt-24">
+      <div className="container-px py-7 sm:py-10 lg:py-12">
         <SectionHeader
           eyebrow="PULSE"
           title="See what's happening."
@@ -61,7 +61,7 @@ export default function PulsePreview() {
               description="Keep exploring — updates, stories and opportunities land here as they happen."
             />
           ) : (
-            <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
               {posts.map((post) => (
                 <PulsePostCard key={post.id} post={post} />
               ))}
@@ -81,12 +81,12 @@ function PulsePostCard({ post }: { post: PulsePostRecord }) {
     <Link
       href="/pulse"
       data-cursor="view"
-      className={`glass-card group flex snap-start flex-col overflow-hidden hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue min-w-[78%] sm:min-w-0 ${
-        post.imageUrl ? "" : "p-5"
+      className={`glass-card card-editorial card-interactive group flex snap-start flex-col overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue min-w-[78%] sm:min-w-0 ${
+        post.imageUrl ? "" : "p-4 sm:p-5"
       }`}
     >
       {post.imageUrl && (
-        <div className="h-40 w-full shrink-0 overflow-hidden bg-surface-soft">
+        <div className="h-36 w-full shrink-0 overflow-hidden bg-surface-soft sm:h-40">
           <img
             src={post.imageUrl}
             alt=""
@@ -97,26 +97,26 @@ function PulsePostCard({ post }: { post: PulsePostRecord }) {
           />
         </div>
       )}
-      <div className={`flex flex-1 flex-col ${post.imageUrl ? "p-5" : ""}`}>
+      <div className={`flex flex-1 flex-col ${post.imageUrl ? "p-4 sm:p-5" : ""}`}>
         <div className="flex items-center justify-between gap-2">
-          <span className="rounded-md bg-brand-blue-soft px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-brand-blue">
+          <span className="eyebrow text-[11px] tracking-[0.16em]">
             {categoryLabel(post.category)}
           </span>
           {externalUrl && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red">
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">
               <Icon name="external" className="h-3 w-3" />
               Source
             </span>
           )}
         </div>
-        <h3 className="mt-3 line-clamp-2 text-sm font-extrabold leading-snug text-ink-900 transition-colors group-hover:text-brand-blue">
+        <h3 className="editorial-title card-title mt-2 line-clamp-2 text-ink-900 transition-colors group-hover:text-brand-blue sm:mt-2.5 sm:text-base">
           {post.title}
         </h3>
         {post.summary && (
-          <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-ink-500">{post.summary}</p>
+          <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-ink-500 sm:mt-2">{post.summary}</p>
         )}
         {posted && (
-          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-4 text-[11px] font-semibold text-ink-400">
+          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-4 text-[11px] font-semibold text-ink-500">
             <Icon name="calendar" className="h-3 w-3" />
             {posted}
           </div>

@@ -47,8 +47,8 @@ export default function CrewPreview() {
   }, []);
 
   return (
-    <section id="crew" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-9 sm:py-12">
+    <section id="crew" className="band pillar-crew scroll-mt-24">
+      <div className="container-px py-7 sm:py-10 lg:py-12">
         <SectionHeader
           eyebrow="CREW"
           title="Teams looking for teammates"
@@ -61,13 +61,13 @@ export default function CrewPreview() {
           {loading ? (
             <CardRowSkeleton />
           ) : teams.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
               {teams.map((team) => (
                 <TeamSeekCard
                   key={team.teamId}
                   team={team}
                   action={
-                    <Link href={`/teams/${team.teamId}`} className="btn-primary min-h-[38px] px-3 text-xs">
+                    <Link href={`/teams/${team.teamId}`} className="btn-primary min-h-[44px] px-3 text-[13px] sm:text-xs">
                       Join Team
                     </Link>
                   }

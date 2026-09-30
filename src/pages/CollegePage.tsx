@@ -195,7 +195,7 @@ export default function CollegePage({ slug }: { slug: string }) {
           <div className="mt-6 grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
               <div className="flex flex-wrap items-center gap-2 animate-fade-in">
-                <span className="eyebrow text-brand-red">COLLEGE PROFILE</span>
+                <span className="eyebrow">COLLEGE PROFILE</span>
                 <span className="text-ink-300">•</span>
                 <span className="text-xs font-bold text-ink-600 uppercase tracking-wider">
                   {[college.campus, college.location].filter(Boolean).join(" · ") || "Delhi University"}
@@ -220,13 +220,13 @@ export default function CollegePage({ slug }: { slug: string }) {
                   </span>
                 )}
                 {avgRating && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-3 py-1 text-xs font-bold text-brand-red">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-3 py-1 text-xs font-bold text-brand-red-ink">
                     <Icon name="star" className="h-3.5 w-3.5" fill="currentColor" /> {avgRating} / 5 ({reviews.length} {reviews.length === 1 ? "student take" : "student takes"})
                   </span>
                 )}
                 <a
                   href="#write-review"
-                  className="inline-flex items-center gap-1 rounded-full bg-brand-red hover:bg-brand-red-dark text-white px-3.5 py-1.5 text-xs font-extrabold transition-all shadow-sm active:scale-95 min-h-[32px]"
+                  className="inline-flex items-center gap-1 rounded-full bg-brand-red hover:bg-brand-red-dark text-brand-navy px-3.5 py-1.5 text-xs font-extrabold transition-all shadow-sm active:scale-95 min-h-[44px] sm:min-h-[32px]"
                 >
                   Write a Review <Icon name="arrow" className="h-3.5 w-3.5" />
                 </a>
@@ -255,7 +255,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                   <span className="text-7xl font-black sm:text-8xl" style={{ color: collegeColor(college.name, 0.4) }}>
                     {college.name.charAt(0)}
                   </span>
-                  <span className="text-xs font-extrabold uppercase tracking-widest text-ink-400">
+                  <span className="text-xs font-extrabold uppercase tracking-widest text-ink-500">
                     Delhi University
                   </span>
                 </div>
@@ -303,7 +303,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                 description="Anonymous, student-verified perspectives on faculty, societies, exams, and campus vibe."
               />
               {avgRating && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-4 py-1.5 text-xs font-extrabold text-brand-red shadow-soft">
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-4 py-1.5 text-xs font-extrabold text-brand-red-ink shadow-soft">
                   <Icon name="star" className="h-3.5 w-3.5" fill="currentColor" /> {avgRating} / 5 ({reviews.length} {reviews.length === 1 ? "student take" : "student takes"})
                 </span>
               )}
@@ -448,11 +448,11 @@ export default function CollegePage({ slug }: { slug: string }) {
                         ) : (
                           <div className="flex flex-col items-center gap-1 text-white/60">
                             <Icon name="play" className="h-12 w-12" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">DU Unfiltered</span>
+                            <span className="text-[11px] font-bold uppercase tracking-wider">DU Unfiltered</span>
                           </div>
                         )}
                         <div className="absolute inset-0 bg-ink-900/30 group-hover:bg-ink-900/10 transition-colors flex items-center justify-center">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-red text-white shadow-lift transition-transform group-hover:scale-110">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-red text-brand-navy shadow-lift transition-transform group-hover:scale-110">
                             <Icon name="play" className="h-6 w-6 ml-0.5" />
                           </div>
                         </div>
@@ -504,7 +504,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                 {mentors.map((mentor) => (
                   <div
                     data-cursor="open"
-                    className="card p-6 bg-white border border-surface-border shadow-card cursor-pointer"
+                    className="card p-6 cursor-pointer"
                     key={mentor.id}
                   >
                     <div className="flex items-center gap-4">
@@ -517,7 +517,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                       )}
                       <div>
                         <h3 className="font-bold text-ink-900">{mentor.name}</h3>
-                        <p className="text-xs font-semibold text-brand-red">
+                        <p className="text-xs font-semibold text-brand-red-ink">
                           {mentor.role || "Senior Mentor"}
                           {mentor.course ? ` · ${mentor.course}` : ""}
                         </p>
@@ -552,7 +552,7 @@ function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
   return (
     <article
       data-cursor="view"
-      className="card card-hover p-6 border border-surface-border bg-white shadow-card flex flex-col justify-between"
+      className="card card-hover p-6 flex flex-col justify-between"
     >
       <Link href={opportunityHref(item.id)} className="group block" aria-label={`View ${item.title} on JAVLIN`}>
         <div className="flex items-center justify-between gap-2">
@@ -560,7 +560,7 @@ function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
             {item.category}
           </span>
           {item.featured && (
-            <span className="rounded-full bg-brand-red-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-red">
+            <span className="rounded-full bg-brand-red-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-red-ink">
               Featured
             </span>
           )}
@@ -570,7 +570,7 @@ function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
         </h3>
         <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
         <p className="mt-3 text-sm leading-relaxed text-ink-500 line-clamp-2">{item.description}</p>
-        <div className="mt-4 flex flex-wrap gap-3 text-xs text-ink-400">
+        <div className="mt-4 flex flex-wrap gap-3 text-xs text-ink-500">
           {item.field && <span>{item.field}</span>}
           {item.mode && <span className="font-semibold text-ink-600">{item.mode}</span>}
         </div>
@@ -602,12 +602,12 @@ function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
 
 function Fact({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="card p-5 bg-white border border-surface-border shadow-card flex items-start gap-3.5">
+    <div className="card p-5 flex items-start gap-3.5">
       <div className="h-10 w-10 rounded-xl bg-brand-blue-soft text-brand-blue flex items-center justify-center shrink-0">
         <Icon name={icon} className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-extrabold uppercase tracking-wider text-ink-400">{label}</p>
+        <p className="text-[11px] font-extrabold uppercase tracking-wider text-ink-500">{label}</p>
         <p className="mt-1 font-bold text-ink-900 text-sm leading-snug">{value || "Verified info coming soon"}</p>
       </div>
     </div>
@@ -616,7 +616,7 @@ function Fact({ label, value, icon }: { label: string; value: string; icon: stri
 
 function ReviewItem({ review }: { review: ReviewRecord }) {
   return (
-    <article className="card p-5 sm:p-6 bg-white border border-surface-border shadow-card transition-all">
+    <article className="card p-5 sm:p-6 transition-all">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-brand-blue-soft text-brand-blue font-extrabold flex items-center justify-center text-sm shrink-0">
@@ -624,8 +624,8 @@ function ReviewItem({ review }: { review: ReviewRecord }) {
           </div>
           <div>
             <h3 className="font-bold text-ink-900 text-sm">{review.name}</h3>
-            <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-400">
-              <StarRating value={review.rating} className="text-brand-red" />
+            <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-500">
+              <StarRating value={review.rating} className="text-brand-red-ink" />
               <span>•</span>
               <time dateTime={review.createdAt}>{new Date(review.createdAt).toLocaleDateString()}</time>
             </div>
@@ -669,7 +669,7 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
 
   return (
     <form onSubmit={submit} className="card p-6 sm:p-7 bg-white shadow-lift border border-surface-border">
-      <span className="eyebrow text-brand-red">DROP YOUR TAKE</span>
+      <span className="eyebrow">DROP YOUR TAKE</span>
       <h2 className="mt-2 text-2xl font-extrabold text-ink-900 tracking-tight">Tell the next student.</h2>
       <p className="mt-2 text-sm leading-relaxed text-ink-500">
         Skip the brochure fluff. No email or login required.
@@ -698,7 +698,7 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
             onMouseEnter={() => setHoverRating(value)}
             onMouseLeave={() => setHoverRating(0)}
             className={`transition-transform hover:scale-110 ${
-              value <= (hoverRating || rating) ? "text-brand-red" : "text-ink-400/40"
+              value <= (hoverRating || rating) ? "text-brand-red-ink" : "text-ink-500/40"
             }`}
             aria-label={`${value} star${value > 1 ? "s" : ""}`}
           >
@@ -715,7 +715,7 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
       </div>
 
       <label className="field-label mt-4" htmlFor="review-comment">
-        Honest Take <span className="text-xs font-normal text-ink-400">(min. 10 chars)</span>
+        Honest Take <span className="text-xs font-normal text-ink-500">(min. 10 chars)</span>
       </label>
       <textarea
         id="review-comment"
@@ -737,7 +737,7 @@ function ReviewForm({ collegeId }: { collegeId: string }) {
         <p
           className={`mt-3 text-xs font-bold p-3 rounded-xl border text-center ${
             message.isError
-              ? "border-brand-red/20 bg-brand-red-soft text-brand-red"
+              ? "border-brand-red/20 bg-brand-red-soft text-brand-red-ink"
               : "text-emerald-700 bg-emerald-50 border-emerald-200"
           }`}
           role={message.isError ? "alert" : "status"}

@@ -33,19 +33,17 @@ export default function FeaturedOpportunityTicker() {
   return (
     <section
       ref={sectionRef}
-      className={`pb-10 sm:pb-14 reveal ${isVisible ? "is-visible" : ""}`}
+      className={`pb-7 sm:pb-10 lg:pb-14 reveal ${isVisible ? "is-visible" : ""}`}
       aria-label="Trending opportunities"
     >
-      <div className="container-px mb-5">
-        <p className="eyebrow text-brand-red">TRENDING</p>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
-            Discover the top things cooking up.
-          </h2>
-          <Link
-            href="/opportunities"
-            className="inline-flex shrink-0 items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark"
-          >
+      <div className="container-px mb-4">
+        <p className="eyebrow flex items-center gap-2">
+          <span className="live-dot" aria-hidden="true" />
+          Trending
+        </p>
+        <div className="mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
+          <h2 className="section-title font-display">Discover the top things cooking up.</h2>
+          <Link href="/opportunities" className="link-pill group w-fit shrink-0">
             View all opportunities <Icon name="arrow" className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -54,7 +52,7 @@ export default function FeaturedOpportunityTicker() {
       {loading ? (
         <div className="container-px flex gap-4 overflow-hidden pb-1">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="homepage-opportunity-card overflow-hidden rounded-2xl border border-surface-border bg-white shadow-soft">
+            <div key={i} className="card homepage-opportunity-card overflow-hidden shadow-soft">
               <div className="h-48 skeleton-shimmer sm:h-56" />
               <div className="space-y-2 p-4">
                 <div className="h-3 w-16 rounded skeleton-shimmer" />

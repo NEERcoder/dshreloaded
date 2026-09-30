@@ -8,6 +8,9 @@ export default {
           // "red" keys are the legacy token name for the JAVLIN Ignition Orange accent (#FF7A30).
           red: "#FF7A30",
           "red-dark": "#E5671A",
+          // Ink variant for orange that carries meaning as text or an icon: #FF7A30
+          // only reaches 2.6:1 on white, this clears AA and matches --javlin-orange-ink.
+          "red-ink": "#C24A08",
           "red-soft": "#FFF1E8",
           blue: "#1769FF",
           "blue-dark": "#0F53D6",
@@ -17,9 +20,12 @@ export default {
         },
         ink: {
           900: "#071A33",
+          800: "#1B2C42",
           700: "#33445C",
+          600: "#475569",
           500: "#64748B",
           400: "#94A3B8",
+          300: "#CBD5E1",
         },
         surface: {
           DEFAULT: "#FFFFFF",

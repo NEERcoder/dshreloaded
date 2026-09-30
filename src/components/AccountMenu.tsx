@@ -63,11 +63,11 @@ export default function AccountMenu() {
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`flex min-h-[40px] items-center gap-2 rounded-xl px-2 py-1.5 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 ${
+        className={`flex min-h-[44px] items-center gap-2 rounded-xl px-2 py-1.5 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 ${
           isOwnProfile ? "bg-brand-blue-soft text-brand-blue" : "text-ink-600 hover:bg-brand-blue-pale hover:text-brand-blue"
         }`}
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-blue text-[10px] font-black text-white">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-blue text-[11px] font-black text-white">
           {initialsFrom(user.email ?? null)}
         </span>
         <span>Profile</span>
@@ -83,7 +83,7 @@ export default function AccountMenu() {
           className="glass-card glass-edge absolute right-0 top-[calc(100%+0.5rem)] z-50 w-60 p-1.5 shadow-lift"
         >
           <div className="px-3 py-2.5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Signed in as</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Signed in as</p>
             <p className="mt-1 truncate text-sm font-semibold text-ink-900">{user.email ?? "Your JAVLIN account"}</p>
           </div>
           <div className="my-1 h-px bg-surface-border" />
@@ -108,7 +108,7 @@ export default function AccountMenu() {
               Notifications
             </span>
             {unread > 0 && (
-              <span className="rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-black text-white">
+              <span className="rounded-full bg-brand-red px-2 py-0.5 text-[11px] font-black text-brand-navy">
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
@@ -128,7 +128,7 @@ export default function AccountMenu() {
             type="button"
             role="menuitem"
             onClick={handleSignOut}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-ink-600 transition-colors hover:bg-brand-red-soft hover:text-brand-red"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-ink-600 transition-colors hover:bg-brand-red-soft hover:text-brand-red-ink"
           >
             <Icon name="logout" className="h-4 w-4 shrink-0" />
             Sign out

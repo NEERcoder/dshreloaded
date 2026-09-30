@@ -219,7 +219,7 @@ export default function OpportunityBrowser({
                 key={c.id}
                 onClick={() => setChip(c.id)}
                 aria-pressed={chip === c.id}
-                className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[40px] ${
+                className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[44px] ${
                   chip === c.id
                     ? "bg-brand-blue text-white shadow-soft"
                     : "bg-white text-ink-600 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
@@ -233,7 +233,7 @@ export default function OpportunityBrowser({
         </div>
       )}
 
-      <div className="mt-4 card p-4 sm:p-5 bg-white shadow-card border border-surface-border">
+      <div className="mt-4 card p-4 sm:p-5">
         <div className="relative">
           <Icon name="search" className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
           <input
@@ -248,7 +248,7 @@ export default function OpportunityBrowser({
           {controls}
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-400" aria-live="polite">
+          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500" aria-live="polite">
             {loading ? (
               <>
                 <Icon name="loader" className="h-3.5 w-3.5 animate-spin" />
@@ -261,7 +261,7 @@ export default function OpportunityBrowser({
           {filtersActive && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[40px]"
+              className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[44px]"
             >
               <Icon name="close" className="h-3.5 w-3.5" />
               Clear filters
@@ -274,25 +274,25 @@ export default function OpportunityBrowser({
         {loading ? (
           <SkeletonOpportunityGrid count={6} />
         ) : error && items.length === 0 ? (
-          <div className="card border-dashed p-10 text-center bg-white">
-            <Icon name="alert-triangle" className="mx-auto h-8 w-8 text-brand-red" />
+          <div className="card border-dashed p-6 text-center bg-white sm:p-10">
+            <Icon name="alert-triangle" className="mx-auto h-8 w-8 text-brand-red-ink" />
             <p className="mt-3 text-base font-bold text-ink-900">This feed needs attention</p>
             <p className="mt-1 text-sm text-ink-500">{error}</p>
           </div>
         ) : items.length === 0 ? (
-          <div className="card border-dashed p-10 text-center bg-white">
+          <div className="card border-dashed p-6 text-center bg-white sm:p-10">
             <Icon name="flag" className="mx-auto h-8 w-8 text-ink-400" />
             <p className="mt-3 text-base font-bold text-ink-900">{emptyTitle}</p>
             <p className="mt-1 text-sm text-ink-500">{emptyDescription}</p>
           </div>
         ) : filtered.length ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {filtered.map((item) => (
               <OpportunityCard key={item.id} item={item} />
             ))}
           </div>
         ) : (
-          <div className="card border-dashed p-10 text-center bg-white">
+          <div className="card border-dashed p-6 text-center bg-white sm:p-10">
             <Icon name="filter" className="mx-auto h-8 w-8 text-ink-400" />
             <p className="mt-3 text-base font-bold text-ink-900">{noResultsTitle}</p>
             <p className="mt-1 text-sm text-ink-500">{noResultsDescription}</p>

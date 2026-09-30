@@ -23,8 +23,8 @@ export default function FieldPreview() {
   }, []);
 
   return (
-    <section id="field" className="scroll-mt-24 border-t glass-panel-tint">
-      <div className="container-px py-9 sm:py-12">
+    <section id="field" className="band pillar-field tone-dark scroll-mt-24">
+      <div className="container-px py-7 sm:py-10 lg:py-12">
         <SectionHeader
           eyebrow="FIELD"
           title="Case competitions, hackathons, contests"

@@ -97,7 +97,7 @@ export function LevelBadge({ competitions, className = "" }: { competitions: num
   if (!tier.tierLabel) return null;
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-blue-pale px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-brand-blue-dark ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-blue-pale px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-brand-blue-dark ${className}`}
     >
       <Icon name="trophy" className="h-3 w-3" />
       {tier.tierLabel}
@@ -108,7 +108,7 @@ export function LevelBadge({ competitions, className = "" }: { competitions: num
 /** The owner made their profile public. Separate from the level badge on purpose. */
 export function VerifiedMark({ className = "" }: { className?: string }) {
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-ink-500 ${className}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-ink-500 ${className}`}>
       <img
         src="/brand/javlin-favicon.png"
         alt=""
@@ -133,7 +133,7 @@ type StudentCardProps = {
 
 export function StudentCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card">
+    <div className="card p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-surface-soft" />
         <div className="min-w-0 flex-1 space-y-2">
@@ -154,12 +154,12 @@ export default function StudentCard({ student, isSelf, connectionState, competit
     <Link
       href={`/circle/${student.userId}`}
       data-cursor="view"
-      className="group flex min-w-0 flex-col rounded-2xl border border-surface-border bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+      className="card card-interactive group flex min-w-0 flex-col p-4 sm:p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
     >
       <div className="flex items-center gap-3">
         <StudentAvatar src={student.avatarUrl} name={student.fullName} className="h-11 w-11 text-sm ring-2 ring-white" />
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-extrabold leading-snug text-ink-900 group-hover:text-brand-blue transition-colors">
+          <h3 className="card-title truncate leading-snug text-ink-900 group-hover:text-brand-blue transition-colors">
             {student.fullName}
           </h3>
           <p className="mt-0.5 truncate text-xs font-semibold text-ink-500">
@@ -168,7 +168,7 @@ export default function StudentCard({ student, isSelf, connectionState, competit
           </p>
         </div>
         {isSelf && (
-          <span className="ml-auto shrink-0 rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red-dark">
+          <span className="ml-auto shrink-0 rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">
             You
           </span>
         )}
@@ -188,7 +188,7 @@ export default function StudentCard({ student, isSelf, connectionState, competit
 
       <div className="mt-auto flex items-center justify-between gap-2 pt-4">
         {student.graduationYear ? (
-          <span className="text-[11px] font-semibold text-ink-400">Graduates {student.graduationYear}</span>
+          <span className="text-[11px] font-semibold text-ink-500">Graduates {student.graduationYear}</span>
         ) : (
           <span />
         )}
@@ -232,16 +232,16 @@ export function StudentRecordList({ records, showPrivacyFlag = false, renderActi
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-blue-pale text-brand-blue-dark">
               <Icon name={RECORD_CATEGORY_ICONS[group.category]} className="h-3.5 w-3.5" />
             </span>
-            <p className="text-[10px] font-black uppercase tracking-widest text-ink-400">
+            <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">
               {RECORD_CATEGORY_LABELS[group.category]}
             </p>
           </div>
           <ul className="mt-2.5 space-y-3">
             {group.items.map((record) => (
-              <li key={record.id} className="rounded-2xl border border-surface-border bg-surface-soft/60 p-4">
+              <li key={record.id} className="card bg-surface-soft/60 p-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h4 className="min-w-0 break-words text-sm font-bold text-ink-900">{record.title}</h4>
-                  {record.year ? <span className="shrink-0 text-[11px] font-bold text-ink-400">{record.year}</span> : null}
+                  <h4 className="card-title min-w-0 break-words text-ink-900">{record.title}</h4>
+                  {record.year ? <span className="shrink-0 text-[11px] font-bold text-ink-500">{record.year}</span> : null}
                 </div>
                 {record.organization && (
                   <p className="mt-0.5 text-xs font-semibold text-ink-600">{record.organization}</p>
@@ -253,7 +253,7 @@ export function StudentRecordList({ records, showPrivacyFlag = false, renderActi
                   <div className="mt-2.5 flex flex-wrap items-center gap-3">
                     {showPrivacyFlag && (
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                           record.isPublic
                             ? "bg-brand-blue-pale text-brand-blue-dark"
                             : "bg-surface-border text-ink-500"

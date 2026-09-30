@@ -141,7 +141,7 @@ export default function CustomCursor() {
         } ${
           isLabelActive
             ? isRedBadge
-              ? "h-14 w-14 -ml-7 -mt-7 bg-brand-red text-white border-brand-red shadow-lift ring-2 ring-brand-red/20"
+              ? "h-14 w-14 -ml-7 -mt-7 bg-brand-red text-brand-navy border-brand-red shadow-lift ring-2 ring-brand-red/20"
               : "h-14 w-14 -ml-7 -mt-7 bg-brand-blue text-white border-brand-blue shadow-lift ring-2 ring-brand-blue/20"
             : cursorType === "hover"
             ? "h-9 w-9 -ml-4.5 -mt-4.5 bg-brand-blue/10 border-brand-blue/40 shadow-soft"
@@ -150,7 +150,7 @@ export default function CustomCursor() {
         style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
       >
         {currentLabel && (
-          <span className="text-[10px] font-black uppercase tracking-wider select-none animate-fade-in">
+          <span className="text-[11px] font-black uppercase tracking-wider select-none animate-fade-in">
             {currentLabel}
           </span>
         )}

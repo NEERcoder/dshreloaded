@@ -41,7 +41,7 @@ export default function DeadlineProgress({ deadline, createdAt }: DeadlineProgre
 
   if (isPast) {
     return (
-      <div className="text-xs font-semibold text-ink-400">
+      <div className="text-xs font-semibold text-ink-500">
         Applications closed
       </div>
     );
@@ -52,9 +52,9 @@ export default function DeadlineProgress({ deadline, createdAt }: DeadlineProgre
   return (
     <div className="space-y-1.5 py-1">
       {/* Track line: OPEN ─────●──── DEADLINE */}
-      <div className="relative flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-ink-400">
+      <div className="relative flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-ink-500">
         <span>Open</span>
-        <span className={isUrgent ? "text-brand-red font-black" : "text-ink-500"}>
+        <span className={isUrgent ? "text-brand-red-ink font-black" : "text-ink-500"}>
           {daysRemaining === 0 ? "Closing today" : daysRemaining !== null ? `${daysRemaining}d left` : "Deadline"}
         </span>
       </div>

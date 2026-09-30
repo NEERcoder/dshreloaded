@@ -122,13 +122,13 @@ export default function CirclePage() {
       description="Discover students, interests and people building something alongside you."
       backgroundPreset="directory"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero pillar-circle">
         <div className="container-px">
-          <p className="eyebrow text-brand-red">CIRCLE</p>
-          <h1 className="font-display mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-tight">
+          <p className="eyebrow">CIRCLE</p>
+          <h1 className="page-title font-display mt-2">
             Find your people.
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-500 font-medium">
+          <p className="page-lede mt-3 max-w-2xl">
             Discover students, interests and people building something alongside you.
           </p>
           {user && (
@@ -154,7 +154,7 @@ export default function CirclePage() {
         ) : (
           <>
             {error && (
-              <div className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
+              <div className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink">
                 We couldn't load the directory. {error}
               </div>
             )}
@@ -220,13 +220,13 @@ export default function CirclePage() {
                 </label>
               </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-ink-400" aria-live="polite">
+                <p className="text-xs font-bold uppercase tracking-wider text-ink-500" aria-live="polite">
                   {`${filtered.length} student${filtered.length === 1 ? "" : "s"}`}
                 </p>
                 {filtersActive && (
                   <button
                     onClick={clearFilters}
-                    className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[40px]"
+                    className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[44px]"
                   >
                     Clear filters
                   </button>

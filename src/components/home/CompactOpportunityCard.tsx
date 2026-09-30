@@ -27,8 +27,8 @@ export default function CompactOpportunityCard({ item, isNew, imageForward = fal
     <Link
       href={opportunityHref(item.id)}
       data-cursor="view"
-      className={`glass-card group flex snap-start flex-col overflow-hidden hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
-        imageForward ? "homepage-opportunity-card" : "min-w-[78%] p-5 sm:min-w-0"
+      className={`glass-card card-interactive group flex snap-start flex-col overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
+        imageForward ? "homepage-opportunity-card" : "min-w-[78%] p-4 sm:min-w-0 sm:p-5"
       }`}
     >
       {imageForward && (
@@ -50,7 +50,7 @@ export default function CompactOpportunityCard({ item, isNew, imageForward = fal
       <div className={imageForward ? "flex flex-1 flex-col p-4" : "flex flex-1 flex-col"}>
         <div className="flex items-center justify-between gap-2">
           <span
-            className={`rounded-md px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+            className={`rounded-md px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider ${
               CATEGORY_BADGE[item.category] ?? "bg-surface-soft text-ink-600"
             }`}
           >
@@ -58,26 +58,26 @@ export default function CompactOpportunityCard({ item, isNew, imageForward = fal
           </span>
           <div className="flex items-center gap-1.5">
             {item.teamFormationEnabled && (
-              <span className="rounded-full bg-brand-blue-soft px-2 py-0.5 text-[10px] font-bold text-brand-blue">
+              <span className="rounded-full bg-brand-blue-soft px-2 py-0.5 text-[11px] font-bold text-brand-blue">
                 Teams
               </span>
             )}
             {isNew && (
-              <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red">
+              <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">
                 New
               </span>
             )}
           </div>
         </div>
-        <h3 className="mt-3 line-clamp-2 text-sm font-extrabold leading-snug text-ink-900 transition-colors group-hover:text-brand-blue">
+        <h3 className="card-title mt-2.5 line-clamp-2 text-ink-900 transition-colors group-hover:text-brand-blue sm:mt-3">
           {item.title}
         </h3>
         <p className="mt-1 line-clamp-1 text-xs font-semibold text-ink-600">{item.organization}</p>
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-4 text-[11px] font-semibold text-ink-400">
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-4 text-[11px] font-semibold text-ink-500">
           {item.mode && <span className="text-ink-600">{item.mode}</span>}
           {item.stipend && <span className="truncate">{item.stipend}</span>}
           {deadline && (
-            <span className={`inline-flex items-center gap-1 ${deadline.urgent ? "text-brand-red font-extrabold" : ""}`}>
+            <span className={`inline-flex items-center gap-1 ${deadline.urgent ? "text-brand-red-ink font-extrabold" : ""}`}>
               <Icon name="flag" className="h-3 w-3" />
               {deadline.text}
             </span>

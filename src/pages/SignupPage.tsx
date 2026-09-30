@@ -191,7 +191,7 @@ export default function SignupPage() {
       <PageShell title="Almost done | JAVLIN" backgroundPreset="explore">
         <section className="container-px py-16 sm:py-24">
           <div className="mx-auto max-w-md text-center animate-fade-up">
-            <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red">
+            <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red-ink">
               One step left
             </span>
             <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-ink-900">
@@ -200,7 +200,7 @@ export default function SignupPage() {
             <p className="mt-4 text-sm leading-relaxed text-ink-600">
               You're signed in, but we couldn't save your profile details yet:
             </p>
-            <div role="alert" className="mt-3 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+            <div role="alert" className="mt-3 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
               {profileError}
             </div>
             <div className="mt-8 flex flex-col gap-3">
@@ -230,7 +230,7 @@ export default function SignupPage() {
     >
       <section className="container-px py-16 sm:py-24">
         <div className="mx-auto max-w-xl animate-fade-up">
-          <p className="eyebrow text-brand-red">STUDENT ACCOUNT</p>
+          <p className="eyebrow">STUDENT ACCOUNT</p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
             Create your account.
           </h1>
@@ -238,8 +238,8 @@ export default function SignupPage() {
             Set up your profile once — no email confirmation, no waiting.
           </p>
 
-          <form onSubmit={submit} className="card mt-8 p-6 sm:p-8 bg-white border border-surface-border shadow-card">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-400">Account</h2>
+          <form onSubmit={submit} className="card mt-8 p-6 sm:p-8">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-500">Account</h2>
             <div className="mt-3 grid gap-4">
               <div>
                 <label className="field-label" htmlFor="signup-email">Email</label>
@@ -287,7 +287,7 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <h2 className="mt-6 text-xs font-bold uppercase tracking-wider text-ink-400">Profile</h2>
+            <h2 className="mt-6 text-xs font-bold uppercase tracking-wider text-ink-500">Profile</h2>
             <div className="mt-3 grid gap-4">
               <div>
                 <label className="field-label" htmlFor="signup-full-name">Full Name</label>
@@ -403,7 +403,7 @@ export default function SignupPage() {
             </button>
 
             {error && (
-              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
                 {error}
               </div>
             )}
@@ -417,7 +417,7 @@ export default function SignupPage() {
           </p>
 
           <div className="mt-4 text-center">
-            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-400 hover:text-brand-blue">
+            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-500 hover:text-brand-blue">
               <Icon name="arrow-left" className="h-3.5 w-3.5" /> Return to JAVLIN Homepage
             </Link>
           </div>

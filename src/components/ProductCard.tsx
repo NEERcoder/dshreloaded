@@ -4,7 +4,7 @@ import type { ProductCardData } from "../data/exploreDu";
 type ProductCardProps = ProductCardData;
 
 export default function ProductCard({ title, description, icon, accent }: ProductCardProps) {
-  const accentBg = accent === "red" ? "bg-brand-red-soft text-brand-red" : "bg-brand-blue-soft text-brand-blue";
+  const accentBg = accent === "red" ? "bg-brand-red-soft text-brand-red-ink" : "bg-brand-blue-soft text-brand-blue";
   const accentBorder = accent === "red" ? "hover:border-brand-red/30" : "hover:border-brand-blue/30";
   return (
     <div className={`card ${accentBorder} hover:shadow-lift p-6 flex flex-col gap-4 group`}>

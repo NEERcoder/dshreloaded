@@ -9,11 +9,11 @@ export default function Footer() {
   return (
     <footer
       ref={ref}
-      className={`mt-20 border-t border-surface-border bg-surface-soft reveal-stagger ${
+      className={`mt-14 sm:mt-20 border-t border-surface-border bg-surface-soft reveal-stagger ${
         isVisible ? "is-visible" : ""
       }`}
     >
-      <div className="container-px py-12 sm:py-16 relative z-10">
+      <div className="container-px py-10 sm:py-16 relative z-10">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2 max-w-sm">
             <BrandMark className="h-12 w-auto block mb-4" />
@@ -24,8 +24,8 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-ink-400 mb-4">Explore JAVLIN</p>
-            <ul className="space-y-2.5">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-500 mb-4">Explore JAVLIN</p>
+            <ul className="sm:space-y-2.5">
               {[
                 { label: "AIM", href: "/aim" },
                 { label: "FIELD", href: "/field" },
@@ -37,7 +37,7 @@ export default function Footer() {
                 { label: "Join Our Team", href: "/join" },
               ].map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-sm text-ink-700 hover:text-brand-blue transition-colors">
+                  <Link href={l.href} className="flex min-h-[44px] items-center text-sm font-semibold text-ink-700 hover:text-brand-blue transition-colors sm:min-h-0">
                     {l.label}
                   </Link>
                 </li>
@@ -46,12 +46,12 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-ink-400 mb-4">Connect</p>
-            <ul className="space-y-2.5">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-500 mb-4">Connect</p>
+            <ul className="sm:space-y-2.5">
               <li>
                 <a
                   href="mailto:connect@dusciencehub.in"
-                  className="text-sm text-ink-700 hover:text-brand-blue transition-colors"
+                  className="flex min-h-[44px] items-center text-sm font-semibold text-ink-700 hover:text-brand-blue transition-colors sm:min-h-0"
                 >
                   connect@dusciencehub.in
                 </a>
@@ -61,8 +61,8 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-ink-400">© {year} JAVLIN</p>
-          <p className="text-xs text-ink-400">Built by students, for students.</p>
+          <p className="text-xs text-ink-500">© {year} JAVLIN</p>
+          <p className="text-xs text-ink-500">Built by students, for students.</p>
         </div>
       </div>
     </footer>

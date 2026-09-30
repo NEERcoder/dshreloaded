@@ -19,14 +19,14 @@ function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
   const campusCorrespondentUrl = roleApplicationUrls["campus-correspondent"] || "https://forms.gle/oqqLTmm45NEtvjV49";
 
   return (
-    <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-12 pb-16 sm:pt-16 sm:pb-20">
+    <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-8 pb-10 sm:pt-16 sm:pb-20">
       <div className="container-px max-w-7xl mx-auto">
         <div className="max-w-3xl">
-          <p className="eyebrow text-brand-red">JOIN JAVLIN</p>
-          <h1 className="mt-3 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
+          <p className="eyebrow">JOIN JAVLIN</p>
+          <h1 className="mt-3 font-display text-[1.875rem] sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
             Want to build JAVLIN with us?
           </h1>
-          <p className="mt-4 text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+          <p className="mt-4 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium">
             We're building the student platform we wish existed — and the team behind it is students
             helping Delhi University discover real information, authentic campus perspectives, and
             career-defining opportunities.
@@ -39,10 +39,10 @@ function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
           <TiltCard className="h-full">
             <div className="card card-hover p-6 sm:p-10 h-full flex flex-col justify-between bg-white border-2 border-brand-red/40 shadow-lift group">
               <div>
-                <span className="inline-block rounded-xl bg-brand-red text-white px-3.5 py-1 text-xs font-black uppercase tracking-wider shadow-sm">
+                <span className="chip chip-accent">
                   REPRESENT YOUR COLLEGE
                 </span>
-                <h2 className="mt-6 text-2xl sm:text-3xl font-black text-ink-900 group-hover:text-brand-red transition-colors leading-snug">
+                <h2 className="mt-6 font-display text-2xl sm:text-3xl font-black text-ink-900 group-hover:text-brand-red-ink transition-colors leading-snug">
                   Become the voice of your campus.
                 </h2>
                 <p className="mt-3 text-base leading-relaxed text-ink-600">
@@ -59,19 +59,19 @@ function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
                 >
                   CAMPUS CORRESPONDENT <Icon name="external" className="h-4 w-4" />
                 </a>
-                <span className="text-xs font-bold text-ink-400">Direct Google Form</span>
+                <span className="text-xs font-bold text-ink-500">Direct Google Form</span>
               </div>
             </div>
           </TiltCard>
 
           {/* Pathway 2: Build With Us */}
           <TiltCard className="h-full">
-            <div className="card card-hover p-6 sm:p-10 h-full flex flex-col justify-between bg-white border border-surface-border shadow-card group">
+            <div className="card card-hover p-6 sm:p-10 h-full flex flex-col justify-between group">
               <div>
-                <span className="inline-block rounded-xl bg-brand-blue text-white px-3.5 py-1 text-xs font-black uppercase tracking-wider shadow-sm">
+                <span className="chip chip-brand">
                   BUILD WITH US
                 </span>
-                <h2 className="mt-6 text-2xl sm:text-3xl font-black text-ink-900 group-hover:text-brand-blue transition-colors leading-snug">
+                <h2 className="mt-6 font-display text-2xl sm:text-3xl font-black text-ink-900 group-hover:text-brand-blue transition-colors leading-snug">
                   Work with the core team.
                 </h2>
                 <p className="mt-3 text-base leading-relaxed text-ink-600">
@@ -85,7 +85,7 @@ function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
                 >
                   EXPLORE OPEN ROLES <Icon name="arrow" className="h-4 w-4" />
                 </a>
-                <span className="text-xs font-bold text-ink-400">
+                <span className="text-xs font-bold text-ink-500">
                   {openRoleCount === null
                     ? "Open roles below"
                     : `${openRoleCount} open role${openRoleCount === 1 ? "" : "s"}`}
@@ -132,8 +132,8 @@ function GeneralApplication() {
       <div className="container-px">
         <div className="grid gap-10 lg:grid-cols-[1fr_0.85fr] lg:items-start max-w-6xl mx-auto">
           <div>
-            <p className="eyebrow text-brand-red">GENERAL APPLICATION</p>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">
+            <p className="eyebrow">GENERAL APPLICATION</p>
+            <h2 className="section-title font-display mt-3">
               Can’t find the exact role?
             </h2>
             <p className="mt-4 max-w-xl leading-relaxed text-ink-600">
@@ -274,8 +274,8 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
         <div className="container-px max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="eyebrow text-brand-red">OPEN ROLES</p>
-              <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-ink-900">
+              <p className="eyebrow">OPEN ROLES</p>
+              <h2 className="section-title font-display mt-2">
                 Choose your role.
               </h2>
               <p className="mt-2 text-base text-ink-600 font-normal">
@@ -296,7 +296,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
               {[0, 1, 2, 3].map((slot) => (
                 <div
                   key={slot}
-                  className="h-64 rounded-2xl border border-surface-border bg-white p-6 shadow-card animate-pulse"
+                  className="card h-64 p-6 animate-pulse"
                 />
               ))}
             </div>
@@ -317,14 +317,14 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                 <TiltCard key={item.id} className="h-full">
                   <div
                     data-cursor="join"
-                    className="card card-hover p-6 sm:p-7 h-full flex flex-col justify-between bg-white border border-surface-border shadow-card group"
+                    className="card card-hover p-6 sm:p-7 h-full flex flex-col justify-between group"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <span
-                          className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                          className={`rounded-lg px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${
                             isRed
-                              ? "bg-brand-red-soft text-brand-red"
+                              ? "bg-brand-red-soft text-brand-red-ink"
                               : "bg-brand-blue-soft text-brand-blue"
                           }`}
                         >
@@ -343,7 +343,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                             aria-label="Actively recruiting"
                           />
                         ) : (
-                          <span className="rounded-lg bg-surface-soft px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-ink-500">
+                          <span className="rounded-lg bg-surface-soft px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-ink-500">
                             Closed
                           </span>
                         )}
@@ -353,7 +353,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                         <div
                           className={`h-11 w-11 rounded-2xl flex items-center justify-center font-black ${
                             isRed
-                              ? "bg-brand-red-soft text-brand-red"
+                              ? "bg-brand-red-soft text-brand-red-ink"
                               : "bg-brand-blue-soft text-brand-blue"
                           }`}
                         >
@@ -384,7 +384,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
                       ) : null}
                       <Link
                         href={`/join/${item.id}`}
-                        className="inline-flex items-center justify-center gap-1.5 text-xs font-extrabold text-ink-500 hover:text-brand-blue text-center py-1 transition-colors"
+                        className="inline-flex min-h-[44px] items-center justify-center gap-1.5 text-xs font-extrabold text-ink-500 hover:text-brand-blue text-center py-1 transition-colors sm:min-h-0"
                       >
                         View Role Details <Icon name="arrow" className="h-3.5 w-3.5" />
                       </Link>
@@ -424,14 +424,14 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
     <PageShell title={`${role.title} | Join JAVLIN`} backgroundPreset="team">
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border">
         <div className="container-px py-14 sm:py-20">
-          <Link href="/join" className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider">
+          <Link href="/join" className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider sm:min-h-0">
             <Icon name="arrow-left" className="h-4 w-4" /> Back to Open Positions
           </Link>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span
               className={`rounded-full px-3 py-1 text-xs font-extrabold ${
                 role.status === "Open" || role.isOpen
-                  ? "bg-brand-red-soft text-brand-red"
+                  ? "bg-brand-red-soft text-brand-red-ink"
                   : "bg-surface-border text-ink-500"
               }`}
             >
@@ -448,7 +448,7 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
               </span>
             )}
           </div>
-          <h1 className="mt-4 text-4xl sm:text-5xl font-extrabold text-ink-900 tracking-tight">{role.title}</h1>
+          <h1 className="page-title font-display mt-4">{role.title}</h1>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-600">{role.description}</p>
           <div className="mt-8 flex flex-wrap gap-4">
             {safeGoogleFormUrl ? (

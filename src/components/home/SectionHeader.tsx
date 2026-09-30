@@ -20,10 +20,10 @@ export default function SectionHeader({
   iconSrc,
 }: SectionHeaderProps) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-      <div className="flex max-w-2xl items-center gap-3 sm:gap-4">
+    <div className="flex flex-wrap items-end justify-between gap-x-5 gap-y-3">
+      <div className="flex max-w-2xl items-center gap-2.5 sm:gap-4">
         {iconSrc && (
-          <span className="glass-card flex h-12 w-12 shrink-0 items-center justify-center bg-white p-1.5 sm:h-14 sm:w-14">
+          <span className="icon-well h-11 w-11 shrink-0 p-1.5 sm:h-14 sm:w-14">
             <img
               src={iconSrc}
               alt=""
@@ -37,21 +37,14 @@ export default function SectionHeader({
         )}
         <div>
           <p className="eyebrow">{eyebrow}</p>
-          <h2 className="font-display mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-ink-900 leading-tight">
-            {title}
-          </h2>
-          {description ? (
-            <p className="mt-2 text-sm sm:text-base leading-relaxed text-ink-600 font-medium">{description}</p>
-          ) : null}
+          <h2 className="section-title font-display mt-1.5 sm:mt-2">{title}</h2>
+          {description ? <p className="section-lede mt-1.5 sm:mt-2">{description}</p> : null}
         </div>
       </div>
       {viewAllHref ? (
-        <Link
-          href={viewAllHref}
-          className="group inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark transition-colors"
-        >
+        <Link href={viewAllHref} className="link-pill group shrink-0">
           {viewAllLabel ?? "View All"}
-          <Icon name="arrow" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          <Icon name="arrow" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       ) : null}
     </div>

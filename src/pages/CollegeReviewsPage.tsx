@@ -83,17 +83,17 @@ export default function CollegeReviewsPage() {
       description="Real reviews from students who've lived it — academics, campus life, and everything in between."
       backgroundPreset="college"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero">
         <div className="container-px">
-          <p className="eyebrow text-brand-red">COLLEGE REVIEWS</p>
-          <h1 className="font-display mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-tight">
+          <p className="eyebrow">COLLEGE REVIEWS</p>
+          <h1 className="page-title font-display mt-2">
             Before you choose, hear from students.
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+          <p className="page-lede mt-3 max-w-2xl">
             Real reviews from students who've lived it — academics, campus life, and everything in between.
           </p>
           {!loading && (
-            <p className="mt-3 text-xs font-bold uppercase tracking-widest text-ink-400">
+            <p className="mt-3 text-xs font-bold uppercase tracking-widest text-ink-500">
               {colleges.length} colleges · {reviews.length} published review{reviews.length === 1 ? "" : "s"}
             </p>
           )}
@@ -101,7 +101,7 @@ export default function CollegeReviewsPage() {
       </section>
 
       <section className="container-px py-8 sm:py-10">
-        <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card">
+        <div className="card p-5">
           <label className="field-label" htmlFor="review-college-search">
             Search college
           </label>
@@ -114,14 +114,14 @@ export default function CollegeReviewsPage() {
                 setSearch(event.target.value);
                 setVisibleCount(PAGE_SIZE);
               }}
-              className="field-input min-h-[40px] flex-1"
+              className="field-input min-h-[44px] flex-1"
               placeholder="Start typing a college or campus…"
             />
-            <Link href="/explore" className="btn-primary min-h-[40px] justify-center">
+            <Link href="/explore" className="btn-primary min-h-[44px] justify-center">
               Submit a review
             </Link>
           </div>
-          <p className="mt-2 text-xs font-semibold text-ink-400" role="status">
+          <p className="mt-2 text-xs font-semibold text-ink-500" role="status">
             {loading
               ? "Loading colleges…"
               : `${pagedColleges.length} of ${colleges.length} colleges shown`}
@@ -140,7 +140,7 @@ export default function CollegeReviewsPage() {
             <div className="mt-4 card border-dashed p-10 text-center bg-white">
               <p className="text-base font-bold text-ink-900">No colleges match your search.</p>
               <p className="mt-1 text-sm text-ink-500">Try a shorter name, or browse every college.</p>
-              <button className="btn-secondary mt-4 min-h-[40px]" onClick={() => { setSearch(""); setVisibleCount(PAGE_SIZE); }}>
+              <button className="btn-secondary mt-4 min-h-[44px]" onClick={() => { setSearch(""); setVisibleCount(PAGE_SIZE); }}>
                 Clear search
               </button>
             </div>
@@ -150,7 +150,7 @@ export default function CollegeReviewsPage() {
               {pagedColleges.map((row) => (
                 <article
                   key={row.college.id}
-                  className="flex min-w-0 flex-col rounded-2xl border border-surface-border bg-white p-5 shadow-card"
+                  className="card flex min-w-0 flex-col p-5"
                 >
                   <h3 className="text-sm font-extrabold leading-snug text-ink-900">{row.college.name}</h3>
                   <p className="mt-1 text-xs font-semibold text-ink-500">
@@ -159,14 +159,14 @@ export default function CollegeReviewsPage() {
 
                   {row.reviewCount > 0 ? (
                     <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-ink-700">
-                      <Icon name="star" className="h-4 w-4 text-brand-red" />
+                      <Icon name="star" className="h-4 w-4 text-brand-red-ink" />
                       {row.averageRating} average
-                      <span className="font-semibold text-ink-400">
+                      <span className="font-semibold text-ink-500">
                         · {row.reviewCount} review{row.reviewCount === 1 ? "" : "s"}
                       </span>
                     </p>
                   ) : (
-                    <p className="mt-3 text-xs font-semibold leading-relaxed text-ink-400">
+                    <p className="mt-3 text-xs font-semibold leading-relaxed text-ink-500">
                       No reviews yet.
                       <br />
                       Be the first to share your experience.
@@ -176,13 +176,13 @@ export default function CollegeReviewsPage() {
                   {row.latest && (
                     <blockquote className="mt-3 border-l-2 border-brand-blue-soft pl-3 text-xs leading-relaxed text-ink-500 line-clamp-3">
                       "{row.latest.review}"
-                      <span className="mt-1 block font-bold text-ink-400">— {row.latest.name}</span>
+                      <span className="mt-1 block font-bold text-ink-500">— {row.latest.name}</span>
                     </blockquote>
                   )}
 
                   <Link
                     href={row.college.slug ? `/explore/${row.college.slug}` : "/explore"}
-                    className="mt-4 inline-flex min-h-[40px] items-center gap-1 text-xs font-bold text-brand-blue hover:text-brand-blue-dark"
+                    className="mt-4 inline-flex min-h-[44px] items-center gap-1 text-xs font-bold text-brand-blue hover:text-brand-blue-dark"
                   >
                     View college & reviews <Icon name="arrow" className="h-3.5 w-3.5" />
                   </Link>
@@ -193,7 +193,7 @@ export default function CollegeReviewsPage() {
               <button
                 type="button"
                 onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-                className="btn-secondary mt-6 min-h-[40px] w-full justify-center sm:w-auto"
+                className="btn-secondary mt-6 min-h-[44px] w-full justify-center sm:w-auto"
               >
                 Show more colleges ({remainingColleges})
               </button>
@@ -218,7 +218,7 @@ export default function CollegeReviewsPage() {
             <div className="mt-4 card border-dashed p-10 text-center bg-white">
               <p className="text-base font-bold text-ink-900">No reviews yet.</p>
               <p className="mt-1 text-sm text-ink-500">Be the first to share your experience.</p>
-              <Link href="/explore" className="btn-primary mt-4 min-h-[40px] inline-flex">
+              <Link href="/explore" className="btn-primary mt-4 min-h-[44px] inline-flex">
                 Submit a review
               </Link>
             </div>

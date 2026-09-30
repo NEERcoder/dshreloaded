@@ -36,19 +36,21 @@ function ProfileCard({
   const state = connection?.state ?? "none";
 
   return (
-    <div className="homepage-profile-card glass-card flex flex-col items-center p-5 text-center">
+    <div className="homepage-profile-card glass-card flex flex-col items-center p-4 text-center sm:p-5">
       <Link
         href={`/circle/${student.userId}`}
         data-cursor="view"
         aria-label={`View ${student.fullName}'s profile`}
         className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue rounded-full"
       >
-        <StudentAvatar
-          src={student.avatarUrl}
-          name={student.fullName}
-          className="h-20 w-20 text-xl ring-2 ring-white transition-transform duration-300 group-hover:scale-[1.03]"
-        />
-        <h3 className="mt-3 line-clamp-2 text-sm font-extrabold leading-snug text-ink-900 transition-colors group-hover:text-brand-blue">
+        <span className="avatar-ring">
+          <StudentAvatar
+            src={student.avatarUrl}
+            name={student.fullName}
+            className="h-16 w-16 text-lg ring-2 ring-white transition-transform duration-300 group-hover:scale-[1.03] sm:h-20 sm:w-20 sm:text-xl"
+          />
+        </span>
+        <h3 className="card-title mt-2.5 line-clamp-2 text-ink-900 transition-colors group-hover:text-brand-blue sm:mt-3">
           {student.fullName}
         </h3>
       </Link>
@@ -56,7 +58,7 @@ function ProfileCard({
       {student.course && (
         <p className="mt-0.5 line-clamp-1 text-[11px] font-semibold text-ink-500">{student.course}</p>
       )}
-      <p className="mt-0.5 text-[11px] font-semibold text-ink-400">
+      <p className="mt-0.5 text-[11px] font-semibold text-ink-500">
         {student.yearOfStudy ? yearLabel(student.yearOfStudy) : "Year not listed"}
       </p>
 
@@ -80,7 +82,7 @@ function ProfileCard({
             type="button"
             onClick={() => onConnect(student, "accept")}
             disabled={busy !== null}
-            className="btn-primary w-full min-h-[38px] px-3 text-xs"
+            className="btn-primary w-full min-h-[44px] px-3 text-[13px] sm:text-xs"
           >
             {busy === "accept" ? (
               <>
@@ -97,7 +99,7 @@ function ProfileCard({
             type="button"
             onClick={() => onConnect(student, "cancel")}
             disabled={busy !== null}
-            className="btn-secondary w-full min-h-[38px] px-3 text-xs"
+            className="btn-secondary w-full min-h-[44px] px-3 text-[13px] sm:text-xs"
           >
             {busy === "cancel" ? (
               <>
@@ -114,7 +116,7 @@ function ProfileCard({
             type="button"
             onClick={() => onConnect(student, "send")}
             disabled={busy !== null}
-            className="btn-primary w-full min-h-[38px] px-3 text-xs"
+            className="btn-primary w-full min-h-[44px] px-3 text-[13px] sm:text-xs"
           >
             {busy === "send" ? (
               <>
@@ -195,8 +197,8 @@ export default function CirclePreview() {
   const loopStudents = shouldLoop ? [...students, ...students] : students;
 
   return (
-    <section id="circle" className="scroll-mt-24 border-t glass-panel-tint">
-      <div className="container-px py-9 sm:py-12">
+    <section id="circle" className="band pillar-circle scroll-mt-24">
+      <div className="container-px py-7 sm:py-10 lg:py-12">
         <SectionHeader
           eyebrow="CIRCLE"
           title="Find your people with common interests"
@@ -210,7 +212,7 @@ export default function CirclePreview() {
           {loading ? (
             <div className="flex gap-4">
               {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="homepage-profile-card glass-card p-5">
+                <div key={index} className="homepage-profile-card glass-card p-4 sm:p-5">
                   <div className="mx-auto h-20 w-20 rounded-full skeleton-shimmer" />
                   <div className="mx-auto mt-3 h-3 w-24 rounded skeleton-shimmer" />
                   <div className="mx-auto mt-2 h-3 w-16 rounded skeleton-shimmer" />
@@ -226,7 +228,7 @@ export default function CirclePreview() {
               ctaHref="/login"
             />
           ) : error ? (
-            <p className="text-sm font-semibold text-brand-red">{error}</p>
+            <p className="text-sm font-semibold text-brand-red-ink">{error}</p>
           ) : students.length === 0 ? (
             <EmptyState
               icon="users"
@@ -237,7 +239,7 @@ export default function CirclePreview() {
             />
           ) : (
             <>
-              <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1 xl:hidden">
+              <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 sm:gap-4 xl:hidden">
                 {students.map((student) => (
                   <ProfileCard
                     key={student.userId}

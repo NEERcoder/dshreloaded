@@ -81,7 +81,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close menu"
-            className="p-2 -mr-2 text-ink-700 hover:text-brand-blue active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue rounded-xl"
+            className="-mr-2 flex min-h-[44px] min-w-[44px] items-center justify-center text-ink-700 hover:text-brand-blue active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue rounded-xl"
           >
             <Icon name="close" className="h-6 w-6" />
           </button>
@@ -121,7 +121,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
                     Notifications
                   </span>
                   {unread > 0 && (
-                    <span className="rounded-full bg-brand-red px-2 py-0.5 text-[11px] font-black text-white">
+                    <span className="rounded-full bg-brand-red px-2 py-0.5 text-[11px] font-black text-brand-navy">
                       {unread > 9 ? "9+" : unread}
                     </span>
                   )}
@@ -166,7 +166,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
                 href="/admin"
                 onClick={onClose}
                 className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-extrabold transition-colors ${
-                  path === "/admin" ? "text-white bg-brand-red" : "text-brand-red bg-brand-red-soft hover:bg-brand-red hover:text-white"
+                  path === "/admin" ? "text-brand-navy bg-brand-red" : "text-brand-red-ink bg-brand-red-soft hover:bg-brand-red hover:text-brand-navy"
                 }`}
               >
                 <span className="h-2 w-2 rounded-full bg-current animate-pulse" />

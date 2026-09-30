@@ -71,7 +71,7 @@ export default function NotificationBell({ className = "" }: { className?: strin
       <Icon name="bell" className="h-6 w-6" />
       {unread > 0 && (
         <span
-          className="absolute -top-0.5 right-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-black leading-none text-white"
+          className="absolute -top-0.5 right-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-red px-1 text-[11px] font-black leading-none text-brand-navy"
           aria-hidden="true"
         >
           {badgeLabel(unread)}

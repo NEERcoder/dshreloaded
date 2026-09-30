@@ -225,7 +225,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
         </Link>
 
         <div className="mt-6 animate-fade-up">
-          <p className="eyebrow text-brand-red">CIRCLE PROFILE</p>
+          <p className="eyebrow">CIRCLE PROFILE</p>
           <div className="mt-4 flex items-start gap-4">
             <StudentAvatar
               src={student.avatarUrl}
@@ -244,7 +244,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
                 <LevelBadge competitions={competitions} />
                 {student.isPublic && <VerifiedMark />}
                 {isSelf && (
-                  <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red-dark">
+                  <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">
                     This is you
                   </span>
                 )}
@@ -257,17 +257,17 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
           <h2 className="text-base font-extrabold text-ink-900">Education</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
-              <dt className="text-[10px] font-black uppercase tracking-widest text-ink-400">College</dt>
+              <dt className="text-[11px] font-black uppercase tracking-widest text-ink-500">College</dt>
               <dd className="mt-1 text-sm font-semibold text-ink-900">
                 {student.collegeName || "Not listed"}
               </dd>
             </div>
             <div>
-              <dt className="text-[10px] font-black uppercase tracking-widest text-ink-400">Course</dt>
+              <dt className="text-[11px] font-black uppercase tracking-widest text-ink-500">Course</dt>
               <dd className="mt-1 text-sm font-semibold text-ink-900">{student.course || "Not listed"}</dd>
             </div>
             <div>
-              <dt className="text-[10px] font-black uppercase tracking-widest text-ink-400">Graduation</dt>
+              <dt className="text-[11px] font-black uppercase tracking-widest text-ink-500">Graduation</dt>
               <dd className="mt-1 text-sm font-semibold text-ink-900">
                 {student.graduationYear || "Not listed"}
               </dd>
@@ -279,14 +279,14 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
         <section className="mt-6 card p-6 bg-white shadow-card border border-surface-border">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-base font-extrabold text-ink-900">MARK record</h2>
-            <p className="text-xs font-bold text-ink-400">{records.length} listed</p>
+            <p className="text-xs font-bold text-ink-500">{records.length} listed</p>
           </div>
           <p className="mt-1 text-sm leading-relaxed text-ink-500">
             Internships, projects, fellowships and achievements this student has chosen to record.
           </p>
 
           {recordsError ? (
-            <p role="alert" className="mt-4 text-xs font-bold text-brand-red">
+            <p role="alert" className="mt-4 text-xs font-bold text-brand-red-ink">
               We couldn't load these records. {recordsError}
             </p>
           ) : records.length === 0 ? (
@@ -330,7 +330,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
                 </p>
               )}
             </div>
-            <p className="mt-4 text-xs font-semibold text-ink-400">
+            <p className="mt-4 text-xs font-semibold text-ink-500">
               Interested in working together? Team up for a competition on CREW.
             </p>
           </div>

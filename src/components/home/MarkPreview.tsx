@@ -14,8 +14,8 @@ const TRACKS = [
 
 export default function MarkPreview() {
   return (
-    <section id="mark" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-9 sm:py-12">
+    <section id="mark" className="band pillar-mark tone-dark scroll-mt-24">
+      <div className="container-px py-7 sm:py-10 lg:py-12">
         <SectionHeader
           eyebrow="MARK"
           title="Document your college years. Build your record."
@@ -24,22 +24,23 @@ export default function MarkPreview() {
           viewAllLabel="Build Your MARK"
           iconSrc={categoryById("mark")?.iconSrc}
         />
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-6 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
           {TRACKS.map((track) => (
             <div
               key={track.label}
-              className="glass-card flex flex-col items-center gap-2.5 px-3 py-5 text-center"
+              className="glass-card flex flex-col items-center gap-2 px-3 py-4 text-center sm:gap-2.5 sm:py-5"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue-soft text-brand-blue">
+              <span className="icon-well h-10 w-10 text-brand-blue">
                 <Icon name={track.icon} className="h-5 w-5" />
               </span>
               <span className="text-xs font-extrabold text-ink-900">{track.label}</span>
             </div>
           ))}
         </div>
-        <div className="mt-6 flex justify-center">
-          <Link href="/mark" className="btn-primary">
+        <div className="mt-5 flex justify-center sm:mt-6">
+          <Link href="/mark" className="btn-accent">
             Start Your MARK
+            <Icon name="arrow" className="h-4 w-4" />
           </Link>
         </div>
       </div>

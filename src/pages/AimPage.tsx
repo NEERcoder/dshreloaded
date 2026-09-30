@@ -17,13 +17,13 @@ export default function AimPage() {
       description="Verified internships, jobs, and certifications for students. Find something worth going after."
       backgroundPreset="opportunities"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero pillar-aim">
         <div className="container-px">
-          <p className="eyebrow text-brand-red">AIM</p>
-          <h1 className="font-display mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-tight">
+          <p className="eyebrow">AIM</p>
+          <h1 className="page-title font-display mt-2">
             Find something worth going after.
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+          <p className="page-lede mt-3 max-w-2xl">
             Internships, jobs, and certifications — verified openings worth your application.
           </p>
         </div>

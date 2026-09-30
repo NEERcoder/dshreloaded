@@ -228,14 +228,14 @@ export default function PulseAdmin({
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, imageUrl: "" })}
-                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-red text-white flex items-center justify-center shadow-soft"
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-red text-brand-navy flex items-center justify-center shadow-soft"
                   title="Remove image"
                 >
                   <Icon name="close" className="h-3 w-3" />
                 </button>
               </div>
             ) : (
-              <div className="w-40 h-28 shrink-0 rounded-xl border-2 border-dashed border-surface-border bg-surface-soft flex flex-col items-center justify-center gap-1 text-xs text-ink-400">
+              <div className="w-40 h-28 shrink-0 rounded-xl border-2 border-dashed border-surface-border bg-surface-soft flex flex-col items-center justify-center gap-1 text-xs text-ink-500">
                 <Icon name="image" className="h-6 w-6" />
                 No cover
               </div>
@@ -261,7 +261,7 @@ export default function PulseAdmin({
                   disabled={coverUploading}
                 />
               </label>
-              <p className="text-xs text-ink-400">Or paste a URL below</p>
+              <p className="text-xs text-ink-500">Or paste a URL below</p>
               <input
                 type="url"
                 value={form.imageUrl || ""}
@@ -319,7 +319,7 @@ export default function PulseAdmin({
                       </span>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          published ? "bg-brand-red-soft text-brand-red" : "bg-surface-border text-ink-500"
+                          published ? "bg-brand-red-soft text-brand-red-ink" : "bg-surface-border text-ink-500"
                         }`}
                       >
                         {published ? "Published" : "Draft"}
@@ -329,7 +329,7 @@ export default function PulseAdmin({
                       )}
                     </div>
                     <h3 className="mt-2 font-bold text-ink-900">{item.title}</h3>
-                    <p className="text-xs text-ink-400">
+                    <p className="text-xs text-ink-500">
                       {published && publishedOn
                         ? `Published ${publishedOn}`
                         : published
@@ -366,7 +366,7 @@ export default function PulseAdmin({
                     )}
                   </button>
                   <button
-                    className="btn-ghost px-3 py-2 text-xs text-brand-red"
+                    className="btn-ghost px-3 py-2 text-xs text-brand-red-ink"
                     onClick={() => remove(item.id)}
                     disabled={isBusy}
                   >

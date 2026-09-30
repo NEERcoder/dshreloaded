@@ -240,7 +240,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
     return (
       <PageShell title="Team not found | JAVLIN" backgroundPreset="explore">
         <div className="container-px py-24 text-center max-w-md mx-auto">
-          <p className="text-sm font-bold text-brand-red">{error ?? "Team not found."}</p>
+          <p className="text-sm font-bold text-brand-red-ink">{error ?? "Team not found."}</p>
           <Link href="/crew" className="btn-secondary mt-6 inline-flex">
             Back to CREW
           </Link>
@@ -265,14 +265,14 @@ export default function TeamPage({ teamId }: { teamId: string }) {
 
         {/* Header */}
         <div className="mt-6 animate-fade-up">
-          <p className="eyebrow text-brand-red">COMPETITION TEAM</p>
+          <p className="eyebrow">COMPETITION TEAM</p>
           <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">{team.name}</h1>
           <p className="mt-2 text-base font-semibold text-ink-500">{team.competitionTitle}</p>
           <div className="mt-2 flex items-center gap-2 flex-wrap">
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${team.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-surface-border text-ink-500"}`}>
               {team.status}
             </span>
-            <span className="text-xs text-ink-400">
+            <span className="text-xs text-ink-500">
               {team.memberCount} member{team.memberCount !== 1 ? "s" : ""}
             </span>
             <Link href="/field" className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:text-brand-blue-dark">
@@ -294,7 +294,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
           </div>
         )}
         {actionError && (
-          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink">
             <span className="inline-flex items-center gap-2">
               <Icon name="alert-circle" className="h-4 w-4 shrink-0" />
               {actionError}
@@ -315,7 +315,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
               </h2>
               <div className="mt-4 space-y-3">
                 {team.members.length === 0 ? (
-                  <p className="text-sm text-ink-400">No members yet.</p>
+                  <p className="text-sm text-ink-500">No members yet.</p>
                 ) : (
                   team.members.map((member) => (
                     <MemberRow
@@ -339,13 +339,13 @@ export default function TeamPage({ teamId }: { teamId: string }) {
                   Pending Join Requests {requests.length > 0 ? `(${requests.length})` : ""}
                 </h2>
                 {requestsLoading ? (
-                  <p className="mt-3 text-sm text-ink-400 animate-pulse">Loading requests…</p>
+                  <p className="mt-3 text-sm text-ink-500 animate-pulse">Loading requests…</p>
                 ) : requestsError ? (
                   <div className="mt-3 rounded-xl border border-brand-red/20 bg-brand-red-soft px-3 py-3">
-                    <p className="text-sm font-semibold text-brand-red">
+                    <p className="text-sm font-semibold text-brand-red-ink">
                       We couldn't load join requests.
                     </p>
-                    <p className="mt-1 text-xs text-brand-red/80">{requestsError}</p>
+                    <p className="mt-1 text-xs text-brand-red-ink/80">{requestsError}</p>
                     <button
                       onClick={() => void loadRequests(true)}
                       className="mt-3 btn-outline-blue text-xs"
@@ -354,7 +354,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
                     </button>
                   </div>
                 ) : requests.length === 0 ? (
-                  <p className="mt-3 text-sm text-ink-400">No pending requests.</p>
+                  <p className="mt-3 text-sm text-ink-500">No pending requests.</p>
                 ) : (
                   <div className="mt-4 space-y-3">
                     {requests.map((req) => (
@@ -413,7 +413,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
             {/* Show invite code only to captain + members */}
             {isMember && team.inviteCode && (
               <div className="card p-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-ink-400">Team Code</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">Team Code</p>
                 <p className="mt-2 text-2xl font-black tracking-widest text-ink-900 font-mono">
                   {team.inviteCode}
                 </p>
@@ -426,7 +426,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
                     Share Team
                   </button>
                 </div>
-                <p className="mt-3 text-[11px] text-ink-400 leading-relaxed">
+                <p className="mt-3 text-[11px] text-ink-500 leading-relaxed">
                   Share this code privately. Anyone with it can join instantly without approval.
                 </p>
               </div>
@@ -435,11 +435,11 @@ export default function TeamPage({ teamId }: { teamId: string }) {
             {/* Actions */}
             {isMember && (
               <div className="card p-5 flex flex-col gap-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-ink-400">Actions</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">Actions</p>
                 {!isCaptain && (
                   <button
                     onClick={() => setConfirmLeave(true)}
-                    className="btn-ghost w-full justify-center text-xs text-brand-red hover:bg-brand-red-soft"
+                    className="btn-ghost w-full justify-center text-xs text-brand-red-ink hover:bg-brand-red-soft"
                   >
                     Leave Team
                   </button>
@@ -447,7 +447,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
                 {isCaptain && (
                   <button
                     onClick={() => setConfirmDisband(true)}
-                    className="btn-ghost w-full justify-center text-xs text-brand-red hover:bg-brand-red-soft"
+                    className="btn-ghost w-full justify-center text-xs text-brand-red-ink hover:bg-brand-red-soft"
                   >
                     Disband Team
                   </button>
@@ -495,10 +495,10 @@ function MemberRow({
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-ink-900 truncate">{member.fullName}</p>
-            {isMe && <span className="text-xs text-ink-400">(you)</span>}
-            {isThisCaptain && <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red">Captain</span>}
+            {isMe && <span className="text-xs text-ink-500">(you)</span>}
+            {isThisCaptain && <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">Captain</span>}
           </div>
-          {member.course && <p className="text-xs text-ink-400 truncate">{member.course}</p>}
+          {member.course && <p className="text-xs text-ink-500 truncate">{member.course}</p>}
         </div>
       </div>
       {isCaptain && !isThisCaptain && (
@@ -506,7 +506,7 @@ function MemberRow({
           <button onClick={onTransfer} className="px-2 py-1 rounded-lg text-[11px] font-bold text-brand-blue bg-brand-blue-soft hover:bg-brand-blue hover:text-white transition-colors">
             Make Captain
           </button>
-          <button onClick={onRemove} className="px-2 py-1 rounded-lg text-[11px] font-bold text-brand-red bg-brand-red-soft hover:bg-brand-red hover:text-white transition-colors">
+          <button onClick={onRemove} className="px-2 py-1 rounded-lg text-[11px] font-bold text-brand-red-ink bg-brand-red-soft hover:bg-brand-red hover:text-brand-navy transition-colors">
             Remove
           </button>
         </div>
@@ -530,14 +530,14 @@ function JoinRequestRow({
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink-900 truncate">{request.fullName}</p>
-          {request.course && <p className="text-xs text-ink-400 truncate">{request.course}</p>}
+          {request.course && <p className="text-xs text-ink-500 truncate">{request.course}</p>}
         </div>
       </div>
       <div className="flex gap-2 shrink-0">
         <button onClick={onApprove} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
           Approve
         </button>
-        <button onClick={onReject} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-surface-soft text-brand-red hover:bg-brand-red-soft transition-colors">
+        <button onClick={onReject} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-surface-soft text-brand-red-ink hover:bg-brand-red-soft transition-colors">
           Reject
         </button>
       </div>

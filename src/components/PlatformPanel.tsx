@@ -38,10 +38,10 @@ export default function PlatformPanel({
 }: PlatformPanelProps) {
   const { ref, visible } = useReveal<HTMLDivElement>();
 
-  const accentText = accent === "red" ? "text-brand-red" : "text-brand-blue";
+  const accentText = accent === "red" ? "text-brand-red-ink" : "text-brand-blue";
   const accentBg = accent === "red" ? "bg-brand-red" : "bg-brand-blue";
   const accentSoftBg = accent === "red" ? "bg-brand-red-soft" : "bg-brand-blue-soft";
-  const accentSoftText = accent === "red" ? "text-brand-red" : "text-brand-blue";
+  const accentSoftText = accent === "red" ? "text-brand-red-ink" : "text-brand-blue";
   const accentHoverBorder = accent === "red" ? "hover:border-brand-red/40" : "hover:border-brand-blue/40";
   const ctaClass = accent === "red" ? "btn-primary" : "btn-secondary";
 

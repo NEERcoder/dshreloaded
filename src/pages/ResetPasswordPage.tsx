@@ -130,14 +130,14 @@ export default function ResetPasswordPage() {
       <section className="container-px py-16 sm:py-24">
         <div className="mx-auto max-w-md animate-fade-up">
           {mode === "verifying" && (
-            <div className="card p-8 bg-white border border-surface-border shadow-card text-center">
+            <div className="card p-8 text-center">
               <p className="text-sm font-semibold text-ink-500 animate-pulse">Verifying your reset link…</p>
             </div>
           )}
 
           {mode === "expired" && (
-            <div className="card p-8 bg-white border border-surface-border shadow-card text-center">
-              <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red">
+            <div className="card p-8 text-center">
+              <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red-ink">
                 Link expired
               </span>
               <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-ink-900">
@@ -158,7 +158,7 @@ export default function ResetPasswordPage() {
 
           {mode === "request" && (
             <>
-              <p className="eyebrow text-brand-red">RESET PASSWORD</p>
+              <p className="eyebrow">RESET PASSWORD</p>
               <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
                 Forgot your password?
               </h1>
@@ -167,13 +167,13 @@ export default function ResetPasswordPage() {
               </p>
 
               {requestSent ? (
-                <div className="card mt-8 p-6 bg-white border border-surface-border shadow-card text-center">
+                <div className="card mt-8 p-6 text-center">
                   <p className="text-sm leading-relaxed text-ink-700">
                     If an account exists for <span className="font-bold">{email.trim()}</span>, a password reset link has been sent. Follow it to set a new password.
                   </p>
                 </div>
               ) : (
-                <form onSubmit={submitRequest} className="card mt-8 p-6 bg-white border border-surface-border shadow-card">
+                <form onSubmit={submitRequest} className="card mt-8 p-6">
                   <label className="field-label" htmlFor="reset-email">Email</label>
                   <input
                     id="reset-email"
@@ -194,7 +194,7 @@ export default function ResetPasswordPage() {
                     {requestSubmitting ? "Sending…" : "Send reset link"}
                   </button>
                   {requestError && (
-                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
                       {requestError}
                     </div>
                   )}
@@ -202,7 +202,7 @@ export default function ResetPasswordPage() {
               )}
 
               <div className="mt-4 text-center">
-                <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-400 hover:text-brand-blue">
+                <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-500 hover:text-brand-blue">
                   <Icon name="arrow-left" className="h-3.5 w-3.5" /> Back to login
                 </Link>
               </div>
@@ -211,7 +211,7 @@ export default function ResetPasswordPage() {
 
           {mode === "update" && (
             <>
-              <p className="eyebrow text-brand-red">RESET PASSWORD</p>
+              <p className="eyebrow">RESET PASSWORD</p>
               <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
                 Set a new password.
               </h1>
@@ -220,7 +220,7 @@ export default function ResetPasswordPage() {
               </p>
 
               {updateSuccess ? (
-                <div className="card mt-8 p-6 bg-white border border-surface-border shadow-card text-center">
+                <div className="card mt-8 p-6 text-center">
                   <p className="text-sm leading-relaxed text-ink-700">
                     Your password has been updated.
                   </p>
@@ -229,7 +229,7 @@ export default function ResetPasswordPage() {
                   </Link>
                 </div>
               ) : (
-                <form onSubmit={submitUpdate} className="card mt-8 p-6 bg-white border border-surface-border shadow-card">
+                <form onSubmit={submitUpdate} className="card mt-8 p-6">
                   <label className="field-label" htmlFor="reset-new-password">New Password</label>
                   <input
                     id="reset-new-password"
@@ -262,7 +262,7 @@ export default function ResetPasswordPage() {
                     {updateSubmitting ? "Saving…" : "Save new password"}
                   </button>
                   {updateError && (
-                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
                       {updateError}
                     </div>
                   )}

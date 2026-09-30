@@ -21,7 +21,7 @@ export default function ReviewCard({ initials, college, course, rating, review }
           <Icon
             key={i}
             name="star"
-            className={`h-4 w-4 ${i < rating ? "text-brand-red fill-brand-red" : "text-surface-border"}`}
+            className={`h-4 w-4 ${i < rating ? "text-brand-red-ink fill-brand-red" : "text-surface-border"}`}
           />
         ))}
       </div>
@@ -29,7 +29,7 @@ export default function ReviewCard({ initials, college, course, rating, review }
       <p className="text-sm text-ink-700 leading-relaxed flex-1">"{review}"</p>
 
       <button
-        className="self-start inline-flex items-center gap-1.5 text-xs font-medium text-ink-400 hover:text-ink-700 transition-colors"
+        className="self-start inline-flex items-center gap-1.5 text-xs font-medium text-ink-500 hover:text-ink-700 transition-colors"
         aria-label="Report this review"
       >
         <Icon name="flag" className="h-3.5 w-3.5" />

@@ -17,11 +17,11 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
     <Link
       href={category.href}
       data-cursor="view"
-      className="glass-card glass-edge group flex min-w-[43%] snap-start animate-fade-up flex-col p-3.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue sm:min-w-0 sm:p-4"
+      className={`cat-tile pillar-${category.id} group animate-fade-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue`}
       style={{ animationDelay: `${index * 60}ms` }}
       aria-label={`${category.label} — ${category.description}`}
     >
-      <span className="flex w-full items-center justify-center rounded-xl bg-white px-2 py-2.5 ring-1 ring-inset ring-surface-border/50 sm:py-3">
+      <span className="cat-tile__well w-full px-1.5 py-1.5 sm:px-2 sm:py-2.5">
         <img
           src={category.iconSrc}
           alt=""
@@ -29,18 +29,18 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
           height={668}
           loading="eager"
           decoding="async"
-          className="h-20 w-20 object-contain mix-blend-multiply transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06] sm:h-[5.5rem] sm:w-[5.5rem]"
+          className="h-[3.25rem] w-[3.25rem] object-contain mix-blend-multiply transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06] sm:h-16 sm:w-16 lg:h-[5.5rem] lg:w-[5.5rem]"
         />
       </span>
 
-      <span className="mt-3 flex items-center gap-1 text-[13px] font-extrabold uppercase tracking-[0.12em] text-ink-900 transition-colors group-hover:text-brand-blue sm:text-sm">
-        {category.label}
+      <span className="cat-tile__label mt-1.5 gap-0.5 uppercase tracking-[0.12em] sm:mt-3">
+        <span className="truncate">{category.label}</span>
         <Icon
           name="arrow"
-          className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
+          className="h-3 w-3 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:h-3.5 sm:w-3.5"
         />
       </span>
-      <span className="mt-1 text-[11px] font-medium leading-snug text-ink-500 sm:text-xs">
+      <span className="mt-1 hidden text-xs font-medium leading-snug text-ink-500 sm:block">
         {category.description}
       </span>
     </Link>

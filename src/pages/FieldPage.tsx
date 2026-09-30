@@ -8,13 +8,13 @@ export default function FieldPage() {
       description="Hackathons, case competitions and contests worth entering. Find the challenge that fits you."
       backgroundPreset="opportunities"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero pillar-field tone-dark">
         <div className="container-px">
-          <p className="eyebrow text-brand-red">FIELD</p>
-          <h1 className="font-display mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-tight">
+          <p className="eyebrow">FIELD</p>
+          <h1 className="page-title font-display mt-2">
             Pick your challenge.
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+          <p className="page-lede mt-3 max-w-2xl">
             Hackathons, case competitions and contests — filter by what you want to prove. Need a team? CREW has you
             covered.
           </p>

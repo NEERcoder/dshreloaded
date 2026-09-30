@@ -19,7 +19,7 @@ export default function OpportunityDetailPage({ opportunityId }: { opportunityId
           Back to Opportunity Radar
         </Link>
 
-        <div className="mt-5 card overflow-hidden rounded-3xl bg-white border border-surface-border shadow-card">
+        <div className="mt-5 card overflow-hidden rounded-3xl">
           <OpportunityDetail opportunityId={opportunityId} />
         </div>
       </div>

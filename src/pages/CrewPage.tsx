@@ -215,13 +215,13 @@ export default function CrewPage() {
       description="Find a team, build your crew, and take on challenges together."
       backgroundPreset="team"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero pillar-crew">
         <div className="container-px">
-          <p className="eyebrow text-brand-red">CREW</p>
-          <h1 className="font-display mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-tight">
+          <p className="eyebrow">CREW</p>
+          <h1 className="page-title font-display mt-2">
             Find your people.
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-500 font-medium">
+          <p className="page-lede mt-3 max-w-2xl">
             Find a team, build your crew, and take on challenges together.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -238,7 +238,7 @@ export default function CrewPage() {
 
       <section className="container-px py-8 sm:py-10 space-y-10">
         {loadError && (
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink">
             <span className="inline-flex items-center gap-2">
               <Icon name="alert-circle" className="h-4 w-4 shrink-0" />
               We couldn't reach the team board. {loadError}
@@ -281,7 +281,7 @@ export default function CrewPage() {
                 <button
                   onClick={() => setCompetitionFilter("")}
                   aria-pressed={competitionFilter === ""}
-                  className={`rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[40px] ${
+                  className={`rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[44px] ${
                     competitionFilter === ""
                       ? "bg-brand-blue text-white shadow-soft"
                       : "bg-white text-ink-500 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
@@ -294,7 +294,7 @@ export default function CrewPage() {
                     key={option.id}
                     onClick={() => setCompetitionFilter(competitionFilter === option.id ? "" : option.id)}
                     aria-pressed={competitionFilter === option.id}
-                    className={`max-w-[220px] truncate rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[40px] ${
+                    className={`max-w-[220px] truncate rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[44px] ${
                       competitionFilter === option.id
                         ? "bg-brand-blue text-white shadow-soft"
                         : "bg-white text-ink-500 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
@@ -319,7 +319,7 @@ export default function CrewPage() {
             </label>
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <label className="inline-flex items-center gap-2 min-h-[40px] cursor-pointer">
+            <label className="inline-flex items-center gap-2 min-h-[44px] cursor-pointer">
               <input
                 type="checkbox"
                 checked={openOnly}
@@ -329,13 +329,13 @@ export default function CrewPage() {
               <span className="text-xs font-bold text-ink-500">Teams needing members</span>
             </label>
             <div className="flex items-center gap-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-ink-400" aria-live="polite">
+              <p className="text-xs font-bold uppercase tracking-wider text-ink-500" aria-live="polite">
                 {loading ? "Loading…" : `${filtered.length} team${filtered.length === 1 ? "" : "s"}`}
               </p>
               {filtersActive && (
                 <button
                   onClick={clearFilters}
-                  className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[40px]"
+                  className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[44px]"
                 >
                   Clear filters
                 </button>
@@ -424,7 +424,7 @@ export default function CrewPage() {
                   action = (
                     <Link
                       href={`/teams/${myTeamId}`}
-                      className="inline-flex min-h-[40px] items-center rounded-xl border border-surface-border bg-white px-3 py-2 text-xs font-extrabold text-brand-blue hover:border-brand-blue/40"
+                      className="inline-flex min-h-[44px] items-center rounded-xl border border-surface-border bg-white px-3 py-2 text-xs font-extrabold text-brand-blue hover:border-brand-blue/40"
                     >
                       View My Team
                     </Link>
@@ -443,7 +443,7 @@ export default function CrewPage() {
                     <button
                       onClick={() => handleRequestJoin(team)}
                       disabled={requestState === "sending"}
-                      className="btn-primary min-h-[40px] px-3 py-2 text-xs disabled:opacity-60"
+                      className="btn-primary min-h-[44px] px-3 py-2 text-xs disabled:opacity-60"
                     >
                       {user ? (requestState === "sending" ? "Sending…" : "Request to Join") : "Join Team"}
                     </button>
@@ -494,7 +494,7 @@ export default function CrewPage() {
                 maxLength={60}
               />
               {createError && (
-                <p className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-red">
+                <p className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-red-ink">
                   <Icon name="alert-circle" className="h-3.5 w-3.5 shrink-0" />
                   {createError}
                 </p>
@@ -525,7 +525,7 @@ export default function CrewPage() {
           </div>
 
           <div id="join-team" className="card scroll-mt-24 p-6 bg-white shadow-card border border-surface-border">
-            <p className="eyebrow text-brand-red">Already have a crew?</p>
+            <p className="eyebrow">Already have a crew?</p>
             <h2 className="mt-2 text-lg font-extrabold text-ink-900">Have a team code?</h2>
             <p className="mt-1 text-sm text-ink-500">
               A captain's code joins their team instantly. Codes are shared privately — we never publish them.
@@ -541,7 +541,7 @@ export default function CrewPage() {
                 autoComplete="off"
               />
               {joinError && (
-                <p className="text-xs font-bold text-brand-red">{joinError}</p>
+                <p className="text-xs font-bold text-brand-red-ink">{joinError}</p>
               )}
               <button type="submit" disabled={joining} className="btn-primary w-full justify-center disabled:opacity-60">
                 {joining ? "Joining…" : user ? "Join Team" : "Sign in to join"}

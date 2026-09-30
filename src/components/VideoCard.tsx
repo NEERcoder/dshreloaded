@@ -5,7 +5,7 @@ type VideoCardProps = VideoCardData;
 
 export default function VideoCard({ category, title, duration, accent }: VideoCardProps) {
   const accentBg = accent === "red" ? "from-brand-red-soft to-brand-red-soft/20" : "from-brand-blue-soft to-brand-blue-soft/20";
-  const accentRing = accent === "red" ? "text-brand-red" : "text-brand-blue";
+  const accentRing = accent === "red" ? "text-brand-red-ink" : "text-brand-blue";
   const accentBorder = accent === "red" ? "hover:border-brand-red/30" : "hover:border-brand-blue/30";
   return (
     <div className={`card ${accentBorder} hover:shadow-lift overflow-hidden group flex flex-col`}>

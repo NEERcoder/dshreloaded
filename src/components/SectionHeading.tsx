@@ -27,7 +27,7 @@ export default function SectionHeading({
       } max-w-2xl ${className}`}
     >
       {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
-      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-balance">
+      <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-balance">
         {title}
       </h2>
       {subtitle && (

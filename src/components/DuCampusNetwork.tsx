@@ -48,7 +48,7 @@ export default function DuCampusNetwork() {
       <div className="container-px relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <span className="eyebrow text-brand-red">Interactive Campus Network</span>
+            <span className="eyebrow">Interactive Campus Network</span>
             <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-ink-900">
               The DU Constellation.
             </h2>
@@ -103,7 +103,7 @@ export default function DuCampusNetwork() {
               const isSouth = college.campus === "South Campus";
 
               const nodeColor = isNorth ? "#FF7A30" : isSouth ? "#1769FF" : "#64748B";
-              const nodeBg = isNorth ? "bg-brand-red-soft text-brand-red" : isSouth ? "bg-brand-blue-soft text-brand-blue" : "bg-surface-soft text-ink-700";
+              const nodeBg = isNorth ? "bg-brand-red-soft text-brand-red-ink" : isSouth ? "bg-brand-blue-soft text-brand-blue" : "bg-surface-soft text-ink-700";
 
               return (
                 <div
@@ -152,16 +152,16 @@ export default function DuCampusNetwork() {
                 className="absolute z-30 pointer-events-none animate-fade-in bottom-4 left-4 right-4 sm:right-auto sm:max-w-xs card p-4 bg-white/95 backdrop-blur-md shadow-lift border border-surface-border"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="rounded-full bg-brand-blue-soft px-2.5 py-0.5 text-[10px] font-bold text-brand-blue uppercase tracking-wider">
+                  <span className="rounded-full bg-brand-blue-soft px-2.5 py-0.5 text-[11px] font-bold text-brand-blue uppercase tracking-wider">
                     {hoveredCollege.campus}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-red">Click to enter <Icon name="arrow" className="h-3 w-3" /></span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-red-ink">Click to enter <Icon name="arrow" className="h-3 w-3" /></span>
                 </div>
                 <h4 className="mt-2 font-bold text-ink-900 text-sm leading-snug">{hoveredCollege.name}</h4>
                 <p className="mt-1 text-xs text-ink-500 line-clamp-2">{hoveredCollege.vibe}</p>
                 <div className="mt-2.5 flex flex-wrap gap-1">
                   {hoveredCollege.courses.map((course) => (
-                    <span key={course} className="text-[10px] font-medium bg-surface-soft text-ink-700 px-2 py-0.5 rounded">
+                    <span key={course} className="text-[11px] font-medium bg-surface-soft text-ink-700 px-2 py-0.5 rounded">
                       {course}
                     </span>
                   ))}

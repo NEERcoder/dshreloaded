@@ -496,8 +496,8 @@ export default function InteractiveDotGrid({
         const radarTargetY = height * 0.35 + Math.sin(radarAngle) * rLen;
 
         const radarGrad = ctx.createLinearGradient(width * 0.5, height * 0.35, radarTargetX, radarTargetY);
-        radarGrad.addColorStop(0, "rgba(${COLORS.interactive}, 0.05)");
-        radarGrad.addColorStop(1, "rgba(${COLORS.interactive}, 0)");
+        radarGrad.addColorStop(0, `rgba(${COLORS.interactive}, 0.05)`);
+        radarGrad.addColorStop(1, `rgba(${COLORS.interactive}, 0)`);
 
         ctx.save();
         ctx.beginPath();

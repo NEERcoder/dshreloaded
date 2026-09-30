@@ -106,13 +106,13 @@ export default function PulsePage() {
       description="Updates, stories and opportunities worth knowing about."
       backgroundPreset="explore"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero pillar-pulse">
         <div className="container-px">
-          <p className="eyebrow text-brand-red">PULSE</p>
-          <h1 className="font-display mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-tight">
+          <p className="eyebrow">PULSE</p>
+          <h1 className="page-title font-display mt-2">
             See what's happening.
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+          <p className="page-lede mt-3 max-w-2xl">
             Updates, stories and opportunities worth knowing about.
           </p>
         </div>
@@ -122,10 +122,10 @@ export default function PulsePage() {
         {openRoleCount !== null && openRoleCount > 0 && (
           <Link
             href="/join"
-            className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-surface-border bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
+            className="card mb-8 flex items-center justify-between gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
           >
             <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-red-soft text-brand-red">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-red-soft text-brand-red-ink">
                 <Icon name="flag" className="h-5 w-5" />
               </span>
               <div className="min-w-0">
@@ -155,12 +155,12 @@ export default function PulsePage() {
               <div className="mb-10">
                 <div className="flex items-end justify-between gap-3">
                   <div>
-                    <p className="eyebrow text-brand-red">The feed</p>
+                    <p className="eyebrow">The feed</p>
                     <h2 className="font-display mt-1 text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
                       News &amp; stories
                     </h2>
                   </div>
-                  <p className="text-xs font-bold text-ink-400">
+                  <p className="text-xs font-bold text-ink-500">
                     {posts.length} post{posts.length === 1 ? "" : "s"}
                   </p>
                 </div>
@@ -216,7 +216,7 @@ export default function PulsePage() {
                     {filter === "all" ? "Latest" : capitalise(filter)}
                   </h2>
                   {latest.length > 0 && (
-                    <p className="text-xs font-bold text-ink-400">{latest.length} live</p>
+                    <p className="text-xs font-bold text-ink-500">{latest.length} live</p>
                   )}
                 </div>
 
@@ -271,7 +271,7 @@ function PulsePostCard({ post, onSelect }: { post: PulsePostRecord; onSelect: (i
   const posted = postedLabel(post.publishedAt ?? post.createdAt);
 
   return (
-    <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <article className="card flex h-full min-w-0 flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       {post.imageUrl ? (
         <button
           type="button"
@@ -288,16 +288,16 @@ function PulsePostCard({ post, onSelect }: { post: PulsePostRecord; onSelect: (i
         </button>
       ) : null}
       <div className="flex flex-1 flex-col p-5">
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-widest">
           <span className="rounded-md bg-brand-blue-soft px-2 py-0.5 text-brand-blue">
             {categoryLabel(post.category)}
           </span>
           {externalUrl && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-brand-red-soft px-2 py-0.5 text-brand-red">
+            <span className="inline-flex items-center gap-1 rounded-md bg-brand-red-soft px-2 py-0.5 text-brand-red-ink">
               <Icon name="external" className="h-3 w-3" /> External source
             </span>
           )}
-          {posted && <span className="font-bold text-ink-400">{posted}</span>}
+          {posted && <span className="font-bold text-ink-500">{posted}</span>}
         </div>
         <h3 className="font-display mt-3 text-lg font-extrabold leading-snug tracking-tight text-ink-900">
           {post.title}
@@ -308,7 +308,7 @@ function PulsePostCard({ post, onSelect }: { post: PulsePostRecord; onSelect: (i
         <button
           type="button"
           onClick={() => onSelect(post.id)}
-          className="btn-primary mt-4 min-h-[40px] self-start px-4 text-sm"
+          className="btn-primary mt-4 min-h-[44px] self-start px-4 text-sm"
         >
           Read More <Icon name="arrow" className="h-4 w-4" />
         </button>
@@ -344,7 +344,7 @@ function PulsePostDetail({ post, onClose }: { post: PulsePostRecord; onClose: ()
                 <span className="rounded-md bg-brand-blue-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-blue">
                   {categoryLabel(post.category)}
                 </span>
-                {posted && <span className="text-xs font-bold text-ink-400">{posted}</span>}
+                {posted && <span className="text-xs font-bold text-ink-500">{posted}</span>}
               </div>
               <h2 className="font-display mt-3 text-2xl font-extrabold tracking-tight text-ink-900">
                 {post.title}
@@ -355,7 +355,7 @@ function PulsePostDetail({ post, onClose }: { post: PulsePostRecord; onClose: ()
             </div>
             <button
               onClick={onClose}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-surface-border bg-surface-soft text-ink-500 transition-colors hover:bg-brand-red-soft hover:text-brand-red"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-surface-border bg-surface-soft text-ink-500 transition-colors hover:bg-brand-red-soft hover:text-brand-red-ink"
               aria-label="Close"
             >
               <Icon name="close" className="h-4 w-4" />
@@ -390,7 +390,7 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`min-h-[40px] rounded-full border px-4 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
+      className={`min-h-[44px] rounded-full border px-4 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
         active
           ? "border-brand-navy bg-brand-navy text-white"
           : "border-surface-border bg-white text-ink-600 hover:border-brand-blue hover:text-brand-blue"
@@ -407,7 +407,7 @@ function FeaturedCard({ item }: { item: OpportunityRecord }) {
   const href = opportunityHref(item.id);
 
   return (
-    <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card">
+    <article className="card flex h-full min-w-0 flex-col overflow-hidden">
       {cover ? (
         <Link href={href} className="block h-36 w-full bg-surface-soft">
           <img
@@ -418,10 +418,10 @@ function FeaturedCard({ item }: { item: OpportunityRecord }) {
         </Link>
       ) : null}
       <div className="flex flex-1 flex-col p-5">
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-          <span className="rounded-md bg-brand-red-soft px-2 py-0.5 text-brand-red">Featured</span>
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+          <span className="rounded-md bg-brand-red-soft px-2 py-0.5 text-brand-red-ink">Featured</span>
           <span className="rounded-md bg-brand-blue-soft px-2 py-0.5 text-brand-blue">{capitalise(item.category)}</span>
-          {posted && <span className="font-bold text-ink-400">{posted}</span>}
+          {posted && <span className="font-bold text-ink-500">{posted}</span>}
         </div>
         <h3 className="font-display mt-3 text-lg font-extrabold leading-snug tracking-tight text-ink-900">
           {item.title}
@@ -429,7 +429,7 @@ function FeaturedCard({ item }: { item: OpportunityRecord }) {
         <p className="mt-1 text-xs font-bold text-ink-600">{item.organization}</p>
         <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-500">{item.description}</p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={href} className="btn-primary min-h-[40px] px-4 text-sm">
+          <Link href={href} className="btn-primary min-h-[44px] px-4 text-sm">
             Read More <Icon name="arrow" className="h-4 w-4" />
           </Link>
         </div>
@@ -455,13 +455,13 @@ function CampusCard({ video }: { video: VideoRecord }) {
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-blue">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-widest text-brand-blue">
           <span>{capitalise(video.category.replace(/_/g, " "))}</span>
-          {posted && <span className="font-bold text-ink-400">{posted}</span>}
+          {posted && <span className="font-bold text-ink-500">{posted}</span>}
         </div>
         <h3 className="mt-2 line-clamp-2 text-sm font-extrabold leading-snug text-ink-900">{video.title}</h3>
         <p className="mt-1 line-clamp-1 text-xs font-semibold text-ink-500">{video.college || "JAVLIN campus crew"}</p>
-        {video.description && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-ink-400">{video.description}</p>}
+        {video.description && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-ink-500">{video.description}</p>}
         <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-brand-blue">
           Read More <Icon name="arrow" className="h-3.5 w-3.5" />
         </span>
@@ -471,7 +471,7 @@ function CampusCard({ video }: { video: VideoRecord }) {
 
   if (!safeLink) {
     return (
-      <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card">
+      <article className="card flex h-full min-w-0 flex-col overflow-hidden">
         {body}
       </article>
     );
@@ -482,7 +482,7 @@ function CampusCard({ video }: { video: VideoRecord }) {
       href={safeLink}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
+      className="card flex h-full min-w-0 flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
     >
       {body}
     </a>

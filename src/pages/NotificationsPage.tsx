@@ -13,7 +13,7 @@ import {
   type NotificationRecord,
 } from "../lib/dataAccess";
 
-const BTN = "min-h-[40px] px-3.5 text-xs";
+const BTN = "min-h-[44px] px-3.5 text-xs";
 
 function timeLabel(createdAt: string): string {
   const date = new Date(createdAt);
@@ -116,15 +116,15 @@ export default function NotificationsPage() {
       description="Connection requests and acceptances, newest first."
       backgroundPreset="directory"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero">
         <div className="container-px">
-          <p className="eyebrow text-brand-red">CIRCLE</p>
+          <p className="eyebrow">CIRCLE</p>
           <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900 leading-tight">
+              <h1 className="page-title font-display">
                 Notifications
               </h1>
-              <p className="mt-3 text-sm sm:text-base leading-relaxed text-ink-500 font-medium">
+              <p className="page-lede mt-3">
                 {unreadOnPage > 0
                   ? `${unreadOnPage} unread connection ${unreadOnPage === 1 ? "update" : "updates"}.`
                   : "You're up to date."}
@@ -141,13 +141,13 @@ export default function NotificationsPage() {
 
       <section className="container-px py-8 sm:py-10 max-w-2xl">
         {error && (
-          <div className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
+          <div className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink">
             We couldn't load your notifications. {error}
           </div>
         )}
         {actionError && (
           <div
-            className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red"
+            className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink"
             role="status"
           >
             {actionError}
@@ -200,7 +200,7 @@ export default function NotificationsPage() {
                         )}{" "}
                         <span className="font-semibold">{item.message}</span>
                       </p>
-                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-bold uppercase tracking-wider text-ink-400">
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-bold uppercase tracking-wider text-ink-500">
                         {!item.read && (
                           <span className="inline-flex items-center gap-1 text-brand-blue">
                             <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
@@ -210,7 +210,7 @@ export default function NotificationsPage() {
                         {timeLabel(item.createdAt)}
                       </p>
                       {item.type === "connection_request" && item.connectionId && (
-                        <Link href="/circle/connections" className="mt-2 inline-flex text-xs font-extrabold text-brand-blue hover:underline min-h-[32px] items-center">
+                        <Link href="/circle/connections" className="mt-2 inline-flex text-xs font-extrabold text-brand-blue hover:underline min-h-[44px] sm:min-h-[32px] items-center">
                           Review request
                         </Link>
                       )}

@@ -18,7 +18,7 @@ type ConnectControlProps = {
   onChanged: () => void;
 };
 
-const BTN = "min-h-[40px] px-4 text-sm";
+const BTN = "min-h-[44px] px-4 text-sm";
 
 /**
  * The five relationship states from one source of truth: the connection row.
@@ -130,9 +130,9 @@ export default function ConnectControl({ peerUserId, connection, onChanged }: Co
         )}
       </div>
 
-      <p className="mt-3 text-xs font-semibold text-ink-400" role="status" aria-live="polite">
+      <p className="mt-3 text-xs font-semibold text-ink-500" role="status" aria-live="polite">
         {notice ? (
-          <span className="text-brand-red">{notice}</span>
+          <span className="text-brand-red-ink">{notice}</span>
         ) : state === "incoming_pending" ? (
           "This student asked to connect with you."
         ) : state === "accepted" ? (
@@ -148,21 +148,21 @@ export default function ConnectControl({ peerUserId, connection, onChanged }: Co
 export function ConnectionBadge({ state }: { state: ConnectionRef["state"] }) {
   if (state === "accepted") {
     return (
-      <span className="ml-auto shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+      <span className="ml-auto shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
         Connected
       </span>
     );
   }
   if (state === "incoming_pending") {
     return (
-      <span className="ml-auto shrink-0 rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-red-dark">
+      <span className="ml-auto shrink-0 rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-red-ink">
         Request
       </span>
     );
   }
   if (state === "outgoing_pending") {
     return (
-      <span className="ml-auto shrink-0 rounded-full bg-brand-blue-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-blue">
+      <span className="ml-auto shrink-0 rounded-full bg-brand-blue-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-blue">
         Pending
       </span>
     );

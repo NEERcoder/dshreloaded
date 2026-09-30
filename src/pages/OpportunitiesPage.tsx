@@ -80,14 +80,14 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
       description="Find verified science internships, hackathons, research fellowships and certifications for DU students."
       backgroundPreset="opportunities"
     >
-      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-10 pb-8 sm:pt-12 sm:pb-10">
+      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-8 pb-8 sm:pt-12 sm:pb-10">
         <div className="container-px max-w-7xl mx-auto">
           <div className="max-w-3xl">
-            <p className="eyebrow text-brand-red">{voice.eyebrow}</p>
-            <h1 className="font-display mt-3 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
+            <p className="eyebrow">{voice.eyebrow}</p>
+            <h1 className="font-display mt-3 text-[1.875rem] sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
               {voice.title}
             </h1>
-            <p className="mt-4 text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+            <p className="mt-4 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium">
               {voice.subtitle}
             </p>
           </div>
@@ -143,7 +143,7 @@ function CategoryChip({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[40px] ${
+      className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[44px] ${
         active
           ? "bg-brand-blue text-white shadow-soft"
           : "bg-white text-ink-600 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"

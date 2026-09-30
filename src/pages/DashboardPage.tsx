@@ -299,7 +299,7 @@ export default function DashboardPage() {
       <div className="container-px py-10 sm:py-14">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between pb-6 border-b border-surface-border">
           <div>
-            <p className="eyebrow text-brand-red">STUDENT DASHBOARD</p>
+            <p className="eyebrow">STUDENT DASHBOARD</p>
             <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">
               {profile ? `Hey, ${profile.fullName.split(" ")[0]}.` : "Let's finish setting up."}
             </h1>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <button
-            className="btn-ghost self-start text-xs font-bold text-ink-600 hover:text-brand-red"
+            className="btn-ghost self-start text-xs font-bold text-ink-600 hover:text-brand-red-ink"
             onClick={handleSignOut}
           >
             <Icon name="logout" className="h-4 w-4" /> Sign out
@@ -322,7 +322,7 @@ export default function DashboardPage() {
             </div>
           ) : loadError ? (
             <div className="card p-6 border border-brand-red/20 bg-brand-red-soft">
-              <p className="text-sm font-bold text-brand-red">{loadError}</p>
+              <p className="text-sm font-bold text-brand-red-ink">{loadError}</p>
               <button className="btn-secondary mt-4" onClick={loadData}>
                 Try again
               </button>
@@ -459,7 +459,7 @@ export default function DashboardPage() {
               </div>
 
               {saveError && (
-                <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+                <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
                   {saveError}
                 </div>
               )}
@@ -508,7 +508,7 @@ export default function DashboardPage() {
                 </div>
               </dl>
 
-              <p className="mt-6 text-xs text-ink-400">
+              <p className="mt-6 text-xs text-ink-500">
                 Email: <span className="font-semibold text-ink-500">{user.email}</span> · Account can't be reassigned to another user.
               </p>
             </div>
@@ -548,7 +548,7 @@ export default function DashboardPage() {
                     onChange={handleAvatarChange}
                     className="mt-2 block w-full text-xs font-semibold text-ink-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-blue-soft file:px-3 file:py-2 file:text-xs file:font-bold file:text-brand-blue-dark disabled:opacity-60"
                   />
-                  <p className="mt-1 text-[11px] leading-relaxed text-ink-400">
+                  <p className="mt-1 text-[11px] leading-relaxed text-ink-500">
                     {avatarSaving
                       ? "Uploading…"
                       : profile.avatarUrl
@@ -559,7 +559,7 @@ export default function DashboardPage() {
               </div>
 
               {avatarError && (
-                <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+                <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
                   {avatarError}
                 </div>
               )}
@@ -594,19 +594,19 @@ export default function DashboardPage() {
 
                 <p className="mt-3 text-[11px] font-bold" role="status" aria-live="polite">
                   {visibilityError ? (
-                    <span className="text-brand-red">{visibilityError}</span>
+                    <span className="text-brand-red-ink">{visibilityError}</span>
                   ) : visibilitySaving ? (
                     <span className="inline-flex items-center gap-1.5 text-ink-500">
                       <Icon name="loader" className="h-3.5 w-3.5 animate-spin" /> Updating…
                     </span>
                   ) : (
-                    <span className="text-ink-400">
+                    <span className="text-ink-500">
                       {profile.isPublic ? "Visible to anyone with your link." : "Hidden from visitors."}
                     </span>
                   )}
                 </p>
 
-                <Link href={`/circle/${profile.userId}`} className="btn-outline-blue mt-4 min-h-[40px] text-xs">
+                <Link href={`/circle/${profile.userId}`} className="btn-outline-blue mt-4 min-h-[44px] text-xs">
                   <Icon name="external" className="h-4 w-4" /> View my CIRCLE profile
                 </Link>
               </div>
@@ -640,14 +640,14 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold text-sm text-ink-900">{team.name}</h3>
                       {team.captainUserId === user?.id && (
-                        <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red">Captain</span>
+                        <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">Captain</span>
                       )}
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${team.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-surface-border text-ink-500"}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${team.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-surface-border text-ink-500"}`}>
                         {team.status}
                       </span>
                     </div>
                     <p className="mt-0.5 text-xs text-ink-500">{team.competitionTitle}</p>
-                    <p className="text-xs text-ink-400">{team.memberCount} member{team.memberCount !== 1 ? "s" : ""}</p>
+                    <p className="text-xs text-ink-500">{team.memberCount} member{team.memberCount !== 1 ? "s" : ""}</p>
                   </div>
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-blue shrink-0">View team <Icon name="arrow" className="h-3.5 w-3.5" /></span>
                 </Link>
@@ -665,7 +665,7 @@ export default function DashboardPage() {
                 <p className="mt-1 text-sm font-semibold text-ink-500">
                   {connectionSummary.connections} connection{connectionSummary.connections === 1 ? "" : "s"}
                   {connectionSummary.incomingPending > 0 && (
-                    <span className="text-brand-red">
+                    <span className="text-brand-red-ink">
                       {" · "}
                       {connectionSummary.incomingPending} request
                       {connectionSummary.incomingPending === 1 ? "" : "s"} waiting

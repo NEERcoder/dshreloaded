@@ -281,8 +281,8 @@ export default function MarkPage() {
               you've actually joined, and it is never shown publicly.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link href="/login" className="btn-primary min-h-[40px]">Sign in to open MARK</Link>
-              <Link href="/signup" className="btn-secondary min-h-[40px]">Create Your Profile</Link>
+              <Link href="/login" className="btn-primary min-h-[44px]">Sign in to open MARK</Link>
+              <Link href="/signup" className="btn-secondary min-h-[44px]">Create Your Profile</Link>
             </div>
           </div>
 
@@ -295,7 +295,7 @@ export default function MarkPage() {
             ].map((item) => (
               <li
                 key={item}
-                className="flex items-start gap-3 rounded-2xl border border-surface-border bg-white p-4 text-sm font-semibold text-ink-700 shadow-card"
+                className="card flex items-start gap-3 p-4 text-sm font-semibold text-ink-700"
               >
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-blue-soft text-brand-blue">
                   <Icon name="arrow" className="h-3.5 w-3.5" />
@@ -315,8 +315,8 @@ export default function MarkPage() {
         <MarkHeader />
         <div className="container-px py-10">
           <div className="card p-6 border border-brand-red/20 bg-brand-red-soft text-center">
-            <p className="text-sm font-bold text-brand-red-dark">{error}</p>
-            <button className="btn-secondary mt-4 min-h-[40px]" onClick={() => setReloadKey((k) => k + 1)}>
+            <p className="text-sm font-bold text-brand-red-ink">{error}</p>
+            <button className="btn-secondary mt-4 min-h-[44px]" onClick={() => setReloadKey((k) => k + 1)}>
               Try again
             </button>
           </div>
@@ -351,7 +351,7 @@ export default function MarkPage() {
                       {profile.course}
                       {profile.yearOfStudy ? ` · ${yearLabel(profile.yearOfStudy)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs font-medium text-ink-400">
+                    <p className="mt-1 text-xs font-medium text-ink-500">
                       {college ? college.name : "College not listed yet"}
                       {profile.graduationYear ? ` · Graduates ${profile.graduationYear}` : ""}
                     </p>
@@ -363,7 +363,7 @@ export default function MarkPage() {
                 )}
               </div>
             </div>
-            <Link href="/dashboard" className="btn-primary shrink-0 self-start min-h-[40px]">
+            <Link href="/dashboard" className="btn-primary shrink-0 self-start min-h-[44px]">
               Edit Profile
             </Link>
           </div>
@@ -371,11 +371,11 @@ export default function MarkPage() {
           {profile && (
             <div className="mt-6 border-t border-surface-border pt-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-ink-400">
+                <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">
                   {profileFieldCount === 5 ? "Profile complete" : "Profile fields on file"}
                 </p>
                 {profileFieldCount < 5 && (
-                  <p className="text-[10px] font-bold text-brand-red-dark">
+                  <p className="text-[11px] font-bold text-brand-red-ink">
                     {5 - profileFieldCount} of 5 still empty
                   </p>
                 )}
@@ -398,7 +398,7 @@ export default function MarkPage() {
         </section>
 
         {error && (
-          <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-dark">
+          <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
             {error}
           </div>
         )}
@@ -411,7 +411,7 @@ export default function MarkPage() {
                 <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
                   Competition record
                 </h2>
-                <p className="text-xs font-bold text-ink-400">
+                <p className="text-xs font-bold text-ink-500">
                   {participations.length} joined
                 </p>
               </div>
@@ -419,10 +419,10 @@ export default function MarkPage() {
               {participations.length === 0 ? (
                 <div className="mt-5 rounded-2xl border border-dashed border-surface-border bg-surface-soft/60 p-6 text-center">
                   <p className="text-sm font-bold text-ink-700">{EMPTY_RECORD_COPY}</p>
-                  <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink-400">
+                  <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink-500">
                     Competitions appear here the moment you join a team for one.
                   </p>
-                  <Link href="/crew" className="btn-secondary mt-4 min-h-[40px] inline-flex text-sm">
+                  <Link href="/crew" className="btn-secondary mt-4 min-h-[44px] inline-flex text-sm">
                     Find a crew on CREW
                   </Link>
                 </div>
@@ -433,14 +433,14 @@ export default function MarkPage() {
                     return (
                       <li
                         key={entry.teamId}
-                        className="rounded-2xl border border-surface-border bg-surface-soft/60 p-4"
+                        className="card bg-surface-soft/60 p-4"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="text-sm font-bold text-ink-900 break-words">{entry.title}</h3>
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                                   entry.teamStatus === "active"
                                     ? "bg-emerald-50 text-emerald-700"
                                     : "bg-surface-border text-ink-500"
@@ -449,7 +449,7 @@ export default function MarkPage() {
                                 {statusLabel(entry.teamStatus)}
                               </span>
                               {entry.isCaptain && (
-                                <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-bold text-brand-red-dark">
+                                <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">
                                   Captain
                                 </span>
                               )}
@@ -457,7 +457,7 @@ export default function MarkPage() {
                             <p className="mt-1 text-xs font-medium text-ink-500">
                               {entry.organization ? `by ${entry.organization}` : "Competition no longer listed"}
                             </p>
-                            <p className="mt-1 text-xs text-ink-400">
+                            <p className="mt-1 text-xs text-ink-500">
                               {entry.teamName}
                               {deadline ? ` · Deadline ${deadline}` : ""}
                             </p>
@@ -475,7 +475,7 @@ export default function MarkPage() {
                 </ul>
               )}
 
-              <p className="mt-5 text-[11px] leading-relaxed text-ink-400">
+              <p className="mt-5 text-[11px] leading-relaxed text-ink-500">
                 MARK records participation. Placements and wins aren't stored in JAVLIN yet, so nothing here
                 claims a result.
               </p>
@@ -487,7 +487,7 @@ export default function MarkPage() {
                 <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
                   My records
                 </h2>
-                <p className="text-xs font-bold text-ink-400">
+                <p className="text-xs font-bold text-ink-500">
                   {records.length} added · {publicRecordCount} public
                 </p>
               </div>
@@ -497,7 +497,7 @@ export default function MarkPage() {
               </p>
 
               {!formOpen && records.length > 0 && (
-                <button type="button" onClick={openNewRecord} className="btn-secondary mt-4 min-h-[40px] text-sm">
+                <button type="button" onClick={openNewRecord} className="btn-secondary mt-4 min-h-[44px] text-sm">
                   <Icon name="plus" className="h-4 w-4" /> Add record
                 </button>
               )}
@@ -505,7 +505,7 @@ export default function MarkPage() {
               {recordError && (
                 <div
                   role="alert"
-                  className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-dark"
+                  className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink"
                 >
                   {recordError}
                 </div>
@@ -514,7 +514,7 @@ export default function MarkPage() {
               {formOpen && (
                 <form
                   onSubmit={submitRecord}
-                  className="mt-5 rounded-2xl border border-surface-border bg-surface-soft/60 p-5"
+                  className="mt-5 card bg-surface-soft/60 p-5"
                 >
                   <h3 className="text-sm font-extrabold text-ink-900">
                     {editingId ? "Edit record" : "New record"}
@@ -634,7 +634,7 @@ export default function MarkPage() {
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-2">
-                    <button type="submit" disabled={recordSaving} className="btn-primary min-h-[40px] disabled:opacity-60">
+                    <button type="submit" disabled={recordSaving} className="btn-primary min-h-[44px] disabled:opacity-60">
                       {recordSaving ? (
                         <>
                           <Icon name="loader" className="h-4 w-4 animate-spin" /> Saving…
@@ -649,7 +649,7 @@ export default function MarkPage() {
                       type="button"
                       onClick={closeRecordForm}
                       disabled={recordSaving}
-                      className="btn-ghost min-h-[40px] disabled:opacity-60"
+                      className="btn-ghost min-h-[44px] disabled:opacity-60"
                     >
                       Cancel
                     </button>
@@ -661,14 +661,14 @@ export default function MarkPage() {
                 {records.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-surface-border bg-surface-soft/60 p-6 text-center">
                     <p className="text-sm font-bold text-ink-700">{EMPTY_RECORD_COPY}</p>
-                    <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink-400">
+                    <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink-500">
                       Record an internship, a project, a certification — you choose whether each one is public.
                     </p>
                     {!formOpen && (
                       <button
                         type="button"
                         onClick={openNewRecord}
-                        className="btn-secondary mt-4 inline-flex min-h-[40px] text-sm"
+                        className="btn-secondary mt-4 inline-flex min-h-[44px] text-sm"
                       >
                         <Icon name="plus" className="h-4 w-4" /> Add your first record
                       </button>
@@ -686,7 +686,7 @@ export default function MarkPage() {
                             type="button"
                             disabled={deleting}
                             onClick={() => deleteRecord(record)}
-                            className="btn-secondary min-h-[34px] px-3 text-xs text-brand-red-dark disabled:opacity-60"
+                            className="btn-secondary min-h-[44px] sm:min-h-[34px] px-3 text-xs text-brand-red-ink disabled:opacity-60"
                           >
                             {deleting ? (
                               <>
@@ -699,7 +699,7 @@ export default function MarkPage() {
                           <button
                             type="button"
                             onClick={() => setPendingDeleteId(null)}
-                            className="btn-ghost min-h-[34px] px-3 text-xs"
+                            className="btn-ghost min-h-[44px] sm:min-h-[34px] px-3 text-xs"
                           >
                             Keep
                           </button>
@@ -709,14 +709,14 @@ export default function MarkPage() {
                           <button
                             type="button"
                             onClick={() => openEditRecord(record)}
-                            className="btn-ghost min-h-[34px] px-3 text-xs"
+                            className="btn-ghost min-h-[44px] sm:min-h-[34px] px-3 text-xs"
                           >
                             <Icon name="pen" className="h-3.5 w-3.5" /> Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => setPendingDeleteId(record.id)}
-                            className="btn-ghost min-h-[34px] px-3 text-xs text-brand-red"
+                            className="btn-ghost min-h-[44px] sm:min-h-[34px] px-3 text-xs text-brand-red-ink"
                           >
                             <Icon name="trash" className="h-3.5 w-3.5" /> Delete
                           </button>
@@ -727,7 +727,7 @@ export default function MarkPage() {
                 )}
               </div>
 
-              <p className="mt-5 text-[11px] leading-relaxed text-ink-400">
+              <p className="mt-5 text-[11px] leading-relaxed text-ink-500">
                 Records are yours to write and yours to hide. JAVLIN doesn't verify them against an issuer, so a
                 record states what you said you did.
               </p>
@@ -751,7 +751,7 @@ export default function MarkPage() {
                       <Icon name={section.icon} className="h-4 w-4" />
                     </span>
                     <h3 className="mt-3 text-sm font-extrabold text-ink-900">{section.label}</h3>
-                    <p className="mt-1 text-[11px] font-medium leading-relaxed text-ink-400">
+                    <p className="mt-1 text-[11px] font-medium leading-relaxed text-ink-500">
                       Not open yet
                     </p>
                   </div>
@@ -765,8 +765,8 @@ export default function MarkPage() {
             <div className="lg:sticky lg:top-24 space-y-4">
               <TierCard tier={tier} />
 
-              <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card">
-                <p className="text-[10px] font-black uppercase tracking-widest text-ink-400">Your record</p>
+              <div className="card p-5">
+                <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">Your record</p>
                 <dl className="mt-3 space-y-2 text-xs">
                   <div className="flex items-center justify-between gap-2">
                     <dt className="font-semibold text-ink-500">Competitions joined</dt>
@@ -785,7 +785,7 @@ export default function MarkPage() {
                     <dd className="font-extrabold text-ink-900">{publicRecordCount}</dd>
                   </div>
                 </dl>
-                <Link href="/dashboard" className="btn-secondary mt-4 min-h-[40px] w-full text-sm">
+                <Link href="/dashboard" className="btn-secondary mt-4 min-h-[44px] w-full text-sm">
                   My Dashboard
                 </Link>
               </div>
@@ -799,13 +799,13 @@ export default function MarkPage() {
 
 function MarkHeader() {
   return (
-    <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+    <section className="page-hero pillar-mark tone-dark">
       <div className="container-px">
-        <p className="eyebrow text-brand-red">MARK</p>
-        <h1 className="font-display mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-tight">
+        <p className="eyebrow">MARK</p>
+        <h1 className="page-title font-display mt-2">
           Your record.
         </h1>
-        <p className="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-600 font-medium">
+        <p className="page-lede mt-3 max-w-2xl">
           One place for everything you've done — starting with the competitions you actually showed up for.
         </p>
       </div>
@@ -819,13 +819,13 @@ function TierCard({ tier }: { tier: ReturnType<typeof resolveTier> }) {
 
   const cardClass = hasTier
     ? `rounded-2xl p-6 shadow-lift bg-brand-navy ring-1 ${isPlatinum ? "ring-brand-red/50" : "ring-white/10"}`
-    : "rounded-2xl border border-surface-border bg-white p-6 shadow-card";
+    : "card p-6";
 
   return (
     <section className={cardClass}>
       <p
-        className={`text-[10px] font-black uppercase tracking-widest ${
-          hasTier ? "text-brand-blue-soft/70" : "text-ink-400"
+        className={`text-[11px] font-black uppercase tracking-widest ${
+          hasTier ? "text-brand-blue-soft/70" : "text-ink-500"
         }`}
       >
         MARK tier
@@ -849,7 +849,7 @@ function TierCard({ tier }: { tier: ReturnType<typeof resolveTier> }) {
           {tier.tierLabel}
         </p>
       ) : (
-        <p className="mt-2 text-sm font-bold text-ink-400">No tier yet</p>
+        <p className="mt-2 text-sm font-bold text-ink-500">No tier yet</p>
       )}
 
       <div

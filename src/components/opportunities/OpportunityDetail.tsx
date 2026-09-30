@@ -43,14 +43,14 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
   if (!opp) {
     return (
       <div className="card border-dashed bg-white p-10 text-center">
-        <Icon name="alert-triangle" className="mx-auto h-8 w-8 text-brand-red" />
+        <Icon name="alert-triangle" className="mx-auto h-8 w-8 text-brand-red-ink" />
         <p className="mt-3 text-base font-bold text-ink-900">
           {errorMessage ? "This listing needs attention" : "We couldn't find that opportunity"}
         </p>
         <p className="mt-1 text-sm text-ink-500">
           {errorMessage ?? "It may have closed or been unpublished."}
         </p>
-        <Link href="/opportunities" className="btn-primary mt-5 inline-flex min-h-[40px] px-4 text-sm">
+        <Link href="/opportunities" className="btn-primary mt-5 inline-flex min-h-[44px] px-4 text-sm">
           <Icon name="arrow-left" className="h-4 w-4" /> Back to Opportunity Radar
         </Link>
       </div>
@@ -110,7 +110,7 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {facts.map((fact) => (
               <div key={fact.label} className="rounded-xl bg-surface-soft p-3">
-                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-500">
                   <Icon name={fact.icon} className="h-3.5 w-3.5" /> {fact.label}
                 </p>
                 <p className={`mt-1 text-sm font-semibold ${fact.label === "Stipend" ? "text-emerald-700" : "text-ink-800"}`}>
@@ -138,7 +138,7 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
 
         {opp.eligibility && (
           <div className="mt-4 rounded-xl border border-surface-border bg-surface-soft p-4">
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-400">
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500">
               <Icon name="info" className="h-3.5 w-3.5" /> Eligibility
             </p>
             <p className="mt-1 text-sm text-ink-700">{opp.eligibility}</p>
@@ -147,14 +147,14 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
 
         {isTeamCompetition && (
           <div className="mt-6 rounded-xl border border-surface-border p-4">
-            <p className="eyebrow text-brand-red">TEAM COMPETITION</p>
+            <p className="eyebrow">TEAM COMPETITION</p>
             <h2 className="mt-2 text-base font-extrabold text-ink-900">This one takes a team</h2>
             {teamSizeLabel && <p className="mt-1 text-sm text-ink-500">Team size: {teamSizeLabel}</p>}
             <p className="mt-3 text-sm leading-relaxed text-ink-600">
               Head to CREW to find a crew short on members for this competition, request to join one, or start your
               own team.
             </p>
-            <Link href="/crew" className="btn-outline-blue mt-4 w-full justify-center min-h-[40px] text-sm">
+            <Link href="/crew" className="btn-outline-blue mt-4 w-full justify-center min-h-[44px] text-sm">
               Find a team on CREW <Icon name="arrow" className="h-4 w-4" />
             </Link>
           </div>

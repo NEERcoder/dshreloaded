@@ -20,11 +20,11 @@ export default function ReviewSnippetCard({
     <Link
       href={href}
       data-cursor="view"
-      className="glass-card group flex min-w-[78%] snap-start flex-col p-5 hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue sm:min-w-0"
+      className="glass-card card-editorial card-interactive group flex min-w-[78%] snap-start flex-col p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue sm:min-w-0 sm:p-5"
     >
       <div className="flex items-center justify-between gap-2">
         {collegeName ? (
-          <span className="line-clamp-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-400">
+          <span className="line-clamp-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-500">
             {collegeName}
           </span>
         ) : (
@@ -35,12 +35,12 @@ export default function ReviewSnippetCard({
           {rating}/5
         </span>
       </div>
-      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-ink-600">
+      <p className="mt-2.5 line-clamp-3 text-[13px] leading-relaxed text-ink-600 sm:mt-3 sm:text-sm">
         <span className="font-display text-lg leading-none text-brand-blue">&ldquo;</span>
         {excerpt}
         <span className="font-display text-lg leading-none text-brand-blue">&rdquo;</span>
       </p>
-      <p className="mt-auto pt-4 text-[11px] font-bold text-ink-400">— {authorName}</p>
+      <p className="mt-auto pt-4 text-[11px] font-bold text-ink-500">— {authorName}</p>
     </Link>
   );
 }

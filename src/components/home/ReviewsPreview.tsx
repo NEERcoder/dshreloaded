@@ -22,8 +22,8 @@ export default function ReviewsPreview() {
   }, []);
 
   return (
-    <section id="college-reviews" className="scroll-mt-24 border-t glass-panel">
-      <div className="container-px py-9 sm:py-12">
+    <section id="college-reviews" className="band scroll-mt-24">
+      <div className="container-px py-7 sm:py-10 lg:py-12">
         <SectionHeader
           eyebrow="COLLEGE REVIEWS"
           title="Before you choose, hear from students."
@@ -43,7 +43,7 @@ export default function ReviewsPreview() {
               ctaHref="/explore"
             />
           ) : (
-            <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
               {reviews.map((review) => (
                 <ReviewSnippetCard
                   key={review.id}

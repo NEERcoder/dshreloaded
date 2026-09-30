@@ -66,7 +66,7 @@ export default function LoginPage() {
     >
       <section className="container-px py-16 sm:py-24">
         <div className="mx-auto max-w-md animate-fade-up">
-          <p className="eyebrow text-brand-red">STUDENT ACCOUNT</p>
+          <p className="eyebrow">STUDENT ACCOUNT</p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
             Welcome back.
           </h1>
@@ -74,7 +74,7 @@ export default function LoginPage() {
             Log in to view and manage your JAVLIN profile.
           </p>
 
-          <form onSubmit={submit} className="card mt-8 p-6 bg-white border border-surface-border shadow-card">
+          <form onSubmit={submit} className="card mt-8 p-6">
             <label className="field-label" htmlFor="login-email">
               Email
             </label>
@@ -119,7 +119,7 @@ export default function LoginPage() {
             </button>
 
             {error && (
-              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red">
+              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
                 {error}
               </div>
             )}
@@ -133,7 +133,7 @@ export default function LoginPage() {
           </p>
 
           <div className="mt-4 text-center">
-            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-400 hover:text-brand-blue">
+            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-500 hover:text-brand-blue">
               <Icon name="arrow-left" className="h-3.5 w-3.5" /> Return to JAVLIN Homepage
             </Link>
           </div>

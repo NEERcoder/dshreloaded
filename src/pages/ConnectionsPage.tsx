@@ -15,7 +15,7 @@ import {
   type ConnectionItem,
 } from "../lib/dataAccess";
 
-const BTN = "min-h-[40px] px-3.5 text-xs";
+const BTN = "min-h-[44px] px-3.5 text-xs";
 
 type Lists = {
   connections: ConnectionItem[];
@@ -115,18 +115,18 @@ export default function ConnectionsPage() {
       description="The students you're connected with, and the requests waiting on you."
       backgroundPreset="directory"
     >
-      <section className="border-b border-surface-border bg-brand-blue-pale/60 backdrop-blur-[2px] pt-10 pb-8 sm:pt-14 sm:pb-10">
+      <section className="page-hero pillar-circle">
         <div className="container-px">
           <Link
             href="/circle"
-            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark"
+            className="link-pill"
           >
             <Icon name="arrow-left" className="h-4 w-4" /> Back to CIRCLE
           </Link>
-          <h1 className="font-display mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900 leading-tight">
+          <h1 className="page-title font-display mt-3">
             Your connections.
           </h1>
-          <p className="mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-ink-500 font-medium">
+          <p className="page-lede mt-3 max-w-2xl">
             {lists.connections.length} connection{lists.connections.length === 1 ? "" : "s"}
             {lists.incoming.length > 0
               ? ` · ${lists.incoming.length} request${lists.incoming.length === 1 ? "" : "s"} waiting`
@@ -137,13 +137,13 @@ export default function ConnectionsPage() {
 
       <section className="container-px py-8 sm:py-10 max-w-2xl">
         {error && (
-          <div className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red">
+          <div className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink">
             We couldn't load your connections. {error}
           </div>
         )}
         {actionError && (
           <div
-            className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red"
+            className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink"
             role="status"
           >
             {actionError}
@@ -208,7 +208,7 @@ function ConnectionGroup({ title, items, busyId, onAccept, onReject, onCancel, o
   return (
     <div className="mb-10 last:mb-0">
       <h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">
-        {title} <span className="text-sm font-bold text-ink-400">({items.length})</span>
+        {title} <span className="text-sm font-bold text-ink-500">({items.length})</span>
       </h2>
       <div className="mt-4 space-y-3">
         {items.map((item) => {
@@ -216,7 +216,7 @@ function ConnectionGroup({ title, items, busyId, onAccept, onReject, onCancel, o
           return (
             <article
               key={item.connectionId}
-              className="flex flex-col gap-3 rounded-2xl border border-surface-border bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between"
+              className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-blue-soft text-sm font-extrabold text-brand-blue">
@@ -239,7 +239,7 @@ function ConnectionGroup({ title, items, busyId, onAccept, onReject, onCancel, o
                       : "This student's profile isn't listed anymore."}
                   </p>
                   {item.peer?.collegeName && (
-                    <p className="mt-0.5 truncate text-[11px] font-semibold text-ink-400">{item.peer.collegeName}</p>
+                    <p className="mt-0.5 truncate text-[11px] font-semibold text-ink-500">{item.peer.collegeName}</p>
                   )}
                 </div>
               </div>
