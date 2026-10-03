@@ -34,22 +34,22 @@ export const roles: RoleCardData[] = [
     slug: "campus-correspondent",
     title: "Campus Correspondent",
     description: "Be the person who knows what's happening on campus. Cover campus stories, events and student takes.",
-    fullDescription: "Be the person who knows what's happening on campus. Cover campus stories, societies, fests, and student takes across Delhi University.",
+    fullDescription: "Be the person who knows what's happening on campus. Cover campus stories, societies, fests, and student takes nationwide.",
     icon: "mic",
     accent: "red",
     responsibilities: [
-      "Represent your college across Delhi University",
+      "Represent your college in your city",
       "Cover useful campus stories, society elections, and academic updates",
       "Share real student perspectives directly with the editorial team",
     ],
     requirements: [
       "Strong communication and interpersonal skills",
-      "Enrolled in any Delhi University college",
+      "Enrolled in any recognised college in India",
       "Curiosity about campus culture and student needs",
     ],
     benefits: [
       "Hands-on journalism and media portfolio experience",
-      "Network with student leaders and campus mentors across DU",
+      "Network with student leaders and campus mentors nationwide",
       "Official certificate of completion and recommendations",
     ],
     workArrangement: "Campus-based · Flexible hours",
@@ -70,7 +70,7 @@ export const roles: RoleCardData[] = [
     responsibilities: [
       "Design clean, modern student-first graphics using Canva / Figma",
       "Create high-engagement Instagram carousels and story templates",
-      "Collaborate with content writers to package complex DU info visually",
+      "Collaborate with content writers to package complex college info visually",
     ],
     requirements: [
       "Proficiency in Canva, Figma or Adobe Creative Cloud",
@@ -78,7 +78,7 @@ export const roles: RoleCardData[] = [
       "Portfolio or sample work showcasing social/editorial designs",
     ],
     benefits: [
-      "Published creative portfolio viewed by thousands of DU students",
+      "Published creative portfolio viewed by thousands of students",
       "Creative freedom to shape visual identity of student campaigns",
       "Official certificate of completion and LinkedIn recommendation",
     ],
@@ -99,16 +99,16 @@ export const roles: RoleCardData[] = [
     accent: "red",
     responsibilities: [
       "Write concise, engaging college guides and course breakdowns",
-      "Research DU admission policies, syllabus details, and society life",
+      "Research admission policies, syllabus details, and society life",
       "Translate academic jargon into clear, student-native articles",
     ],
     requirements: [
       "Crisp, engaging writing voice (clean grammar, zero brochure fluff)",
       "Ability to research and verify official university information",
-      "Enthusiasm for helping juniors navigate the DU journey",
+      "Enthusiasm for helping juniors navigate the college journey",
     ],
     benefits: [
-      "Byline credits on one of DU's fastest-growing student platforms",
+      "Byline credits on one of India's fastest-growing student platforms",
       "Mentorship on editorial strategy, SEO, and content distribution",
       "Official certificate and verified LinkedIn recommendation",
     ],

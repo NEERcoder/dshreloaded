@@ -50,10 +50,10 @@ export default function DuCampusNetwork() {
           <div>
             <span className="eyebrow">Interactive Campus Network</span>
             <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-ink-900">
-              The DU Constellation.
+              The Campus Constellation.
             </h2>
             <p className="mt-2 text-sm sm:text-base text-ink-500 max-w-xl">
-              An abstract network of prominent Delhi University campuses. Hover over any node to discover its identity, or click to enter the profile.
+              An abstract network of the colleges on JAVLIN. Hover over any node to discover its identity, or click to enter the profile.
             </p>
           </div>
 

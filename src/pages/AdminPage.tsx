@@ -334,7 +334,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               { key: "opportunities" as TabType, label: "Opportunities", count: opportunities.length },
               { key: "reviews" as TabType, label: "Reviews (Moderation)", count: reviews.filter((r) => r.status === "pending").length },
               { key: "mentors" as TabType, label: "Mentors", count: mentors.length },
-              { key: "videos" as TabType, label: "Videos (DU Unfiltered)", count: videos.length },
+              { key: "videos" as TabType, label: "Videos (Campus Unfiltered)", count: videos.length },
               { key: "pulse" as TabType, label: "PULSE Posts", count: pulsePosts.length },
               { key: "team_roles" as TabType, label: "Team Roles", count: teamRoles.length },
               { key: "team_members" as TabType, label: "Team Members", count: teamMembers.length },
@@ -512,7 +512,7 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
           </div>
           <div>
             <label className="field-label">Organization</label>
-            <input required value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} className="field-input" placeholder="e.g. DU Science Forum" />
+            <input required value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} className="field-input" placeholder="e.g. Science Forum" />
           </div>
           <div>
             <label className="field-label">Category</label>
@@ -863,7 +863,7 @@ function MentorManager({
               onChange={(e) => setForm({ ...form, college: e.target.value })}
               className="field-input"
             >
-              <option value="">General DU / Not College Specific</option>
+              <option value="">General / Not college specific</option>
               {colleges.map((c) => (
                 <option value={c.name} key={c.id}>
                   {c.name}
@@ -1024,7 +1024,7 @@ function VideoManager({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="eyebrow">Media</p>
-          <h2 className="mt-2 text-2xl font-extrabold text-ink-900">DU Unfiltered Videos</h2>
+          <h2 className="mt-2 text-2xl font-extrabold text-ink-900">Campus Unfiltered Videos</h2>
         </div>
         <span className="text-sm text-ink-500">{videos.length} total</span>
       </div>
@@ -1082,7 +1082,7 @@ function VideoManager({
               }}
               className="field-input"
             >
-              <option value="">None / General DU Media</option>
+              <option value="">None / General campus media</option>
               {colleges.map((c) => (
                 <option value={c.id} key={c.id}>
                   {c.name}

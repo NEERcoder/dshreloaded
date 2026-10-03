@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import CustomCursor from "./components/CustomCursor";
 import PageTransition from "./components/PageTransition";
 import Navbar from "./components/Navbar";
+import HomeSidebar from "./components/HomeSidebar";
 import Hero from "./components/Hero";
 import FeaturedOpportunityTicker from "./components/FeaturedOpportunityTicker";
 import Footer from "./components/Footer";
@@ -41,30 +42,32 @@ import TeamPage from "./pages/TeamPage";
 
 function JavlinHome() {
   return (
-    <div className="relative min-h-screen isolate">
-      {/* Signature Living Background */}
-      <InteractiveDotGrid background preset="home" />
-      <div className="relative z-10 flex flex-col min-h-screen justify-between">
-        <Navbar />
-        <main className="flex-1">
-          {/* 1. HERO — THE FRONT DOOR */}
+    <div className="homepage-canvas relative flex min-h-screen flex-col">
+      {/* The dot field is one CSS radial-gradient on this wrapper. The canvas
+          particle grid is deliberately not mounted here: it costs an animation
+          frame on every scroll for decoration a background paint gives free. */}
+      <Navbar />
+      <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 gap-6 lg:px-6">
+        <HomeSidebar />
+        <main className="min-w-0 flex-1">
+          {/* 1. HERO — the front door and the six-area launcher */}
           <Hero />
 
-          {/* 2. FEATURED OPPORTUNITIES — LEAD WITH OPPORTUNITIES */}
+          {/* 2. TRENDING — what is happening right now */}
           <FeaturedOpportunityTicker />
 
-          {/* 3. LAUNCHPAD — compact glimpse of every major area */}
+          {/* 3. Content islands — one per pillar, each on its own surface */}
           <AimPreview />
           <FieldPreview />
+          <MarkPreview />
           <CrewPreview />
           <CirclePreview />
-          <MarkPreview />
           <PulsePreview />
           <ReviewsPreview />
           <JoinPreview />
         </main>
-        <Footer />
       </div>
+      <Footer />
     </div>
   );
 }

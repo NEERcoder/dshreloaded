@@ -517,6 +517,124 @@
   }
 
   /* ------------------------------------------------------------
+     HOMEPAGE CANVAS — the dark digital campus.
+
+     One deep-navy field carrying a dot lattice holds the whole page,
+     and each section sits inside it as a lit content island, so the
+     six pillars stay visually distinct without the page turning into
+     six full-bleed slabs. The dots are a single radial-gradient tile
+     — one background paint, no animation loop — which is why the
+     homepage no longer mounts the canvas particle grid at all.
+     ------------------------------------------------------------ */
+  .homepage-canvas {
+    background-color: var(--javlin-navy);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: #ffffff;
+  }
+  @media (max-width: 640px) {
+    .homepage-canvas {
+      background-size: 20px 20px;
+    }
+  }
+
+  /* Islands. The container gives up padding to the island margin so the total
+     inset stays at the 16px mobile page padding Part 14 settled on. Adjacent
+     island margins collapse, so one value is also the gap between them. */
+  .homepage-canvas .band {
+    margin-block: 1.25rem;
+    margin-inline: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.125rem;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+  }
+  .homepage-canvas .band > .container-px {
+    padding-inline: 0.75rem;
+  }
+  /* The seam hairline divided two full-bleed bands; inside an island it is
+     only a stray line across the top. */
+  .homepage-canvas .band::before {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .homepage-canvas .band {
+      margin-block: 2rem;
+      margin-inline: 1.5rem;
+      border-radius: 1.5rem;
+    }
+    .homepage-canvas .band > .container-px {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /* The account rail is part of the same navy family as the canvas, lifted
+     just enough to read as a surface rather than a hole in the page. */
+  .home-rail {
+    background: rgba(11, 40, 80, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Anything that sits directly on the navy canvas — the hero and the trending
+     rail — inherits its ink and eyebrow from the same tokens the dark islands
+     use, so one set of heading classes works on both surfaces. Applied as a
+     class rather than on the canvas itself so a light pillar island can never
+     pick up white-on-white text. */
+  .on-navy {
+    --band-ink: #ffffff;
+    --band-muted: rgba(226, 232, 240, 0.82);
+    --eyebrow: #ffa366;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #ffa366;
+  }
+
+  /* 36px on a 320px phone up to the 60px the mockup asks for on desktop. The
+     line breaks under itself rather than overflowing at the small end. */
+  .hero-title {
+    font-size: clamp(2.25rem, 8vw, 3.75rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    color: #ffffff;
+    text-wrap: balance;
+  }
+
+  /* The top bar keeps its height and its controls over the navy canvas and
+     only inverts its surface. Scoped by descent, so every other page keeps
+     the light bar it was tuned for. No backdrop-filter: the same Chromium
+     limitation noted on .glass-panel means blurring a fixed layer over this
+     background erases the dot field instead of frosting it, and it is the one
+     effect mid-range phones can least afford. */
+  .homepage-canvas .glass-nav {
+    background: rgba(7, 26, 51, 0.92);
+    backdrop-filter: none;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+  .homepage-canvas .nav-control {
+    color: rgba(255, 255, 255, 0.88);
+  }
+  .homepage-canvas .nav-control:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+
+  /* Frosted white over navy turns to mud; the launcher wants the deep-blue
+     surface instead so the white tiles read as the lit thing. */
+  .homepage-canvas .launcher-panel {
+    background: rgba(11, 40, 80, 0.6);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  /* ------------------------------------------------------------
      PAGE HEROES — the header block each section page opens with.
      Same tokens as the homepage band for the same pillar, so a
      section looks like itself whether you scroll to it or land on it.

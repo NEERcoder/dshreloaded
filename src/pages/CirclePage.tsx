@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import StudentCard, { StudentCardSkeleton, yearLabel } from "../components/circle/StudentCard";
-import { Link } from "../lib/router";
+import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
   getConnectionStates,
@@ -20,6 +20,17 @@ function distinct(values: Array<string | number>): string[] {
 
 export default function CirclePage() {
   const { user, loading: authLoading } = useAuth();
+  const { search: queryString, navigate } = useLocation();
+
+  /**
+   * A college page links here with ?college=<name> so "the people from this
+   * college" reuses this directory instead of duplicating it. The directory
+   * filters on the college name it already stores, so the param is a name.
+   */
+  const collegeFromUrl = useMemo(() => {
+    const raw = new URLSearchParams(queryString).get("college");
+    return raw ? raw.trim() : "";
+  }, [queryString]);
 
   const [students, setStudents] = useState<StudentProfileRecord[]>([]);
   const [connectionStates, setConnectionStates] = useState<Record<string, ConnectionRef>>({});
@@ -28,7 +39,7 @@ export default function CirclePage() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [college, setCollege] = useState("");
+  const [college, setCollege] = useState(collegeFromUrl);
   const [course, setCourse] = useState("");
   const [year, setYear] = useState("");
   const [graduation, setGraduation] = useState("");
@@ -71,7 +82,18 @@ export default function CirclePage() {
     };
   }, [user]);
 
-  const collegeOptions = useMemo(() => distinct(students.map((s) => s.collegeName)), [students]);
+  // Arriving from a college page after mount (or clicking Back onto a new
+  // ?college=) must move the filter, not just the first render.
+  useEffect(() => {
+    setCollege(collegeFromUrl);
+  }, [collegeFromUrl]);
+
+  // The linked college may not appear in the list until its students load, so
+  // keep the active value selectable.
+  const collegeOptions = useMemo(() => {
+    const options = distinct(students.map((s) => s.collegeName));
+    return college && !options.includes(college) ? [...options, college].sort((a, b) => a.localeCompare(b)) : options;
+  }, [college, students]);
   const courseOptions = useMemo(() => distinct(students.map((s) => s.course)), [students]);
   const yearOptions = useMemo(
     () => distinct(students.map((s) => s.yearOfStudy)).filter((v) => v !== "0"),
@@ -167,6 +189,25 @@ export default function CirclePage() {
                 <Link href="/dashboard" className="btn-outline-blue text-xs">
                   Complete My Profile
                 </Link>
+              </div>
+            )}
+
+            {college && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-blue/20 bg-brand-blue-soft px-4 py-3">
+                <p className="min-w-0 text-sm font-extrabold text-brand-blue">
+                  Students from {college}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCollege("");
+                    navigate("/circle", { replace: true });
+                  }}
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-brand-blue/30 bg-white px-3 py-1.5 text-xs font-extrabold text-brand-blue transition-colors hover:bg-brand-blue hover:text-white sm:min-h-0"
+                >
+                  <Icon name="close" className="h-3.5 w-3.5" />
+                  Clear college filter
+                </button>
               </div>
             )}
 

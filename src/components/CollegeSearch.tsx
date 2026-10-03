@@ -63,7 +63,7 @@ export default function CollegeSearch({ className = "" }: { className?: string }
           setResults(result.data.slice(0, MAX_RESULTS));
         })
         .catch(() => {
-          // The helper already degrades to the local DU seed list; if even that
+          // The helper already degrades to the local seed list; if even that
           // fails the honest answer is "nothing matched", never a stuck spinner.
           if (cancelled) return;
           setResults([]);
@@ -146,7 +146,7 @@ export default function CollegeSearch({ className = "" }: { className?: string }
   return (
     <div
       ref={containerRef}
-      className={`relative min-w-0 flex-1 ${className}`}
+      className={`relative min-w-0 max-w-[360px] flex-1 ${className}`}
       onBlur={handleFocusOut}
     >
       <div className="relative flex w-full items-center">

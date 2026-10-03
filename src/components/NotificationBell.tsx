@@ -62,7 +62,7 @@ export default function NotificationBell({ className = "" }: { className?: strin
     <Link
       href="/notifications"
       aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-      className={`relative inline-flex items-center justify-center rounded-xl transition-colors duration-200 min-h-[44px] min-w-[44px] ${
+      className={`nav-control relative inline-flex items-center justify-center rounded-xl transition-colors duration-200 min-h-[44px] min-w-[44px] ${
         isActive
           ? "text-brand-blue bg-brand-blue-soft"
           : "text-ink-900 hover:text-brand-blue hover:bg-brand-blue-soft/60"

@@ -105,6 +105,11 @@ const paths: Record<string, JSX.Element> = {
       <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
     </>
   ),
+  phone: (
+    <>
+      <path d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 006 6l1.5-2 4 1.5v3a2 2 0 01-2.2 2A16.5 16.5 0 014.5 5.7 2 2 0 016.5 3.5z" />
+    </>
+  ),
   arrow: (
     <>
       <path d="M5 12h14M13 6l6 6-6 6" />

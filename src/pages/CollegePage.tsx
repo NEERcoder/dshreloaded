@@ -137,7 +137,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       <PageShell title="College profile coming soon | JAVLIN" backgroundPreset="college">
         <section className="container-px py-20 sm:py-28">
           <Link href="/explore" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:underline">
-            <Icon name="arrow-left" className="h-4 w-4" /> Back to Explore DU
+            <Icon name="arrow-left" className="h-4 w-4" /> Back to College Directory
           </Link>
           <div className="mt-8 max-w-2xl">
             <p className="eyebrow">COLLEGE PROFILE</p>
@@ -190,7 +190,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border">
         <div className="container-px py-10 sm:py-16">
           <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider">
-            <Icon name="arrow-left" className="h-4 w-4" /> Back to Explore DU
+            <Icon name="arrow-left" className="h-4 w-4" /> Back to College Directory
           </Link>
           <div className="mt-6 grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
@@ -198,7 +198,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                 <span className="eyebrow">COLLEGE PROFILE</span>
                 <span className="text-ink-300">•</span>
                 <span className="text-xs font-bold text-ink-600 uppercase tracking-wider">
-                  {[college.campus, college.location].filter(Boolean).join(" · ") || "Delhi University"}
+                  {[college.campus, college.location].filter(Boolean).join(" · ") || "Campus not listed"}
                 </span>
               </div>
 
@@ -206,6 +206,16 @@ export default function CollegePage({ slug }: { slug: string }) {
               <h1 className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink-900 animate-fade-up">
                 {college.name}
               </h1>
+
+              {/* Reuses the existing CIRCLE directory with its own college
+                  filter — there is no second student list here. */}
+              <Link
+                href={`/circle?college=${encodeURIComponent(college.name)}`}
+                className="mt-3 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-extrabold text-brand-blue hover:text-brand-blue-dark sm:min-h-0"
+              >
+                See the people from this college
+                <Icon name="arrow" className="h-4 w-4" />
+              </Link>
 
               {/* Supporting metadata assembles around it */}
               <div className="mt-4 flex flex-wrap items-center gap-3 animate-fade-up" style={{ animationDelay: "0.15s" }}>
@@ -256,7 +266,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                     {college.name.charAt(0)}
                   </span>
                   <span className="text-xs font-extrabold uppercase tracking-widest text-ink-500">
-                    Delhi University
+                    JAVLIN
                   </span>
                 </div>
               )}
@@ -340,7 +350,7 @@ export default function CollegePage({ slug }: { slug: string }) {
           <SectionHeading
             eyebrow="QUICK FACTS"
             title="Start with what's verified."
-            description="Essential college attributes verified directly from official University of Delhi bulletins."
+            description="Essential college attributes verified directly from official college bulletins."
           />
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Fact label="Campus Zone" value={college.campus} icon="building" />
@@ -376,7 +386,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                   ))}
                 </div>
               ) : (
-                <ComingSoon label="Courses" copy="Course information will be populated directly from official DU admission bulletins." />
+                <ComingSoon label="Courses" copy="Course information will be populated directly from official college admission bulletins." />
               )}
             </div>
           </div>
@@ -413,11 +423,11 @@ export default function CollegePage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      {/* 6. DU UNFILTERED MEDIA */}
+      {/* 6. CAMPUS UNFILTERED MEDIA */}
       <section id="videos" className="scroll-mt-32 border-t border-surface-border bg-white py-16 sm:py-24">
         <div className="container-px">
           <SectionHeading
-            eyebrow="DU UNFILTERED"
+            eyebrow="CAMPUS UNFILTERED"
             title="See the campus before you commit."
             subtitle="Campus tours, student interviews and unfiltered stories."
             description="Real student experiences and campus videos associated with this college."
@@ -448,7 +458,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                         ) : (
                           <div className="flex flex-col items-center gap-1 text-white/60">
                             <Icon name="play" className="h-12 w-12" />
-                            <span className="text-[11px] font-bold uppercase tracking-wider">DU Unfiltered</span>
+                            <span className="text-[11px] font-bold uppercase tracking-wider">Campus Unfiltered</span>
                           </div>
                         )}
                         <div className="absolute inset-0 bg-ink-900/30 group-hover:bg-ink-900/10 transition-colors flex items-center justify-center">
@@ -524,7 +534,7 @@ export default function CollegePage({ slug }: { slug: string }) {
                       </div>
                     </div>
                     <p className="mt-4 text-sm leading-relaxed text-ink-600 line-clamp-3">
-                      {mentor.bio || "DU senior mentor sharing authentic academic and campus insights."}
+                      {mentor.bio || "Senior mentor sharing authentic academic and campus insights."}
                     </p>
                     {mentor.expertise && (
                       <p className="mt-4 pt-3 border-t border-surface-border text-xs font-semibold text-brand-blue">

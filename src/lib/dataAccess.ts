@@ -74,6 +74,13 @@ export type ProfileRecord = {
   /** Mirrors public.profiles.is_public — owner-controlled visitor visibility. */
   isPublic: boolean;
   avatarUrl: string | null;
+  /** Bare Instagram handle, no @ and no URL. Public on the profile. */
+  instagramHandle: string | null;
+  /**
+   * Private. Lives in public.profile_contacts, never in a public projection,
+   * and is only surfaced to students who share a team (migration 011).
+   */
+  phone: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -85,7 +92,45 @@ export type ProfileInput = {
   yearOfStudy: number;
   graduationYear: number;
   gender: string;
+  /** Optional. Collected at signup, never verified — no OTP anywhere. */
+  phone?: string | null;
+  /** Optional bare handle. Anything that looks like a URL is rejected. */
+  instagramHandle?: string | null;
 };
+
+const INSTAGRAM_HANDLE_RE = /^[A-Za-z0-9._]{1,30}$/;
+
+/**
+ * Accepts "neer_singh", "@neer_singh" or an accidental paste of the full
+ * profile URL, and returns the bare handle — or null when the value is not a
+ * handle at all, so the caller can show one clear message instead of storing
+ * something that renders as a broken link.
+ */
+export function normalizeInstagramHandle(raw: string | null | undefined): string | null {
+  const value = String(raw ?? "").trim().replace(/^@+/, "").replace(/\s+/g, "");
+  if (!value) return null;
+  if (/instagram\.com/i.test(value) || value.includes("/")) return null;
+  return INSTAGRAM_HANDLE_RE.test(value) ? value : null;
+}
+
+/** The link a handle turns into. Never stored — built on the way out. */
+export function instagramProfileUrl(handle: string | null | undefined): string | null {
+  const clean = normalizeInstagramHandle(handle);
+  return clean ? `https://instagram.com/${clean}` : null;
+}
+
+/**
+ * Keeps digits and the few separators an Indian mobile number is written with,
+ * so "+91 98765 43210" and "9876543210" both store cleanly. Deliberately lax:
+ * the number is collected, not verified.
+ */
+export function normalizePhoneNumber(raw: string | null | undefined): string | null {
+  const value = String(raw ?? "").trim();
+  if (!value) return null;
+  const cleaned = value.replace(/[^\d+()\-\s]/g, "").replace(/\s+/g, " ").trim();
+  if (cleaned.replace(/\D/g, "").length < 6 || cleaned.length > 20) return null;
+  return cleaned;
+}
 
 /** A CIRCLE directory entry — the discovery-safe projection of public.profiles. */
 export type StudentProfileRecord = {
@@ -100,6 +145,8 @@ export type StudentProfileRecord = {
   avatarUrl: string | null;
   /** Whether the owner has let anonymous visitors read this profile. */
   isPublic: boolean;
+  /** Bare handle, public by design. Phone number is never part of this view. */
+  instagramHandle: string | null;
 };
 
 const localSuccess = <T>(data: T): DataResult<T> => ({
@@ -251,6 +298,10 @@ const mapProfile = (row: Record<string, unknown>): ProfileRecord => ({
   gender: String(row.gender ?? ""),
   isPublic: Boolean(row.is_public),
   avatarUrl: row.avatar_url ? String(row.avatar_url) : null,
+  instagramHandle: row.instagram_handle ? String(row.instagram_handle) : null,
+  // Only ever present when the caller is the owner (or a teammate via RPC):
+  // profile_contacts is not reachable from a public profile query.
+  phone: row.phone_number ? String(row.phone_number) : null,
   createdAt: String(row.created_at ?? ""),
   updatedAt: String(row.updated_at ?? row.created_at ?? ""),
 });
@@ -953,6 +1004,14 @@ export type CompetitionTeamMemberRecord = {
   fullName: string;
   college: string | null;
   course: string | null;
+  /** Bare handle. Public elsewhere too, so no extra gating needed here. */
+  instagramHandle: string | null;
+  /**
+   * Only ever populated by the team-scoped RPC, i.e. the caller has already
+   * been checked as a member or captain of this team. Never populated for
+   * non-members, so the UI cannot invent it.
+   */
+  phone: string | null;
   role: "captain" | "member";
   joinedAt: string;
 };
@@ -981,11 +1040,21 @@ async function fetchInviteCodeForMember(teamId: string): Promise<string> {
   return data;
 }
 
-async function fetchTeamProfiles(
-  teamId: string,
-  userIds: string[]
-): Promise<Map<string, { full_name?: string; college_id?: string; course?: string }>> {
-  const profiles = new Map<string, { full_name?: string; college_id?: string; course?: string }>();
+/**
+ * Roster details for one team. The RPC behind this is security definer and
+ * returns nothing unless the caller is on that team, which is what makes it
+ * safe to carry phone_number here and nowhere else in the directory.
+ */
+type TeamProfile = {
+  full_name?: string;
+  college_id?: string;
+  course?: string;
+  instagram_handle?: string;
+  phone_number?: string;
+};
+
+async function fetchTeamProfiles(teamId: string, userIds: string[]): Promise<Map<string, TeamProfile>> {
+  const profiles = new Map<string, TeamProfile>();
 
   if (!supabase || !teamId || userIds.length === 0) return profiles;
 
@@ -1005,6 +1074,8 @@ async function fetchTeamProfiles(
       full_name: row.full_name ?? undefined,
       college_id: row.college_id ?? undefined,
       course: row.course ?? undefined,
+      instagram_handle: row.instagram_handle ?? undefined,
+      phone_number: row.phone_number ?? undefined,
     });
   }
 
@@ -1013,7 +1084,7 @@ async function fetchTeamProfiles(
 
 const mapCompetitionMember = (
   row: Record<string, unknown>,
-  profile?: { full_name?: string; college_id?: string; course?: string }
+  profile?: TeamProfile
 ): CompetitionTeamMemberRecord => ({
   id: String(row.id),
   teamId: String(row.team_id),
@@ -1021,6 +1092,8 @@ const mapCompetitionMember = (
   fullName: profile?.full_name ?? "Student",
   college: profile?.college_id ?? null,
   course: profile?.course ?? null,
+  instagramHandle: profile?.instagram_handle ?? null,
+  phone: profile?.phone_number ?? null,
   role: (row.role as "captain" | "member") ?? "member",
   joinedAt: String(row.joined_at),
 });
@@ -1779,10 +1852,33 @@ export async function getCurrentUserProfile(): Promise<DataResult<ProfileRecord 
 
     if (result.error) return failure(null, result.error);
     if (!result.data) return remoteSuccess(null);
-    return remoteSuccess(mapProfile(result.data));
+
+    const profile = mapProfile(result.data);
+    // The owner is the one person allowed to see their own number, and it lives
+    // in profile_contacts rather than on the profile row.
+    const { data: contact } = await supabase
+      .from("profile_contacts")
+      .select("phone_number")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    profile.phone = contact?.phone_number ? String(contact.phone_number) : null;
+    return remoteSuccess(profile);
   } catch (err) {
     return failure(null, err);
   }
+}
+
+/**
+ * Phone lives in its own table so that no public profile projection can reach
+ * it (see migration 011). The owner's upsert is idempotent, and an absent or
+ * unchanged value never writes a row.
+ */
+async function savePhoneNumber(userId: string, phone: string | null | undefined) {
+  if (!supabase) return { error: null as unknown };
+  const value = normalizePhoneNumber(phone);
+  return supabase
+    .from("profile_contacts")
+    .upsert({ user_id: userId, phone_number: value }, { onConflict: "user_id" });
 }
 
 export async function createProfile(input: ProfileInput): Promise<DataResult<ProfileRecord | null>> {
@@ -1816,7 +1912,28 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
       .select()
       .single();
     if (result.error) return failure(null, result.error);
-    return remoteSuccess(mapProfile(result.data));
+
+    // Instagram and phone sit behind migration 011, so they are written after
+    // the core row and never fail it: an account whose project has not applied
+    // 011 yet still gets a working profile instead of a broken signup.
+    const handle = normalizeInstagramHandle(input.instagramHandle);
+    if (handle) {
+      const extra = await supabase
+        .from("profiles")
+        .update({ instagram_handle: handle })
+        .eq("user_id", user.id);
+      if (extra.error) console.error("Instagram handle could not be saved:", extra.error);
+    }
+
+    // A phone number is optional and unverified, so a failure here must not
+    // strand a student who already has a working account.
+    const contact = await savePhoneNumber(String(user.id), input.phone);
+    if (contact.error) console.error("Phone number could not be saved:", contact.error);
+
+    const profile = mapProfile(result.data);
+    profile.instagramHandle = handle;
+    profile.phone = normalizePhoneNumber(input.phone);
+    return remoteSuccess(profile);
   } catch (err) {
     return failure(null, err);
   }
@@ -1833,7 +1950,7 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
 // Row visibility stays with RLS ("Authenticated users can read profiles"),
 // so this list is a projection, not a security boundary.
 const DIRECTORY_COLUMNS =
-  "user_id, full_name, college_id, course, year_of_study, graduation_year, is_public, avatar_url, colleges(name)";
+  "user_id, full_name, college_id, course, year_of_study, graduation_year, is_public, avatar_url, instagram_handle, colleges(name)";
 
 const mapStudent = (row: Record<string, unknown>): StudentProfileRecord => ({
   userId: String(row.user_id),
@@ -1847,6 +1964,7 @@ const mapStudent = (row: Record<string, unknown>): StudentProfileRecord => ({
   graduationYear: Number(row.graduation_year ?? 0),
   avatarUrl: row.avatar_url ? String(row.avatar_url) : null,
   isPublic: Boolean(row.is_public),
+  instagramHandle: row.instagram_handle ? String(row.instagram_handle) : null,
 });
 
 export async function getStudentDirectory(limit = 240): Promise<DataResult<StudentProfileRecord[]>> {
@@ -1912,7 +2030,30 @@ export async function updateProfile(input: ProfileInput): Promise<DataResult<Pro
       .single();
 
     if (result.error) return failure(null, result.error);
-    return remoteSuccess(mapProfile(result.data));
+
+    const profile = mapProfile(result.data);
+
+    // Both fields sit behind migration 011 and are written separately so a
+    // project that has not applied it yet keeps a working profile editor.
+    // `undefined` means "not offered"; a blank string means "clear it".
+    if (input.instagramHandle !== undefined) {
+      const handle = normalizeInstagramHandle(input.instagramHandle);
+      const extra = await supabase
+        .from("profiles")
+        .update({ instagram_handle: handle })
+        .eq("user_id", user.id);
+      if (extra.error) console.error("Instagram handle could not be saved:", extra.error);
+      profile.instagramHandle = handle;
+    }
+
+    if (input.phone !== undefined) {
+      const phone = normalizePhoneNumber(input.phone);
+      const contact = await savePhoneNumber(String(user.id), phone);
+      if (contact.error) console.error("Phone number could not be saved:", contact.error);
+      profile.phone = phone;
+    }
+
+    return remoteSuccess(profile);
   } catch (err) {
     return failure(null, err);
   }

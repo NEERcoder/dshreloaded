@@ -14,6 +14,7 @@ import {
   getPendingTeamJoinRequests,
   approveCompetitionTeamJoinRequest,
   rejectCompetitionTeamJoinRequest,
+  instagramProfileUrl,
   type CompetitionTeamRecord,
   type CompetitionTeamMemberRecord,
   type CompetitionTeamJoinRequestRecord,
@@ -332,6 +333,19 @@ export default function TeamPage({ teamId }: { teamId: string }) {
               </div>
             </div>
 
+            {/* Guidance only — JAVLIN never creates the group or asks for a
+                WhatsApp integration. */}
+            {team.members.length > 1 && (
+              <div className="flex items-start gap-3 rounded-2xl border border-brand-blue/15 bg-brand-blue-pale/70 p-4">
+                <span className="icon-well h-8 w-8 shrink-0">
+                  <Icon name="users" className="h-4 w-4" />
+                </span>
+                <p className="text-xs font-semibold leading-relaxed text-ink-700">
+                  Tip: Make a WhatsApp group with your team members to prepare for the competition
+                  in advance.
+                </p>
+              </div>
+            )}
             {/* Pending join requests — captain only */}
             {isCaptain && (
               <div className="card p-6">
@@ -499,6 +513,33 @@ function MemberRow({
             {isThisCaptain && <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">Captain</span>}
           </div>
           {member.course && <p className="text-xs text-ink-500 truncate">{member.course}</p>}
+
+          {/* Both of these arrive only from get_team_member_profiles, which the
+              database returns solely to students on this team — so rendering
+              them unconditionally cannot leak a number to a stranger. */}
+          {(member.instagramHandle || member.phone) && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-ink-500">
+              {member.instagramHandle && (
+                <a
+                  href={instagramProfileUrl(member.instagramHandle) ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-blue-dark"
+                >
+                  <Icon name="instagram" className="h-3.5 w-3.5" />@{member.instagramHandle}
+                </a>
+              )}
+              {member.phone && (
+                <a
+                  href={`tel:${member.phone.replace(/[^0-9+]/g, "")}`}
+                  className="inline-flex items-center gap-1 text-ink-700 hover:text-brand-blue"
+                >
+                  <Icon name="phone" className="h-3.5 w-3.5" />
+                  {member.phone}
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </div>
       {isCaptain && !isThisCaptain && (

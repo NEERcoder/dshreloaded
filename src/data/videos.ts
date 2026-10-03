@@ -37,7 +37,7 @@ export const videos: VideoCardData[] = [
   {
     id: "v3",
     category: "Podcasts",
-    title: "Conversations about choosing the right science course at DU",
+    title: "Conversations about choosing the right course",
     duration: "21:30",
     accent: "blue",
   },

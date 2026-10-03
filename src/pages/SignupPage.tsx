@@ -5,7 +5,7 @@ import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { friendlyAuthError } from "../lib/authErrors";
-import { getColleges, createProfile, type CollegeRecord, type ProfileInput } from "../lib/dataAccess";
+import { getColleges, createProfile, normalizePhoneNumber, type CollegeRecord, type ProfileInput } from "../lib/dataAccess";
 
 const GENDER_OPTIONS = ["Female", "Male", "Non-binary", "Prefer not to say"];
 
@@ -34,6 +34,8 @@ export default function SignupPage() {
   const [yearOfStudy, setYearOfStudy] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
   const [gender, setGender] = useState("");
+  /** Optional and never verified — collected so teammates can reach each other. */
+  const [phone, setPhone] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +82,9 @@ export default function SignupPage() {
     }
 
     if (!gender) return "Please select a gender.";
+    if (phone.trim() && !normalizePhoneNumber(phone)) {
+      return "Enter a valid phone number, or leave it blank.";
+    }
 
     return null;
   }
@@ -95,6 +100,7 @@ export default function SignupPage() {
       yearOfStudy: Number(yearOfStudy),
       graduationYear: Number(graduationYear),
       gender,
+      phone,
     };
 
     const result = await createProfile(input);
@@ -391,6 +397,29 @@ export default function SignupPage() {
                     <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="field-label" htmlFor="signup-phone">
+                  Phone Number{" "}
+                  <span className="font-medium normal-case text-ink-500">(optional)</span>
+                </label>
+                <input
+                  id="signup-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  maxLength={20}
+                  disabled={submitting}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="+91 98765 43210"
+                />
+                <p className="mt-1 text-[11px] font-semibold text-ink-500">
+                  No verification code. It stays private — only students who share a team with you
+                  can see it.
+                </p>
               </div>
             </div>
 

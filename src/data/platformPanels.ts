@@ -4,13 +4,13 @@ export const platformPanels: PlatformPanelData[] = [
   {
     id: "explore-du",
     panelNumber: 1,
-    title: "Find your DU era.",
-    subtitle: "A complete guide to Delhi University, by seniors.",
+    title: "Find your college era.",
+    subtitle: "A complete guide to your college, by seniors.",
     description:
       "Discover colleges, hear unfiltered student takes, watch real campus experiences and get guidance from seniors who've already been through the grind.",
     items: [
       { label: "College Guides", icon: "building" },
-      { label: "DU Unfiltered Media", icon: "play" },
+      { label: "Campus Unfiltered Media", icon: "play" },
       { label: "Real Student Reviews", icon: "star" },
       { label: "Seniors & Mentors", icon: "users" },
     ],
@@ -22,10 +22,10 @@ export const platformPanels: PlatformPanelData[] = [
   {
     id: "join-team",
     panelNumber: 2,
-    title: "Build DU with us.",
+    title: "Build JAVLIN with us.",
     subtitle: "Work on something students actually use.",
     description:
-      "We're creating the internet home for Delhi University science students — and we're looking for ambitious peers to run campus stories, design, and operations.",
+      "We're creating the internet home for Indian students — and we're looking for ambitious peers to run campus stories, design, and operations.",
     items: [
       { label: "Campus Correspondent", icon: "mic" },
       { label: "Canva & Brand Editor", icon: "palette" },

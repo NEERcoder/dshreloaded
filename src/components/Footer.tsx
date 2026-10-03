@@ -18,7 +18,7 @@ export default function Footer() {
           <div className="lg:col-span-2 max-w-sm">
             <BrandMark className="h-12 w-auto block mb-4" />
             <p className="text-sm text-ink-500 leading-relaxed">
-              A student-powered platform for discovering Delhi University, learning from seniors
+              A student-powered platform for discovering your college, learning from seniors
               and finding opportunities that help you move forward.
             </p>
           </div>

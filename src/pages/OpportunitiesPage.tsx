@@ -23,7 +23,7 @@ const CATEGORY_FILTERS: CategoryFilter[] = [
     icon: "briefcase",
     eyebrow: "INTERNSHIPS",
     title: "Find experience worth applying for.",
-    subtitle: "Verified industry and startup roles for Delhi University undergraduates.",
+    subtitle: "Verified industry and startup roles for students across India.",
   },
   {
     param: "competitions",
@@ -67,7 +67,7 @@ const ALL_CATEGORIES: OpportunityRecord["category"][] = [
 const DEFAULT_VOICE = {
   eyebrow: "OPPORTUNITY RADAR",
   title: "Find Things Worth Applying For.",
-  subtitle: "Verified internships, hackathons, research fellowships, and credentials for DU students.",
+  subtitle: "Verified internships, hackathons, research fellowships, and credentials for students.",
 };
 
 export default function OpportunitiesPage({ categoryId }: { categoryId?: string }) {
@@ -77,7 +77,7 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
   return (
     <PageShell
       title={activeFilter ? `${activeFilter.label} | Opportunity Radar | JAVLIN` : "Find Opportunities | JAVLIN"}
-      description="Find verified science internships, hackathons, research fellowships and certifications for DU students."
+      description="Find verified internships, hackathons, research fellowships and certifications for students across India."
       backgroundPreset="opportunities"
     >
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-8 pb-8 sm:pt-12 sm:pb-10">

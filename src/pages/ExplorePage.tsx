@@ -93,7 +93,7 @@ function CollegeCard({ college }: { college: CollegeRecord }) {
                 {college.name}
               </h3>
               <p className="text-xs text-ink-500 truncate mt-0.5">
-                {[college.campus, college.location].filter(Boolean).join(" · ") || "Delhi University"}
+                {[college.campus, college.location].filter(Boolean).join(" · ") || "Campus not listed"}
               </p>
             </div>
           </div>
@@ -160,12 +160,12 @@ function MentorCarousel({ mentors }: { mentors: MentorRecord[] }) {
                 </div>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-ink-600 line-clamp-3">
-                {mentor.bio || "DU senior mentor sharing authentic academic and campus insights."}
+                {mentor.bio || "Senior mentor sharing authentic academic and campus insights."}
               </p>
             </div>
             <div className="mt-4 border-t border-surface-border pt-3">
               <p className="text-xs font-semibold text-brand-blue truncate">
-                {[mentor.college, mentor.course, mentor.year].filter(Boolean).join(" · ") || "DU Community"}
+                {[mentor.college, mentor.course, mentor.year].filter(Boolean).join(" · ") || "JAVLIN Community"}
               </p>
               {mentor.expertise && (
                 <p className="mt-1 text-[11px] text-ink-500 font-medium truncate">
@@ -234,7 +234,7 @@ function VideoDiscovery({
             <div className="p-4 sm:p-5">
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-brand-red-soft px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-red-ink">
-                  {videoCategoryMap[featuredVideo.category] || "DU Unfiltered"}
+                  {videoCategoryMap[featuredVideo.category] || "Campus Unfiltered"}
                 </span>
                 {featuredVideo.college && (
                   <span className="text-xs font-semibold text-ink-500">
@@ -272,7 +272,7 @@ function VideoDiscovery({
                       {thumb ? (
                         <img src={thumb} alt={video.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center text-white text-xs font-bold">DU Story</div>
+                        <div className="h-full w-full flex items-center justify-center text-white text-xs font-bold">Campus Story</div>
                       )}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10">
                         <span className="h-7 w-7 rounded-full bg-white/90 text-brand-red-ink flex items-center justify-center shadow-sm">
@@ -285,7 +285,7 @@ function VideoDiscovery({
                         {video.title}
                       </h4>
                       <p className="mt-1 text-[11px] text-ink-500 truncate">
-                        {video.college || "Delhi University"}
+                        {video.college || "Campus story"}
                       </p>
                     </div>
                   </a>
@@ -386,7 +386,7 @@ function WriteReviewModal({
             >
               {colleges.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} ({c.campus || "DU"})
+                  {c.name} ({c.campus || "Campus"})
                 </option>
               ))}
             </select>
@@ -567,20 +567,20 @@ export default function ExplorePage() {
 
   return (
     <PageShell
-      title="Explore Delhi University | JAVLIN"
-      description="Explore Delhi University colleges, courses, campus experiences and student perspectives with JAVLIN."
+      title="Explore Colleges | JAVLIN"
+      description="Explore colleges, courses, campus experiences and student perspectives with JAVLIN."
       backgroundPreset="explore"
     >
       {/* 1. EDITORIAL HEADER & 4 PRIMARY PATHWAYS */}
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-8 pb-10 sm:pt-16 sm:pb-20">
         <div className="container-px max-w-7xl mx-auto">
           <div className="max-w-3xl">
-            <p className="eyebrow">EXPLORE DU</p>
+            <p className="eyebrow">COLLEGE DIRECTORY</p>
             <h1 className="mt-3 font-display text-[1.875rem] sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
               Explore Colleges & Student Reviews.
             </h1>
             <p className="mt-4 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium">
-              Explore all 91 Delhi University institutions, read verified perspectives, watch real campus stories, and connect with mentors.
+              Explore colleges across India, read verified perspectives, watch real campus stories, and connect with mentors.
             </p>
           </div>
 
@@ -594,13 +594,13 @@ export default function ExplorePage() {
               >
                 <div>
                   <span className="chip chip-brand">
-                    DU COLLEGES
+                    COLLEGES
                   </span>
                   <h2 className="mt-3 font-display text-lg sm:text-xl font-extrabold text-ink-900 group-hover:text-brand-blue transition-colors">
                     Explore Colleges
                   </h2>
                   <p className="mt-2 text-sm text-ink-500 leading-relaxed">
-                    91 DU colleges at a glance. Campus locations, courses and cutoffs.
+                    Every college at a glance. Campus locations, courses and cutoffs.
                   </p>
                 </div>
                 <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-brand-blue">
@@ -640,7 +640,7 @@ export default function ExplorePage() {
               </div>
             </TiltCard>
 
-            {/* Door 3: DU Unfiltered */}
+            {/* Door 3: Campus Unfiltered */}
             <TiltCard className="h-full">
               <a
                 href="#du-unfiltered"
@@ -648,7 +648,7 @@ export default function ExplorePage() {
               >
                 <div>
                   <span className="chip chip-brand">
-                    DU UNFILTERED
+                    CAMPUS UNFILTERED
                   </span>
                   <h2 className="mt-3 font-display text-lg sm:text-xl font-extrabold text-ink-900 group-hover:text-brand-blue transition-colors">
                     Watch Stories
@@ -768,8 +768,8 @@ export default function ExplorePage() {
         <div className="container-px">
           <SectionHeading
             eyebrow="VERIFIED DIRECTORY"
-            title="Browse 91 DU Colleges"
-            subtitle="Search official Delhi University institutions."
+            title="Browse the college directory"
+            subtitle="Search colleges by name, campus or course."
             description="Verified college records with campus details, academic disciplines, and undergraduate programs."
           />
 
@@ -865,21 +865,21 @@ export default function ExplorePage() {
               <EmptyState title={hasFilters ? "No colleges match those filters" : "Official college records are coming soon"}>
                 {isSupabaseConfigured
                   ? "There are no published college records matching this search yet."
-                  : "The directory interface is ready. Connect the official DU dataset to publish college records without adding unverified information."}
+                  : "The directory interface is ready. Connect the verified college dataset to publish college records without adding unverified information."}
               </EmptyState>
             )}
           </div>
         </div>
       </section>
 
-      {/* 4. DU UNFILTERED MEDIA EXPERIENCE */}
+      {/* 4. CAMPUS UNFILTERED MEDIA EXPERIENCE */}
       <section id="du-unfiltered" className="scroll-mt-24 py-16 sm:py-24 border-b border-surface-border">
         <div className="container-px">
           <SectionHeading
-            eyebrow="DU UNFILTERED"
+            eyebrow="CAMPUS UNFILTERED"
             title="Real student takes. Zero brochure energy."
             subtitle="Campus tours, student interviews, podcasts and honest conversations."
-            description="Watch real student experiences and campus stories from the Delhi University community."
+            description="Watch real student experiences and campus stories from the JAVLIN community."
           />
           <div className="mt-10">
             <VideoDiscovery

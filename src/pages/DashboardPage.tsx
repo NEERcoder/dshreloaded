@@ -14,6 +14,9 @@ import {
   getConnectionSummary,
   setProfileVisibility,
   uploadStudentAvatar,
+  normalizeInstagramHandle,
+  normalizePhoneNumber,
+  instagramProfileUrl,
   type CollegeRecord,
   type ProfileRecord,
   type ProfileInput,
@@ -30,6 +33,10 @@ type FormState = {
   yearOfStudy: string;
   graduationYear: string;
   gender: string;
+  /** Bare handle, no @ and no URL. Public on the profile. */
+  instagramHandle: string;
+  /** Optional and unverified. Visible only to the owner and shared teammates. */
+  phone: string;
 };
 
 const blankForm: FormState = {
@@ -39,7 +46,23 @@ const blankForm: FormState = {
   yearOfStudy: "",
   graduationYear: "",
   gender: "",
+  instagramHandle: "",
+  phone: "",
 };
+
+/** One place to keep the form and the saved profile in step. */
+function formFromProfile(p: ProfileRecord): FormState {
+  return {
+    fullName: p.fullName,
+    collegeId: p.collegeId,
+    course: p.course,
+    yearOfStudy: p.yearOfStudy ? String(p.yearOfStudy) : "",
+    graduationYear: p.graduationYear ? String(p.graduationYear) : "",
+    gender: p.gender,
+    instagramHandle: p.instagramHandle ?? "",
+    phone: p.phone ?? "",
+  };
+}
 
 function yearLabel(y: number): string {
   const suffix = y === 1 ? "st" : y === 2 ? "nd" : y === 3 ? "rd" : "th";
@@ -106,14 +129,7 @@ export default function DashboardPage() {
     } else if (profileResult.data) {
       const p = profileResult.data;
       setProfile(p);
-      setForm({
-        fullName: p.fullName,
-        collegeId: p.collegeId,
-        course: p.course,
-        yearOfStudy: p.yearOfStudy ? String(p.yearOfStudy) : "",
-        graduationYear: p.graduationYear ? String(p.graduationYear) : "",
-        gender: p.gender,
-      });
+      setForm(formFromProfile(p));
       setEditing(false);
     } else {
       // No profile row yet — most likely the profile-creation step during
@@ -148,6 +164,13 @@ export default function DashboardPage() {
     }
 
     if (!form.gender) return "Please select a gender.";
+
+    if (form.instagramHandle.trim() && !normalizeInstagramHandle(form.instagramHandle)) {
+      return "Instagram should be just your username, like neer_singh — no @ and no link.";
+    }
+    if (form.phone.trim() && !normalizePhoneNumber(form.phone)) {
+      return "Enter a valid phone number, or leave it blank.";
+    }
     return null;
   }
 
@@ -173,6 +196,8 @@ export default function DashboardPage() {
       yearOfStudy: Number(form.yearOfStudy),
       graduationYear: Number(form.graduationYear),
       gender: form.gender,
+      instagramHandle: form.instagramHandle,
+      phone: form.phone,
     };
 
     const result = profile ? await updateProfile(input) : await createProfile(input);
@@ -193,14 +218,7 @@ export default function DashboardPage() {
 
   function startEdit() {
     if (profile) {
-      setForm({
-        fullName: profile.fullName,
-        collegeId: profile.collegeId,
-        course: profile.course,
-        yearOfStudy: profile.yearOfStudy ? String(profile.yearOfStudy) : "",
-        graduationYear: profile.graduationYear ? String(profile.graduationYear) : "",
-        gender: profile.gender,
-      });
+      setForm(formFromProfile(profile));
     }
     setSaveError(null);
     setSaveSuccess(false);
@@ -209,14 +227,7 @@ export default function DashboardPage() {
 
   function cancelEdit() {
     if (!profile) return; // nothing to cancel back to — profile must be created first
-    setForm({
-      fullName: profile.fullName,
-      collegeId: profile.collegeId,
-      course: profile.course,
-      yearOfStudy: profile.yearOfStudy ? String(profile.yearOfStudy) : "",
-      graduationYear: profile.graduationYear ? String(profile.graduationYear) : "",
-      gender: profile.gender,
-    });
+    setForm(formFromProfile(profile));
     setSaveError(null);
     setEditing(false);
   }
@@ -437,6 +448,58 @@ export default function DashboardPage() {
                     ))}
                   </select>
                 </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="field-label" htmlFor="dash-instagram">
+                      Instagram <span className="font-medium normal-case text-ink-500">(optional)</span>
+                    </label>
+                    <div className="relative">
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-ink-500"
+                      >
+                        @
+                      </span>
+                      <input
+                        id="dash-instagram"
+                        type="text"
+                        autoComplete="off"
+                        spellCheck={false}
+                        maxLength={30}
+                        disabled={saving}
+                        value={form.instagramHandle}
+                        onChange={(e) => setForm({ ...form, instagramHandle: e.target.value.replace(/^@+/, "") })}
+                        className="field-input pl-7 disabled:opacity-60 disabled:cursor-not-allowed"
+                        placeholder="neer_singh"
+                      />
+                    </div>
+                    <p className="mt-1 text-[11px] font-semibold text-ink-500">
+                      Username only — this appears on your public profile.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="field-label" htmlFor="dash-phone">
+                      Phone <span className="font-medium normal-case text-ink-500">(optional)</span>
+                    </label>
+                    <input
+                      id="dash-phone"
+                      type="tel"
+                      autoComplete="tel"
+                      inputMode="tel"
+                      maxLength={20}
+                      disabled={saving}
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                      placeholder="+91 98765 43210"
+                    />
+                    <p className="mt-1 text-[11px] font-semibold text-ink-500">
+                      Never verified and never public — only teammates on a shared team can see it.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-6 flex gap-2">
@@ -505,6 +568,33 @@ export default function DashboardPage() {
                 <div>
                   <dt className="field-label">Gender</dt>
                   <dd className="mt-1 text-sm font-semibold text-ink-900">{profile.gender}</dd>
+                </div>
+                <div>
+                  <dt className="field-label">Instagram</dt>
+                  <dd className="mt-1 text-sm font-semibold text-ink-900">
+                    {profile.instagramHandle ? (
+                      <a
+                        href={instagramProfileUrl(profile.instagramHandle) ?? "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark"
+                      >
+                        @{profile.instagramHandle}
+                        <Icon name="external" className="h-3.5 w-3.5" />
+                      </a>
+                    ) : (
+                      "Not added"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="field-label">Phone</dt>
+                  <dd className="mt-1 text-sm font-semibold text-ink-900">
+                    {profile.phone || "Not added"}
+                    <span className="mt-0.5 block text-[11px] font-semibold text-ink-500">
+                      Visible only to you and students on a team with you.
+                    </span>
+                  </dd>
                 </div>
               </dl>
 

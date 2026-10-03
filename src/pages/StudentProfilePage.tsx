@@ -16,6 +16,7 @@ import {
   getStudentLevel,
   getStudentProfile,
   getStudentRecords,
+  instagramProfileUrl,
   type ConnectionRef,
   type StudentProfileRecord,
   type StudentRecord,
@@ -273,6 +274,25 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
               </dd>
             </div>
           </dl>
+
+          {student.instagramHandle && (
+            <div className="mt-5 flex items-center gap-2 border-t border-surface-border pt-4">
+              <span className="icon-well h-8 w-8">
+                <Icon name="instagram" className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">Instagram</p>
+                <a
+                  href={instagramProfileUrl(student.instagramHandle) ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold text-brand-blue hover:text-brand-blue-dark"
+                >
+                  @{student.instagramHandle}
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* MARK — RLS already limits this to public records of a public profile. */}

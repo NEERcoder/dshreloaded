@@ -1,5 +1,5 @@
 export const heroPhrases = [
-  "Delhi University",
+  "Your Campus",
   "Competitions",
   "Internships",
   "Certifications",

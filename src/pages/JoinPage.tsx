@@ -28,7 +28,7 @@ function JoinIntro({ openRoleCount }: { openRoleCount: number | null }) {
           </h1>
           <p className="mt-4 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium">
             We're building the student platform we wish existed — and the team behind it is students
-            helping Delhi University discover real information, authentic campus perspectives, and
+            helping students discover real information, authentic campus perspectives, and
             career-defining opportunities.
           </p>
         </div>
@@ -265,7 +265,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
   }
 
   return (
-    <PageShell title="Join JAVLIN | Build DU With Us" backgroundPreset="team">
+    <PageShell title="Join JAVLIN | Build It With Us" backgroundPreset="team">
       {/* 1. TWO VERY CLEAR PATHWAYS */}
       <JoinIntro openRoleCount={rolesLoading ? null : openRoleCount} />
 
