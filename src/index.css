@@ -820,14 +820,29 @@
     100% { box-shadow: 0 0 0 0 rgba(255, 122, 48, 0); }
   }
 
-  .reveal {
+  /* Reveal travel and duration are tokens rather than literals so the mobile
+     media query can shorten the movement without the two reveal classes drifting
+     apart. Desktop travels 22px over 420ms; mobile 14px over 300ms. */
+  .reveal,
+  .reveal-stagger {
+    --reveal-shift: 22px;
+    --reveal-duration: 420ms;
     opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transform: translateY(var(--reveal-shift));
+    transition: opacity var(--reveal-duration) ease-out,
+      transform var(--reveal-duration) ease-out;
   }
-  .reveal.is-visible {
+  .reveal.is-visible,
+  .reveal-stagger.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+  @media (max-width: 640px) {
+    .reveal,
+    .reveal-stagger {
+      --reveal-shift: 14px;
+      --reveal-duration: 300ms;
+    }
   }
 
   /* Subtle accent line separator */
@@ -954,17 +969,11 @@
 
 /* ============================================================
    MOTION PASS — Stagger Reveal (scroll-driven)
+   Defined with .reveal in the components layer so both share the
+   --reveal-shift / --reveal-duration tokens and the mobile override.
+   Keeping a second copy here would win the cascade and silently
+   undo that.
    ============================================================ */
-.reveal-stagger {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.reveal-stagger.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* ============================================================
    MOTION PASS — Phrase Exit Animation
@@ -1037,6 +1046,22 @@
 .drawer-link.is-visible {
   opacity: 1;
   transform: translateX(0);
+}
+
+/* ============================================================
+   NO-SCRIPT SAFETY NET
+   Every rule above that starts at opacity: 0 is only ever undone
+   by JavaScript adding `is-visible`. If scripts never run — blocked,
+   crashed, or a bot that does not execute JS — the page must still
+   show its content. Content beats animation.
+   ============================================================ */
+@media (scripting: none) {
+  .reveal,
+  .reveal-stagger,
+  .drawer-link {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* ============================================================

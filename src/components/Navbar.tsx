@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
-import BrandMark from "./BrandMark";
 import CollegeSearch from "./CollegeSearch";
 import MobileMenu from "./MobileMenu";
 import NotificationBell from "./NotificationBell";
@@ -46,28 +45,35 @@ export default function Navbar() {
         }`}
       >
         <nav
-          className="container-px flex items-center gap-2 h-16 sm:h-20"
+          className="container-px flex items-center gap-1 h-16 sm:h-20 sm:gap-2"
           aria-label="Primary"
         >
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* LEFT — the drawer handle and a plain home affordance. The JAVLIN
+              wordmark stays in the drawer, the hero and the footer, which are
+              the branding positions; here it competed with navigation. */}
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
+              aria-label="Open navigation"
               aria-expanded={menuOpen}
               className="nav-control inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl p-2.5 text-ink-900 transition-colors hover:bg-brand-blue-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
             >
               <Icon name="menu" className="h-6 w-6" />
             </button>
-            <Link href="/" aria-label="JAVLIN home" className="hidden sm:inline-flex">
-              <BrandMark className="h-6 w-auto" />
+            <Link
+              href="/"
+              aria-label="Home"
+              className="nav-control inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl p-2.5 text-ink-900 transition-colors hover:bg-brand-blue-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+            >
+              <Icon name="home" className="h-6 w-6" />
             </Link>
           </div>
 
-          <CollegeSearch />
-
-          <div className="shrink-0">
-            <NotificationBell className="px-1.5" />
+          {/* CENTER — the compact college search, with the bell beside it. */}
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:gap-1.5">
+            <CollegeSearch />
+            <NotificationBell className="shrink-0 px-1" />
           </div>
         </nav>
       </header>

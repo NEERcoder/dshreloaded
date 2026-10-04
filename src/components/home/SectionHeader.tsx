@@ -1,5 +1,6 @@
 import Icon from "../Icon";
 import { Link } from "../../lib/router";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 type SectionHeaderProps = {
   eyebrow: string;
@@ -19,8 +20,17 @@ export default function SectionHeader({
   viewAllLabel,
   iconSrc,
 }: SectionHeaderProps) {
+  // Every homepage pillar renders its heading through this component, so the
+  // scroll reveal is wired once here instead of being re-added per section.
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
+
   return (
-    <div className="flex flex-wrap items-end justify-between gap-x-5 gap-y-3">
+    <div
+      ref={ref}
+      className={`reveal flex flex-wrap items-end justify-between gap-x-5 gap-y-3 ${
+        isVisible ? "is-visible" : ""
+      }`}
+    >
       <div className="flex max-w-2xl items-center gap-2.5 sm:gap-4">
         {iconSrc && (
           <span className="icon-well h-11 w-11 shrink-0 p-1.5 sm:h-14 sm:w-14">

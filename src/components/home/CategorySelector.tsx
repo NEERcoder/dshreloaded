@@ -25,9 +25,9 @@ export default function CategorySelector() {
         </h1>
       </div>
 
-      <div className="glass-panel launcher-panel mt-5 animate-fade-up rounded-2xl p-3.5 shadow-soft sm:mt-7 sm:rounded-3xl sm:p-5 lg:p-7" style={{ animationDelay: "80ms" }}>
+      <div className="glass-panel launcher-panel mt-4 animate-fade-up rounded-2xl p-3 shadow-soft sm:mt-5 sm:rounded-3xl sm:p-4 lg:p-5" style={{ animationDelay: "80ms" }}>
         <div className="flex items-center justify-center gap-2">
-          <BrandMark className="h-7 w-auto sm:h-8" />
+          <BrandMark className="h-6 w-auto sm:h-7" />
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/60">
             Six areas, one campus
           </p>
@@ -35,7 +35,7 @@ export default function CategorySelector() {
 
         {/* Mobile: all six areas in one 3x2 grid so the launcher and Trending share
             the first viewport. Desktop keeps the single six-across row. */}
-        <div className="mt-3.5 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-3 lg:grid-cols-6 lg:gap-4">
+        <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:gap-2.5 lg:grid-cols-6 lg:gap-3">
           {JAVLIN_CATEGORIES.map((category, index) => (
             <CategoryCard key={category.id} category={category} index={index} />
           ))}

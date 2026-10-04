@@ -21,7 +21,7 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
       style={{ animationDelay: `${index * 60}ms` }}
       aria-label={`${category.label} — ${category.description}`}
     >
-      <span className="cat-tile__well w-full px-1.5 py-1.5 sm:px-2 sm:py-2.5">
+      <span className="cat-tile__well w-full p-1 sm:px-2 sm:py-2">
         <img
           src={category.iconSrc}
           alt=""
@@ -29,18 +29,20 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
           height={668}
           loading="eager"
           decoding="async"
-          className="h-[3.25rem] w-[3.25rem] object-contain mix-blend-multiply transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06] sm:h-16 sm:w-16 lg:h-[5.5rem] lg:w-[5.5rem]"
+          className="h-10 w-10 object-contain mix-blend-multiply transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:scale-[1.06] sm:h-12 sm:w-12 lg:h-14 lg:w-14"
         />
       </span>
 
-      <span className="cat-tile__label mt-1.5 gap-0.5 uppercase tracking-[0.12em] sm:mt-3">
+      <span className="cat-tile__label mt-1 gap-0.5 uppercase tracking-[0.12em] sm:mt-1.5">
         <span className="truncate">{category.label}</span>
         <Icon
           name="arrow"
-          className="h-3 w-3 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:h-3.5 sm:w-3.5"
+          className="h-3 w-3 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:h-3 sm:w-3"
         />
       </span>
-      <span className="mt-1 hidden text-xs font-medium leading-snug text-ink-500 sm:block">
+      {/* Clamped so a long description cannot stretch one tile past its
+          neighbours and push the launcher out of the first viewport. */}
+      <span className="mt-0.5 hidden text-[11px] font-medium leading-tight text-ink-500 line-clamp-2 sm:block">
         {category.description}
       </span>
     </Link>

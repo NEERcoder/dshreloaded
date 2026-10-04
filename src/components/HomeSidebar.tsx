@@ -2,13 +2,42 @@ import Icon from "./Icon";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 
+type RailItem = {
+  href: string;
+  label: string;
+  icon: string;
+  /** Only meaningful once a student exists; hidden for visitors. */
+  requiresUser?: boolean;
+  /** Match the whole subtree, not just the exact path. */
+  exact?: boolean;
+};
+
 /**
- * The account rail that sits open beside the homepage on large screens.
+ * Destinations that already exist — every href here resolves to a real route.
+ * "Jobs" lands on AIM because AIM is the jobs/internships/certifications
+ * discovery page, and /opportunities only has the four category filters
+ * declared in lib/opportunityRoute.ts.
+ */
+const RAIL_ITEMS: RailItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: "grid", requiresUser: true },
+  { href: "/circle", label: "Profile", icon: "user", requiresUser: true },
+  { href: "/circle/connections", label: "Connections", icon: "link", requiresUser: true },
+  { href: "/aim", label: "Jobs", icon: "briefcase" },
+  { href: "/opportunities/internships", label: "Internships", icon: "target" },
+  { href: "/opportunities/competitions", label: "Competitions", icon: "trophy" },
+  { href: "/crew", label: "Teams", icon: "users" },
+  { href: "/mark", label: "Your Records", icon: "award", requiresUser: true },
+  { href: "/pulse", label: "PULSE News", icon: "presentation" },
+  { href: "/join", label: "Work With Us", icon: "send" },
+];
+
+/**
+ * The account rail that stays open beside the homepage on large screens.
  *
- * Deliberately half the drawer's width and icon-led, so it reads as a rail
- * rather than a second content column. It reuses the same destinations as
- * MobileMenu — the drawer stays the mobile pattern and this never appears
- * below lg, so the two can't compete for the same viewport.
+ * Sized to 208px and 38px rows so all eleven entries fit one 1280x720 frame
+ * without the rail ever scrolling inside itself. It is `lg`-only on purpose:
+ * phones and tablets keep the drawer, which is the pattern that already fits
+ * them, and a 38px row would be under the 44px mobile touch minimum.
  */
 export default function HomeSidebar() {
   const { path, navigate } = useLocation();
@@ -19,63 +48,60 @@ export default function HomeSidebar() {
     navigate("/");
   }
 
+  const isActive = (href: string) => path === href || path.startsWith(href + "/");
+
   const itemClass = (href: string) =>
-    `flex min-h-[44px] items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
-      path === href || (href !== "/" && path.startsWith(href + "/"))
-        ? "bg-brand-blue text-white"
-        : "text-white/80 hover:bg-white/10 hover:text-white"
+    `flex min-h-[38px] items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
+      isActive(href) ? "bg-brand-blue text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
     }`;
+
+  const visibleItems = RAIL_ITEMS.filter((item) => !item.requiresUser || user);
 
   return (
     <aside
-      aria-label="JAVLIN account menu"
-      className="home-rail hidden w-52 shrink-0 self-start lg:sticky lg:top-20 lg:mt-24 lg:flex lg:flex-col lg:gap-1 lg:rounded-2xl lg:p-3"
+      aria-label="JAVLIN sections"
+      className="home-rail hidden w-52 shrink-0 self-start lg:sticky lg:top-20 lg:mt-20 lg:flex lg:flex-col lg:gap-0.5 lg:rounded-2xl lg:p-2.5"
     >
-      <p className="px-3 pb-1 pt-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/45">
-        {authLoading ? "Account" : user ? "Your JAVLIN" : "Get started"}
+      <p className="px-2.5 pb-1.5 pt-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/45">
+        {authLoading ? "JAVLIN" : user ? "Your JAVLIN" : "Explore"}
       </p>
 
-      {!authLoading && user ? (
-        <>
-          <Link href="/dashboard" className={itemClass("/dashboard")}>
-            <Icon name="grid" className="h-4 w-4 shrink-0" />
-            Dashboard
-          </Link>
-          <Link href={`/circle/${user.id}`} className={itemClass("/circle")}>
-            <Icon name="user" className="h-4 w-4 shrink-0" />
-            Profile
-          </Link>
-          <Link href="/circle/connections" className={itemClass("/circle/connections")}>
-            <Icon name="link" className="h-4 w-4 shrink-0" />
-            Connections
-          </Link>
-          <Link href="/join" className={itemClass("/join")}>
-            <Icon name="users" className="h-4 w-4 shrink-0" />
-            Join JAVLIN
-          </Link>
+      <nav aria-label="Homepage sections">
+        <ul className="flex flex-col gap-0.5">
+          {visibleItems.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.label === "Profile" && user ? `/circle/${user.id}` : item.href}
+                className={itemClass(item.href)}
+              >
+                <Icon name={item.icon} className="h-4 w-4 shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="mt-1.5 border-t border-white/10 pt-1.5">
+        {!authLoading && user ? (
           <button
             type="button"
             onClick={handleSignOut}
-            className="mt-1 flex min-h-[44px] items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-bold text-white/65 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+            className="flex min-h-[38px] w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none text-white/65 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
           >
             <Icon name="logout" className="h-4 w-4 shrink-0" />
             Sign Out
           </button>
-        </>
-      ) : (
-        <>
-          <Link href="/join" className={itemClass("/join")}>
-            <Icon name="users" className="h-4 w-4 shrink-0" />
-            Join JAVLIN
+        ) : (
+          <Link
+            href="/login"
+            className="flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-2.5 text-[12.5px] font-black leading-none text-brand-navy transition-transform hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <Icon name="user" className="h-4 w-4 shrink-0" />
+            Sign In
           </Link>
-          {!authLoading && (
-            <Link href="/login" className="btn-accent mt-1 w-full justify-center px-3 text-[13px]">
-              <Icon name="user" className="h-4 w-4 shrink-0" />
-              Sign In
-            </Link>
-          )}
-        </>
-      )}
+        )}
+      </div>
     </aside>
   );
 }

@@ -146,7 +146,7 @@ export default function CollegeSearch({ className = "" }: { className?: string }
   return (
     <div
       ref={containerRef}
-      className={`relative min-w-0 max-w-[360px] flex-1 ${className}`}
+      className={`relative min-w-0 max-w-[168px] flex-1 sm:max-w-[240px] lg:max-w-[300px] ${className}`}
       onBlur={handleFocusOut}
     >
       <div className="relative flex w-full items-center">
