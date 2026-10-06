@@ -155,8 +155,8 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
           </div>
           <div {...stagger(!authLoading && user ? 5 : 3)}>
             <Link href="/join" onClick={onClose} className={itemClass("/join")}>
-              <Icon name="users" className="h-5 w-5 shrink-0" />
-              Join JAVLIN
+              <Icon name="handshake" className="h-5 w-5 shrink-0" />
+              Collaborate With Us
             </Link>
           </div>
 

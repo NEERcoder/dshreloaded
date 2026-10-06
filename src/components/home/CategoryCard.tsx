@@ -40,9 +40,11 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
           className="h-3 w-3 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:h-3 sm:w-3"
         />
       </span>
-      {/* Clamped so a long description cannot stretch one tile past its
-          neighbours and push the launcher out of the first viewport. */}
-      <span className="mt-0.5 hidden text-[11px] font-medium leading-tight text-ink-500 line-clamp-2 sm:block">
+      {/* Unclamped on purpose. The launcher's mobile tiles are ~100px wide, so
+          "Certificates • Internships • Jobs" needs three lines — clamping here
+          would cut the copy in half, and grid rows auto-size to the tallest
+          tile, so every tile in the row still ends at the same height. */}
+      <span className="mt-0.5 block text-[10px] font-medium leading-[1.25] text-ink-500 sm:text-[11px]">
         {category.description}
       </span>
     </Link>

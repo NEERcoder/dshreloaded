@@ -6,6 +6,11 @@ export type JavlinCategory = {
   /** Existing route — the selector links to the pages, it never duplicates them. */
   href: string;
   iconSrc: string;
+  /**
+   * What the area actually holds. This one string feeds the desktop launcher,
+   * the mobile 3x2 launcher and every aria-label, so the wording can never
+   * drift between the two layouts.
+   */
   description: string;
 };
 
@@ -15,42 +20,42 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     label: "AIM",
     href: "/aim",
     iconSrc: "/categories/aim.png",
-    description: "Goals, careers & direction",
+    description: "Certificates • Internships • Jobs",
   },
   {
     id: "field",
     label: "FIELD",
     href: "/field",
     iconSrc: "/categories/field.png",
-    description: "Opportunities & real-world experience",
+    description: "Competitions",
   },
   {
     id: "crew",
     label: "CREW",
     href: "/crew",
     iconSrc: "/categories/crew.png",
-    description: "Teams, clubs & collaboration",
+    description: "Teams",
   },
   {
     id: "circle",
     label: "CIRCLE",
     href: "/circle",
     iconSrc: "/categories/circle.png",
-    description: "Find and connect with students",
+    description: "Connections",
   },
   {
     id: "mark",
     label: "MARK",
     href: "/mark",
     iconSrc: "/categories/mark.png",
-    description: "Achievements & your student record",
+    description: "Record Your College Life",
   },
   {
     id: "pulse",
     label: "PULSE",
     href: "/pulse",
     iconSrc: "/categories/pulse.png",
-    description: "What's happening around you",
+    description: "News",
   },
 ];
 

@@ -28,7 +28,9 @@ const RAIL_ITEMS: RailItem[] = [
   { href: "/crew", label: "Teams", icon: "users" },
   { href: "/mark", label: "Your Records", icon: "award", requiresUser: true },
   { href: "/pulse", label: "PULSE News", icon: "presentation" },
-  { href: "/join", label: "Work With Us", icon: "send" },
+  // /join already carries the collaboration experience, so this row keeps one
+  // destination and takes the stronger label rather than adding a twin link.
+  { href: "/join", label: "Collaborate With Us", icon: "handshake" },
 ];
 
 /**
@@ -95,7 +97,7 @@ export default function HomeSidebar() {
         ) : (
           <Link
             href="/login"
-            className="flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-2.5 text-[12.5px] font-black leading-none text-brand-navy transition-transform hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-brand-red px-2.5 text-[12.5px] font-black leading-none text-brand-navy transition-transform hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <Icon name="user" className="h-4 w-4 shrink-0" />
             Sign In

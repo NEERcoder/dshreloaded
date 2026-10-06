@@ -142,8 +142,8 @@ function GeneralApplication() {
             <div className="mt-6 space-y-3 text-sm text-ink-600">
               <p className="flex items-center gap-2">
                 <Icon name="check" className="h-4 w-4 shrink-0 text-brand-blue" /> Direct contact:{" "}
-                <a href="mailto:connect@dusciencehub.in" className="font-bold text-brand-blue hover:underline">
-                  connect@dusciencehub.in
+                <a href="mailto:hello@javlin.space" className="font-bold text-brand-blue hover:underline">
+                  hello@javlin.space
                 </a>
               </p>
               <p className="flex items-center gap-2">
@@ -213,6 +213,66 @@ function GeneralApplication() {
   );
 }
 
+const COLLABORATION_KINDS = [
+  "Brand Deals",
+  "Sponsorships",
+  "Events",
+  "Event Collaborations",
+  "Partnerships",
+  "Certification Collaborations",
+  "Campus Collaborations",
+];
+
+/**
+ * Organizations reach JAVLIN through the same page students do, so this sits
+ * inside /join rather than on a route of its own — one destination, two
+ * audiences. `hello@javlin.space` is the only address it offers.
+ */
+function Collaborate() {
+  return (
+    <section id="collaborate" className="scroll-mt-24 py-16 sm:py-20 border-b border-surface-border">
+      <div className="container-px max-w-6xl mx-auto">
+        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="eyebrow">FOR ORGANIZATIONS</p>
+            <h2 className="section-title font-display mt-3">Let's Collaborate</h2>
+            <p className="mt-4 max-w-xl leading-relaxed text-ink-600">
+              For brand deals, sponsorships, events, partnerships, certification listings,
+              campus collaborations and more.
+            </p>
+            <ul className="mt-5 flex flex-wrap gap-2">
+              {COLLABORATION_KINDS.map((kind) => (
+                <li
+                  key={kind}
+                  className="rounded-full border border-surface-border bg-white px-3 py-1.5 text-xs font-bold text-ink-700"
+                >
+                  {kind}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="card w-full p-6 sm:p-8 lg:w-80">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-500">Contact</p>
+            <a
+              href="mailto:hello@javlin.space"
+              className="mt-2 block break-all text-lg font-extrabold text-brand-blue hover:underline"
+            >
+              hello@javlin.space
+            </a>
+            <a href="mailto:hello@javlin.space" className="btn-primary mt-5 w-full justify-center">
+              <Icon name="send" className="h-4 w-4" /> Email Us
+            </a>
+            <p className="mt-3 text-xs text-ink-500">
+              Tell us the audience, the timeline and what you want students to remember.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function JoinPage({ roleId }: { roleId?: string }) {
   const [roleList, setRoleList] = useState<RoleCardData[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
@@ -269,7 +329,10 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
       {/* 1. TWO VERY CLEAR PATHWAYS */}
       <JoinIntro openRoleCount={rolesLoading ? null : openRoleCount} />
 
-      {/* 2. AVAILABLE ROLES (SIMPLE, SCANNABLE FORMAT) */}
+      {/* 2. ORGANIZATIONS — brand deals, sponsorships and campus collaborations */}
+      <Collaborate />
+
+      {/* 3. AVAILABLE ROLES (SIMPLE, SCANNABLE FORMAT) */}
       <section id="open-roles" className="scroll-mt-24 py-16 sm:py-24 border-b border-surface-border">
         <div className="container-px max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

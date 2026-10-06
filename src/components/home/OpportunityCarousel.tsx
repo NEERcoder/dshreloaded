@@ -16,7 +16,7 @@ export default function OpportunityCarousel({ items }: OpportunityCarouselProps)
 
   return (
     <div aria-label="Opportunities">
-      <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 sm:gap-4 lg:hidden">
+      <div className="h-scroll no-scrollbar flex snap-x snap-proximity gap-3 overflow-x-auto overflow-y-hidden pb-1 sm:gap-4 lg:hidden">
         {items.map((item) => (
           <CompactOpportunityCard key={item.id} item={item} imageForward />
         ))}

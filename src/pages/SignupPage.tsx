@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
+import BrandMark from "../components/BrandMark";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
@@ -236,7 +237,8 @@ export default function SignupPage() {
     >
       <section className="container-px py-16 sm:py-24">
         <div className="mx-auto max-w-xl animate-fade-up">
-          <p className="eyebrow">STUDENT ACCOUNT</p>
+          <BrandMark className="h-10 w-auto" />
+          <p className="eyebrow mt-4">STUDENT ACCOUNT</p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
             Create your account.
           </h1>

@@ -1,17 +1,11 @@
-import BrandMark from "../BrandMark";
 import CategoryCard from "./CategoryCard";
 import { JAVLIN_CATEGORIES } from "../../lib/categories";
 
 /**
- * Primary homepage discovery: the six JAVLIN areas as 3D icon cards under a
- * small logo lockup. These replace the six section links that used to sit in
- * the top navigation.
- */
-/**
- * Primary homepage discovery: the six JAVLIN areas as 3D icon cards under a
- * small logo lockup. These replace the six section links that used to sit in
- * the top navigation. The whole lockup sits on one frosted launcher panel so
- * the hero reads as the same design system as the section bands below it.
+ * Primary homepage discovery: the six JAVLIN areas as 3D icon cards under the
+ * final wordmark. These replace the six section links that used to sit in the
+ * top navigation. The whole lockup sits on one frosted launcher panel so the
+ * hero reads as the same design system as the section bands below it.
  */
 export default function CategorySelector() {
   return (
@@ -21,13 +15,22 @@ export default function CategorySelector() {
       <div className="animate-fade-up text-center">
         <p className="hero-eyebrow">What's on the list Today?</p>
         <h1 className="hero-title mt-2 font-display">
-          Shoot your <span className="text-brand-orange">shot.</span>
+          Shoot your <span className="text-brand-red">shot.</span>
         </h1>
       </div>
 
       <div className="glass-panel launcher-panel mt-4 animate-fade-up rounded-2xl p-3 shadow-soft sm:mt-5 sm:rounded-3xl sm:p-4 lg:p-5" style={{ animationDelay: "80ms" }}>
-        <div className="flex items-center justify-center gap-2">
-          <BrandMark className="h-6 w-auto sm:h-7" />
+        <div className="flex items-center justify-center gap-2.5">
+          {/* The approved wordmark carries the same navy as the canvas as its
+              own ground, so `lighten` lets the surface behind it show through
+              untouched instead of framing it in a box. */}
+          <img
+            src="/brand/javlin-wordmark.png"
+            alt="JAVLIN"
+            width={764}
+            height={237}
+            className="h-5 w-auto object-contain mix-blend-lighten sm:h-6"
+          />
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/60">
             Six areas, one place
           </p>

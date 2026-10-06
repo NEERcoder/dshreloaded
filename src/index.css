@@ -523,18 +523,45 @@
      and each section sits inside it as a lit content island, so the
      six pillars stay visually distinct without the page turning into
      six full-bleed slabs. The dots are a single radial-gradient tile
-     — one background paint, no animation loop — which is why the
-     homepage no longer mounts the canvas particle grid at all.
+     on its own layer, which costs one paint and no animation frame
+     beyond the opacity breath below — which is why the homepage still
+     never mounts the canvas particle grid.
      ------------------------------------------------------------ */
   .homepage-canvas {
     background-color: var(--javlin-navy);
+    color: #ffffff;
+    /* The lattice lives on a ::before layer underneath everything, so
+       `isolate` keeps its negative z-index inside this element instead of
+       letting it drop behind the page background. */
+    isolation: isolate;
+  }
+
+  /* Dot radius (1px), colour and grid spacing are exactly what they were.
+     Only the alpha moves, and only between 70% and 100% of it, on a 5.5s
+     cycle — about half the swing an attention-grabbing background would use. */
+  .homepage-canvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
     background-size: 24px 24px;
-    color: #ffffff;
+    animation: javlin-dot-breath 5.5s ease-in-out infinite;
   }
   @media (max-width: 640px) {
-    .homepage-canvas {
+    .homepage-canvas::before {
       background-size: 20px 20px;
+    }
+  }
+  @keyframes javlin-dot-breath {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .homepage-canvas::before {
+      animation: none;
+      opacity: 1;
     }
   }
 
@@ -873,6 +900,33 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* ------------------------------------------------------------
+     CARD RAILS — the homepage's horizontal strips.
+
+     Native touch scrolling, nothing else. Two things used to fight it:
+     `snap-mandatory` on a rail with only two cards, where the second
+     card's snap position sits past the end of the scrollable range, so
+     the browser springs the strip back to zero and the swipe reads as
+     dead; and the gesture carrying on to the page once the rail runs
+     out, which sideways-rubber-bands the whole document. Proximity
+     snapping and `overscroll-behavior-x: contain` fix both.
+
+     The trailing fade is the affordance: without it a rail that has
+     more cards looks like a rail that ends.
+
+     Snapping itself is set with `snap-x snap-proximity` on the element —
+     Tailwind's `snap-x` emits `scroll-snap-type: x var(--tw-scroll-snap-strictness)`,
+     and a utility always outranks this layer, so declaring it here would
+     be overridden rather than applied.
+     ------------------------------------------------------------ */
+  .h-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 0.75rem;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
   }
 }
 
