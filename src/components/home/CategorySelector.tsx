@@ -19,7 +19,7 @@ export default function CategorySelector() {
       {/* The lockup sits on the navy canvas itself, so the headline can be a
           real white display line instead of dark text on frosted glass. */}
       <div className="animate-fade-up text-center">
-        <p className="hero-eyebrow">Welcome to JAVLIN</p>
+        <p className="hero-eyebrow">What's on the list Today?</p>
         <h1 className="hero-title mt-2 font-display">
           Shoot your <span className="text-brand-orange">shot.</span>
         </h1>
@@ -29,7 +29,7 @@ export default function CategorySelector() {
         <div className="flex items-center justify-center gap-2">
           <BrandMark className="h-6 w-auto sm:h-7" />
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/60">
-            Six areas, one campus
+            Six areas, one place
           </p>
         </div>
 
