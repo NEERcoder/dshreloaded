@@ -2,6 +2,7 @@ import Icon from "../Icon";
 import { Link } from "../../lib/router";
 import { CATEGORY_BADGE } from "../opportunities/OpportunityCard";
 import { opportunityHref } from "../../lib/opportunityRoute";
+import { opportunityCategoryIcon } from "../../data/opportunityCategories";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
 function deadlineLabel(deadline: string | null): { text: string; urgent: boolean } | null {
@@ -41,8 +42,17 @@ export default function CompactOpportunityCard({ item, isNew, imageForward = fal
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
-            <span className="flex h-full items-center justify-center text-ink-300">
-              <Icon name="image" className="h-10 w-10" />
+            /* A listing without a poster used to show a small grey picture icon
+               floating in a white void, which read as a broken image. The empty
+               field now carries the section's own accent and the category it
+               belongs to, so it says "no poster yet" instead of "something
+               failed". */
+            <span
+              aria-hidden="true"
+              className="poster-empty flex h-full w-full flex-col items-center justify-center gap-1.5"
+            >
+              <Icon name={opportunityCategoryIcon(item.category)} className="h-9 w-9" />
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">{item.category}</span>
             </span>
           )}
         </div>

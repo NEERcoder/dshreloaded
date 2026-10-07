@@ -33,7 +33,7 @@ export default function AimPreview() {
 
   return (
     <section id="aim" className="band pillar-aim scroll-mt-24">
-      <div className="container-px py-7 sm:py-10 lg:py-12">
+      <div className="container-px py-6 sm:py-8 lg:py-10">
         <SectionHeader
           eyebrow="AIM"
           title="Internships, jobs, certifications"

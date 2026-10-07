@@ -198,7 +198,7 @@ export default function CirclePreview() {
 
   return (
     <section id="circle" className="band pillar-circle scroll-mt-24">
-      <div className="container-px py-7 sm:py-10 lg:py-12">
+      <div className="container-px py-6 sm:py-8 lg:py-10">
         <SectionHeader
           eyebrow="CIRCLE"
           title="Find your people with common interests"
@@ -239,7 +239,7 @@ export default function CirclePreview() {
             />
           ) : (
             <>
-              <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 sm:gap-4 xl:hidden">
+              <div className="h-scroll no-scrollbar flex snap-x snap-proximity gap-3 overflow-x-auto overflow-y-hidden pb-1 sm:gap-4 xl:hidden">
                 {students.map((student) => (
                   <ProfileCard
                     key={student.userId}

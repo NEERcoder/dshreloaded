@@ -42,7 +42,7 @@ export default function PulsePreview() {
 
   return (
     <section id="pulse" className="band pillar-pulse scroll-mt-24">
-      <div className="container-px py-7 sm:py-10 lg:py-12">
+      <div className="container-px py-6 sm:py-8 lg:py-10">
         <SectionHeader
           eyebrow="PULSE"
           title="See what's happening."
@@ -61,7 +61,7 @@ export default function PulsePreview() {
               description="Keep exploring — updates, stories and opportunities land here as they happen."
             />
           ) : (
-            <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
+            <div className="h-scroll flex gap-3 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-proximity sm:gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:overflow-visible">
               {posts.map((post) => (
                 <PulsePostCard key={post.id} post={post} />
               ))}

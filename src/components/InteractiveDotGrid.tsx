@@ -268,7 +268,9 @@ export default function InteractiveDotGrid({
   preset = "home",
 }: InteractiveDotGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const config = PRESET_CONFIGS[preset] || PRESET_CONFIGS.home;
+  // Stable module reference — the effect derives its own config below, so this
+  // must not become a fresh object or the effect would re-run on every render.
+  const presetConfig = PRESET_CONFIGS[preset] || PRESET_CONFIGS.home;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -276,6 +278,26 @@ export default function InteractiveDotGrid({
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // PageShell mounts this as a fixed layer behind real content. At the preset
+    // weight — tuned for the full-bleed /dot-grid page — the drifting particles,
+    // travelling packets and floating glyphs read as noise competing with the
+    // cards on top, which is what makes a sparse page look unfinished rather
+    // than open. Behind content the field keeps the grid and its ripples and
+    // drops everything that moves of its own accord.
+    const config = background
+      ? {
+          ...presetConfig,
+          baseOpacity: presetConfig.baseOpacity * 0.5,
+          accentDotRatio: Math.round(presetConfig.accentDotRatio * 1.8),
+          freeParticlesDesktop: Math.round(presetConfig.freeParticlesDesktop * 0.35),
+          freeParticlesMobile: Math.round(presetConfig.freeParticlesMobile * 0.35),
+          connectionMaxDist: Math.round(presetConfig.connectionMaxDist * 0.82),
+          enablePackets: false,
+          enableGlyphs: false,
+          enableRadarSweep: false,
+        }
+      : presetConfig;
 
     // JAVLIN palettes: light ambient treatment for site-wide backgrounds,
     // dark signature treatment (navy + white dots) reserved for the dot-grid page.
@@ -722,7 +744,13 @@ export default function InteractiveDotGrid({
 
             ctx.beginPath();
             ctx.arc(pkx, pky, 2.0, 0, Math.PI * 2);
-            ctx.fillStyle = pkt.isAccent ? "rgba(${COLORS.accent}, 0.75)" : "rgba(${COLORS.interactive}, 0.75)";
+            // These were double-quoted, so the interpolation never ran and every
+            // packet was filled with the literal string "rgba(${COLORS...})" —
+            // an invalid colour the canvas silently ignores. The travelling
+            // packets have therefore never been visible.
+            ctx.fillStyle = pkt.isAccent
+              ? `rgba(${COLORS.accent}, 0.75)`
+              : `rgba(${COLORS.interactive}, 0.75)`;
             ctx.fill();
           }
         }
@@ -995,7 +1023,7 @@ export default function InteractiveDotGrid({
         window.removeEventListener("touchend", handleTouchEnd);
       }
     };
-  }, [preset, config, background]);
+  }, [preset, background]);
 
   const canvas = (
     <canvas

@@ -233,21 +233,19 @@ export default function OpportunityBrowser({
         </div>
       )}
 
-      <div className="mt-4 card p-4 sm:p-5">
-        <div className="relative">
-          <Icon name="search" className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
+      <div className="filter-bar mt-4 card p-3 sm:p-3.5">
+        <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
+          <Icon name="search" className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={searchPlaceholder}
-            className="field-input pl-11"
+            className="field-input filter-search pl-11"
             aria-label="Search opportunities"
           />
         </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {controls}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        {controls}
+        <div className="flex w-full flex-wrap items-center justify-between gap-2 pt-1">
           <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500" aria-live="polite">
             {loading ? (
               <>

@@ -72,8 +72,9 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-surface-border pt-6 sm:flex-row">
           <p className="text-xs text-ink-500">© {year} JAVLIN</p>
+          <p className="font-display text-xs font-bold italic text-ink-600">Shoot Your Shot.</p>
           <p className="text-xs text-ink-500">Built by students, for students.</p>
         </div>
       </div>

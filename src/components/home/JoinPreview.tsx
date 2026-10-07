@@ -19,7 +19,7 @@ export default function JoinPreview() {
 
   return (
     <section id="join" className="band scroll-mt-24">
-      <div className="container-px py-7 sm:py-10 lg:py-12">
+      <div className="container-px py-6 sm:py-8 lg:py-10">
         <div className="glass-card card-rail flex flex-col items-start justify-between gap-4 p-4 sm:p-6 lg:flex-row lg:items-center lg:gap-5 lg:p-8">
           <div className="flex items-start gap-3 sm:gap-4">
             <span className="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-red-soft text-brand-red-ink">

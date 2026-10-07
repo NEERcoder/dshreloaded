@@ -272,6 +272,25 @@
     letter-spacing: -0.01em;
   }
 
+  /* A listing with no poster should look withheld, not broken. The field takes
+     the surrounding section's own accent — every rail sits inside a
+     .pillar-* scope — so the gap reads as part of the design. The fallbacks
+     cover the one place a card renders outside a pillar: /dot-grid and the
+     opportunity detail page. */
+  .poster-empty {
+    color: var(--accent-ink, #64748b);
+    background:
+      radial-gradient(120% 85% at 50% 0%, var(--accent-soft, #f1f5f9), transparent 72%),
+      repeating-linear-gradient(135deg, rgba(7, 26, 51, 0.035) 0 2px, transparent 2px 12px),
+      var(--javlin-hover-surface, #f8fafc);
+  }
+  .poster-empty > svg {
+    opacity: 0.5;
+  }
+  .poster-empty > span {
+    opacity: 0.62;
+  }
+
   /* ============================================================
      LAUNCHER TILES — the six areas in the hero. One shape, six
      identities: the .pillar-* class sits on the same element, so the
@@ -536,17 +555,21 @@
     isolation: isolate;
   }
 
-  /* Dot radius (1px), colour and grid spacing are exactly what they were.
-     Only the alpha moves, and only between 70% and 100% of it, on a 5.5s
-     cycle — about half the swing an attention-grabbing background would use. */
+  /* Dot radius (1px) and grid spacing are exactly what they were. What changed
+     is the amplitude: the lattice now breathes between 50% and 100% of a
+     slightly brighter alpha, which is a real 2x swing on the navy canvas.
+     The previous 0.7–1.0 band over 0.1 alpha moved by 0.03 — below the
+     threshold anyone can see, which is why the effect read as missing. */
   .homepage-canvas::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
     background-size: 24px 24px;
+    opacity: 1;
+    will-change: opacity;
     animation: javlin-dot-breath 5.5s ease-in-out infinite;
   }
   @media (max-width: 640px) {
@@ -555,25 +578,29 @@
     }
   }
   @keyframes javlin-dot-breath {
-    0%, 100% { opacity: 0.7; }
+    0%, 100% { opacity: 0.5; }
     50% { opacity: 1; }
   }
   @media (prefers-reduced-motion: reduce) {
     .homepage-canvas::before {
       animation: none;
       opacity: 1;
+      will-change: auto;
     }
   }
 
   /* Islands. The container gives up padding to the island margin so the total
      inset stays at the 16px mobile page padding Part 14 settled on. Adjacent
-     island margins collapse, so one value is also the gap between them. */
+     island margins collapse, so one value is also the gap between them.
+     The border and shadow are deliberately lighter than they were: eight
+     identical boxed rectangles stacked down a page is what made the homepage
+     read as cards-in-a-card rather than as sections. */
   .homepage-canvas .band {
     margin-block: 1.25rem;
     margin-inline: 0.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1.125rem;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 1rem;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.14);
     overflow: hidden;
   }
   .homepage-canvas .band > .container-px {
@@ -586,9 +613,9 @@
   }
   @media (min-width: 640px) {
     .homepage-canvas .band {
-      margin-block: 2rem;
+      margin-block: 1.75rem;
       margin-inline: 1.5rem;
-      border-radius: 1.5rem;
+      border-radius: 1.25rem;
     }
     .homepage-canvas .band > .container-px {
       padding-inline: 1.5rem;
@@ -886,7 +913,42 @@
   }
 
   .filter-select {
-    @apply w-full rounded-xl border border-surface-border bg-white px-3.5 py-3 text-sm font-semibold text-ink-700;
+    @apply w-full rounded-xl border border-surface-border bg-white px-3.5 py-3 text-sm font-semibold text-ink-700 transition-colors focus:border-brand-blue focus:outline-none;
+  }
+
+  /* ------------------------------------------------------------
+     FILTER TOOLBAR — AIM, FIELD and /opportunities share this.
+
+     It used to be a full-width slab with three stacked rows: search,
+     then four selects, then a count line. On a page holding one or two
+     listings the controls outweighed the content they filtered, which
+     is most of what made those pages feel unfinished. Same controls,
+     same behaviour — one toolbar, with the count riding on its own
+     line only because it has to stay announced to screen readers.
+     ------------------------------------------------------------ */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .filter-bar .filter-search {
+    margin-top: 0;
+  }
+  .filter-bar > label {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+  }
+  .filter-bar .filter-select {
+    margin-top: 0;
+  }
+  /* Four selects stacked one per row pushed the first listing below the fold
+     on a phone. Two-up keeps every label legible at 320px and brings the
+     content up. */
+  @media (max-width: 359px) {
+    .filter-bar > label {
+      flex-basis: 100%;
+    }
   }
 }
 
@@ -905,28 +967,32 @@
   /* ------------------------------------------------------------
      CARD RAILS — the homepage's horizontal strips.
 
-     Native touch scrolling, nothing else. Two things used to fight it:
-     `snap-mandatory` on a rail with only two cards, where the second
-     card's snap position sits past the end of the scrollable range, so
-     the browser springs the strip back to zero and the swipe reads as
-     dead; and the gesture carrying on to the page once the rail runs
-     out, which sideways-rubber-bands the whole document. Proximity
-     snapping and `overscroll-behavior-x: contain` fix both.
+     Native touch scrolling, nothing else. Three things have fought it:
 
-     The trailing fade is the affordance: without it a rail that has
-     more cards looks like a rail that ends.
+     * `snap-mandatory` on a rail with only two cards, where the second
+       card's snap position sits past the end of the scrollable range, so
+       the browser springs the strip back to zero and the swipe reads as
+       dead. Proximity snapping fixes that.
+     * the gesture carrying on to the page once the rail runs out, which
+       sideways-rubber-bands the whole document. `overscroll-behavior-x:
+       contain` fixes that.
+     * a trailing `mask-image` fade. It looked tidy, but a mask forces the
+       scroller onto a slower compositing path on mobile and, worse, it
+       faded out the very thing that tells someone the rail continues —
+       the edge of the next card. Removed. The peeking card is the
+       affordance now, which is also what the brief asks for.
 
-     Snapping itself is set with `snap-x snap-proximity` on the element —
+     Snapping is set with `snap-x snap-proximity` on the element —
      Tailwind's `snap-x` emits `scroll-snap-type: x var(--tw-scroll-snap-strictness)`,
      and a utility always outranks this layer, so declaring it here would
      be overridden rather than applied.
      ------------------------------------------------------------ */
   .h-scroll {
+    display: flex;
+    flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     scroll-padding-inline: 0.75rem;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
   }
 }
 
