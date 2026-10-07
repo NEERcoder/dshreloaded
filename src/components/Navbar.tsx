@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
 import CollegeSearch from "./CollegeSearch";
+import HomepageAnimation from "./HomepageAnimation";
 import MobileMenu from "./MobileMenu";
 import NotificationBell from "./NotificationBell";
 import { Link } from "../lib/router";
@@ -70,8 +71,10 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* CENTER — the compact college search, with the bell beside it. */}
+          {/* CENTER — the admin animation slot, the compact college search,
+              with the bell beside it. */}
           <div className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:gap-1.5">
+            <HomepageAnimation />
             <CollegeSearch />
             <NotificationBell className="shrink-0 px-1" />
           </div>

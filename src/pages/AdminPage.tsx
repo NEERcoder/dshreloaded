@@ -17,6 +17,11 @@ import {
   getAdminTeamMembers,
   getAdminTeamRoles,
   getAdminPulsePosts,
+  getAdminHomepageAnimations,
+  setActiveHomepageAnimation,
+  setHomepageAnimationEnabled,
+  deleteHomepageAnimation,
+  uploadHomepageAnimation,
   getColleges,
   moderateReview,
   saveOpportunity,
@@ -32,6 +37,7 @@ import {
   type OpportunityInput,
   type OpportunityRecord,
   type PulsePostRecord,
+  type HomepageAnimationRecord,
   type ReviewRecord,
   type MentorRecord,
   type VideoRecord,
@@ -267,7 +273,7 @@ function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => 
   );
 }
 
-type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "pulse" | "team_roles" | "team_members" | "colleges";
+type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "pulse" | "team_roles" | "team_members" | "colleges" | "animations";
 
 function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabType>("opportunities");
@@ -279,10 +285,11 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
   const [pulsePosts, setPulsePosts] = useState<PulsePostRecord[]>([]);
   const [teamRoles, setTeamRoles] = useState<TeamRoleRecord[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMemberRecord[]>([]);
+  const [animations, setAnimations] = useState<HomepageAnimationRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
   async function refresh() {
-    const [colRes, oppRes, revRes, menRes, vidRes, pulseRes, rolRes, memRes] = await Promise.all([
+    const [colRes, oppRes, revRes, menRes, vidRes, pulseRes, rolRes, memRes, animRes] = await Promise.all([
       getColleges(),
       getAdminOpportunities(),
       getAdminReviews(),
@@ -291,6 +298,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
       getAdminPulsePosts(),
       getAdminTeamRoles(),
       getAdminTeamMembers(),
+      getAdminHomepageAnimations(),
     ]);
     setColleges(colRes.data);
     setOpportunities(oppRes.data);
@@ -300,6 +308,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
     setPulsePosts(pulseRes.data);
     setTeamRoles(rolRes.data);
     setTeamMembers(memRes.data);
+    setAnimations(animRes.data);
   }
 
   useEffect(() => {
@@ -339,6 +348,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               { key: "team_roles" as TabType, label: "Team Roles", count: teamRoles.length },
               { key: "team_members" as TabType, label: "Team Members", count: teamMembers.length },
               { key: "colleges" as TabType, label: "College Images", count: colleges.length },
+              { key: "animations" as TabType, label: "Homepage Animation", count: animations.filter((a) => a.enabled).length },
             ].map(({ key, label, count }) => (
               <button
                 key={key}
@@ -412,6 +422,12 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
             {tab === "colleges" && (
               <CollegeImageManager
                 colleges={colleges}
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "animations" && (
+              <HomepageAnimationManager
+                items={animations}
                 onSaved={(msg) => { setMessage(msg); refresh(); }}
               />
             )}
@@ -1392,6 +1408,162 @@ function TeamMemberManager({ members, onSaved }: { members: TeamMemberRecord[]; 
 }
 
 // COLLEGE IMAGE MANAGER
+function HomepageAnimationManager({
+  items,
+  onSaved,
+}: {
+  items: HomepageAnimationRecord[];
+  onSaved: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const active = items.find((item) => item.enabled) || null;
+  const retired = items.filter((item) => !item.enabled);
+
+  async function upload(file: File) {
+    setBusy(true);
+    const result = await uploadHomepageAnimation(file);
+    setBusy(false);
+    if (result.error) {
+      onSaved(result.error);
+      return;
+    }
+    onSaved(`Uploaded "${result.data?.title}". Choose Make live to put it in the header.`);
+  }
+
+  async function makeLive(item: HomepageAnimationRecord) {
+    setBusy(true);
+    const result = await setActiveHomepageAnimation(item.id);
+    setBusy(false);
+    onSaved(result.error || `“${item.title}” is now live in the header.`);
+  }
+
+  async function takeOffline(item: HomepageAnimationRecord) {
+    setBusy(true);
+    const result = await setHomepageAnimationEnabled(item.id, false);
+    setBusy(false);
+    onSaved(result.error || `“${item.title}” is offline. The header shows nothing until you enable another.`);
+  }
+
+  async function remove(item: HomepageAnimationRecord) {
+    if (!window.confirm(`Delete "${item.title}"? The file is removed from storage too.`)) return;
+    setBusy(true);
+    const result = await deleteHomepageAnimation(item.id);
+    setBusy(false);
+    onSaved(result.error || `Deleted "${item.title}".`);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="eyebrow">Homepage Media</p>
+          <h2 className="mt-2 text-2xl font-extrabold text-ink-900">Homepage Animation</h2>
+        </div>
+        <span className="text-sm text-ink-500">{items.length} uploaded</span>
+      </div>
+      <p className="mt-2 text-sm text-ink-500">
+        A small branded animation in front of the college search on the homepage header. One at a time;
+        visitors only ever see the one you leave enabled. GIF, WebP, PNG or JPEG.
+      </p>
+
+      <div className="mt-6 card p-5">
+        <p className="text-xs font-bold uppercase tracking-wider text-ink-500">Currently live</p>
+        {active ? (
+          <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4 min-w-0">
+              <img
+                src={active.fileUrl}
+                alt={active.title}
+                className="h-16 w-24 shrink-0 rounded-lg border border-surface-border bg-surface-soft object-contain"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-bold text-sm text-ink-900">{active.title}</p>
+                <p className="mt-0.5 truncate font-mono text-xs text-ink-500">{active.filePath.split("/").pop()}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Live on the homepage
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <label className={`btn-ghost px-3 py-2 text-xs cursor-pointer ${busy ? "opacity-60 pointer-events-none" : ""}`}>
+                Replace
+                <input
+                  type="file"
+                  accept="image/gif,image/webp,image/png,image/jpeg"
+                  className="sr-only"
+                  disabled={busy}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) upload(file);
+                  }}
+                />
+              </label>
+              <button className="btn-ghost px-3 py-2 text-xs" disabled={busy} onClick={() => takeOffline(active)}>
+                Disable
+              </button>
+              <button className="btn-ghost px-3 py-2 text-xs text-brand-red-ink" disabled={busy} onClick={() => remove(active)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-ink-500">
+              Nothing is live. The header slot hides itself, so the search bar stays where it is.
+            </p>
+            <label className={`btn-primary px-3 py-2 text-xs cursor-pointer shrink-0 ${busy ? "opacity-60 pointer-events-none" : ""}`}>
+              {busy ? "Uploading…" : "Upload GIF"}
+              <input
+                type="file"
+                accept="image/gif,image/webp,image/png,image/jpeg"
+                className="sr-only"
+                disabled={busy}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) upload(file);
+                }}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
+      {retired.length > 0 && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-ink-500">Other uploads</p>
+          {retired.map((item) => (
+            <div key={item.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4 min-w-0">
+                <img
+                  src={item.fileUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-12 w-20 shrink-0 rounded-lg border border-surface-border bg-surface-soft object-contain"
+                />
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-sm text-ink-900">{item.title}</p>
+                  <p className="mt-0.5 truncate font-mono text-xs text-ink-500">{item.filePath.split("/").pop()}</p>
+                  <p className="text-xs text-ink-500">Offline · updated {new Date(item.updatedAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button className="btn-ghost px-3 py-2 text-xs" disabled={busy} onClick={() => makeLive(item)}>
+                  Make live
+                </button>
+                <button className="btn-ghost px-3 py-2 text-xs text-brand-red-ink" disabled={busy} onClick={() => remove(item)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CollegeImageManager({ colleges, onSaved }: { colleges: CollegeRecord[]; onSaved: (msg: string) => void }) {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [localImages, setLocalImages] = useState<Record<string, string>>({});

@@ -2884,3 +2884,174 @@ export async function uploadPulseImage(file: File): Promise<DataResult<string | 
     return failure(null, err);
   }
 }
+
+// ==========================================
+// HOMEPAGE ANIMATION (migration 012)
+// ==========================================
+
+export const HOMEPAGE_ANIMATION_BUCKET = "homepage-animations";
+
+/** Mirrors the extension allowlist the storage INSERT policy enforces. */
+export const HOMEPAGE_ANIMATION_TYPES = ["image/gif", "image/webp", "image/png", "image/jpeg"];
+
+export type HomepageAnimationRecord = {
+  id: string;
+  title: string;
+  /** Storage object key — needed so deleting the row can delete the file. */
+  filePath: string;
+  fileUrl: string;
+  enabled: boolean;
+  updatedAt: string;
+};
+
+function mapHomepageAnimation(row: Record<string, unknown>): HomepageAnimationRecord {
+  return {
+    id: String(row.id),
+    title: String(row.title ?? "Homepage animation"),
+    filePath: String(row.file_path ?? ""),
+    fileUrl: String(row.file_url ?? ""),
+    enabled: row.enabled === true,
+    updatedAt: String(row.updated_at ?? ""),
+  };
+}
+
+// The header asks for this on every mount. One cached result means a
+// re-render cannot turn into a query, and a project that has not applied 012
+// yet caches its single "no animation" answer instead of retrying on every
+// navigation.
+let activeAnimationResult: Promise<DataResult<HomepageAnimationRecord | null>> | null = null;
+
+export function getActiveHomepageAnimation(): Promise<DataResult<HomepageAnimationRecord | null>> {
+  if (!activeAnimationResult) activeAnimationResult = loadActiveHomepageAnimation();
+  return activeAnimationResult;
+}
+
+async function loadActiveHomepageAnimation(): Promise<DataResult<HomepageAnimationRecord | null>> {
+  if (!supabase || !isSupabaseConfigured) return localSuccess(null);
+  try {
+    const result = await supabase
+      .from("homepage_animations")
+      .select("id, title, file_path, file_url, enabled, updated_at")
+      .eq("enabled", true)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    // No table yet, or no enabled row: both mean "show nothing", which is the
+    // documented empty state rather than an error the header should surface.
+    if (result.error) return localSuccess(null);
+    return remoteSuccess(result.data ? mapHomepageAnimation(result.data as Record<string, unknown>) : null);
+  } catch {
+    return localSuccess(null);
+  }
+}
+
+/** Called after any admin change so the header agrees with the database. */
+export function resetHomepageAnimationCache(): void {
+  activeAnimationResult = null;
+}
+
+export async function getAdminHomepageAnimations(): Promise<DataResult<HomepageAnimationRecord[]>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
+  }
+  try {
+    const result = await supabase
+      .from("homepage_animations")
+      .select("id, title, file_path, file_url, enabled, updated_at")
+      .order("updated_at", { ascending: false });
+    if (result.error) return failure([], result.error);
+    return remoteSuccess((result.data || []).map((row) => mapHomepageAnimation(row as Record<string, unknown>)));
+  } catch (err) {
+    return failure([], err);
+  }
+}
+
+/**
+ * Uploads the file and records it as a retired row. Activating is deliberately
+ * a separate step, because the database permits at most one enabled row and a
+ * single client call that both inserted-enabled and disabled-the-previous would
+ * have a window where two are live.
+ */
+export async function uploadHomepageAnimation(
+  file: File,
+  title?: string,
+): Promise<DataResult<HomepageAnimationRecord | null>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(null, new Error("You must be signed in to upload a homepage animation."));
+  if (!supabase) return failure(null, new Error("Supabase is not configured."));
+  if (!HOMEPAGE_ANIMATION_TYPES.includes(file.type)) {
+    return failure(null, new Error("Use a GIF, WebP, PNG or JPEG image."));
+  }
+
+  try {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+    const filePath = `${crypto.randomUUID()}-${safeName}`;
+    const upload = await supabase.storage.from(HOMEPAGE_ANIMATION_BUCKET).upload(filePath, file, {
+      upsert: false,
+      contentType: file.type,
+    });
+    if (upload.error) return failure(null, upload.error);
+
+    const { data: publicData } = supabase.storage.from(HOMEPAGE_ANIMATION_BUCKET).getPublicUrl(filePath);
+    const inserted = await supabase
+      .from("homepage_animations")
+      .insert({
+        title: (title || file.name).slice(0, 120),
+        file_path: filePath,
+        file_url: publicData.publicUrl,
+        enabled: false,
+      })
+      .select("id, title, file_path, file_url, enabled, updated_at")
+      .single();
+    if (inserted.error) {
+      // The row did not land, so the file would be orphaned in the bucket.
+      void supabase.storage.from(HOMEPAGE_ANIMATION_BUCKET).remove([filePath]);
+      return failure(null, inserted.error);
+    }
+    resetHomepageAnimationCache();
+    return remoteSuccess(mapHomepageAnimation(inserted.data as Record<string, unknown>));
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
+export async function setActiveHomepageAnimation(id: string): Promise<DataResult<boolean>> {
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+  const result = await supabase.rpc("set_active_homepage_animation", { p_id: id });
+  if (result.error) return failure(false, result.error);
+  resetHomepageAnimationCache();
+  return remoteSuccess(true);
+}
+
+export async function setHomepageAnimationEnabled(id: string, enabled: boolean): Promise<DataResult<boolean>> {
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+  // Enabling goes through the RPC so the previous row is retired atomically;
+  // turning the live one off is a single-row update.
+  if (enabled) return setActiveHomepageAnimation(id);
+  const result = await supabase.from("homepage_animations").update({ enabled: false }).eq("id", id);
+  if (result.error) return failure(false, result.error);
+  resetHomepageAnimationCache();
+  return remoteSuccess(true);
+}
+
+export async function deleteHomepageAnimation(id: string): Promise<DataResult<boolean>> {
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+  try {
+    const existing = await supabase
+      .from("homepage_animations")
+      .select("file_path")
+      .eq("id", id)
+      .maybeSingle();
+    if (existing.error) return failure(false, existing.error);
+
+    const removed = await supabase.from("homepage_animations").delete().eq("id", id);
+    if (removed.error) return failure(false, removed.error);
+
+    const filePath = existing.data ? String((existing.data as Record<string, unknown>).file_path ?? "") : "";
+    if (filePath) void supabase.storage.from(HOMEPAGE_ANIMATION_BUCKET).remove([filePath]);
+    resetHomepageAnimationCache();
+    return remoteSuccess(true);
+  } catch (err) {
+    return failure(false, err);
+  }
+}
