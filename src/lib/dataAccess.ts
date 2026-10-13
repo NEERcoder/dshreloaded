@@ -3205,19 +3205,42 @@ function openListingFilter(): string {
 }
 
 /**
+ * Whether this project's database has the 013 deadline column, resolved once.
+ *
+ * The homepage issues four opportunity queries in parallel. If every one of them
+ * had to be rejected by PostgREST before falling back, the page would spend
+ * seconds waiting on a failure it already knew was coming — measured at 8.7s to
+ * fill Trending on a project where the migration has not been applied. One probe
+ * answers for all of them, and for the rest of the page load.
+ */
+let deadlineColumnProbe: Promise<boolean> | null = null;
+
+function deadlineColumnAvailable(): Promise<boolean> {
+  if (!supabase || !isSupabaseConfigured) return Promise.resolve(false);
+  if (!deadlineColumnProbe) {
+    // PostgREST builders are thenables rather than promises, so wrap before
+    // chaining — `.catch` does not exist on what they return.
+    deadlineColumnProbe = Promise.resolve(
+      supabase.from("opportunities").select("deadline_effective").limit(1)
+    )
+      .then((result) => !result.error || !/deadline_effective/i.test(result.error.message))
+      .catch(() => false);
+  }
+  return deadlineColumnProbe;
+}
+
+/**
  * Migration 013 adds `deadline_effective`. Until it is applied, filtering on
  * that column fails outright, and the wrong failure mode would be an empty
- * FIELD page. So: try the authoritative filter, and if the column is not there
- * yet, fall back to the pre-013 query and let the client-side
- * `isListingOpen` do the hiding. Once the migration is applied the server
- * filter is what runs, and the fallback never fires.
+ * FIELD page. So: ask the database once whether it can filter, use the
+ * authoritative server-side filter when it can, and let `isListingOpen` do the
+ * hiding when it cannot. The client-side filter runs either way, so an expired
+ * listing is absent from every public feed on both paths.
  */
 async function selectOpenOpportunities(
   run: (extraFilter: string | null) => Promise<{ data: Record<string, unknown>[] | null; error: { message: string; code?: string } | null }>
 ) {
-  const filtered = await run(openListingFilter());
-  if (!filtered.error) return filtered;
-  if (!/deadline_effective|does not exist|column/i.test(filtered.error.message)) return filtered;
+  if (await deadlineColumnAvailable()) return run(openListingFilter());
   return run(null);
 }
 
