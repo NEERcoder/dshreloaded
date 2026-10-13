@@ -31,6 +31,32 @@ export function isSafeExternalUrl(rawUrl: string | null | undefined): boolean {
 }
 
 /**
+ * A WhatsApp click-to-chat link from whatever an admin typed.
+ *
+ * Numbers arrive as "+91 98765 43210", "9876543210" or "098765 43210" and all
+ * have to become bare digits, because wa.me rejects punctuation and a link with
+ * no country code does not resolve. Anything that will not reduce to 10–15
+ * digits returns undefined, so the UI omits the button instead of shipping a
+ * broken one.
+ */
+export function sanitizeWhatsAppUrl(rawNumber: string | null | undefined): string | undefined {
+  if (!rawNumber) return undefined;
+  let digits = rawNumber.replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  if (digits.length < 10 || digits.length > 15) return undefined;
+  return `https://wa.me/${digits}`;
+}
+
+/** A `mailto:` from an address field, or undefined when it is not an address. */
+export function sanitizeMailto(rawEmail: string | null | undefined): string | undefined {
+  if (!rawEmail) return undefined;
+  const trimmed = rawEmail.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmed)) return undefined;
+  return `mailto:${trimmed.toLowerCase()}`;
+}
+
+/**
  * Validates and sanitizes YouTube URLs specifically.
  * Accepts youtube.com/watch?v=..., youtu.be/..., youtube.com/shorts/...
  */

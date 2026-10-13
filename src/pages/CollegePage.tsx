@@ -587,7 +587,7 @@ function CollegeOpportunityCard({ item }: { item: OpportunityRecord }) {
       </Link>
 
       <div className="mt-6 pt-4 border-t border-surface-border">
-        <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
+        <DeadlineProgress deadline={item.deadline} deadlineAt={item.deadlineAt} createdAt={item.createdAt} />
         {safeAppUrl ? (
           <a
             href={safeAppUrl}

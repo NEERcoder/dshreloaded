@@ -9,7 +9,21 @@ import { friendlyAuthError } from "../lib/authErrors";
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
-  const { navigate } = useLocation();
+  const { navigate, search } = useLocation();
+
+  /**
+   * Where to send the student after a successful sign in.
+   *
+   * Registering for a competition needs a session, so the competition page
+   * sends them here with `?next=`. Only a single-slash in-app path is accepted:
+   * `//host` is protocol-relative and `/\host` is normalised to the same thing
+   * by some browsers, so both would turn a login into an open redirect. Anything
+   * else falls back to the dashboard.
+   */
+  const nextPath = (() => {
+    const raw = new URLSearchParams(search).get("next") ?? "";
+    return /^\/[^/\s\\]/.test(raw) ? raw : "/dashboard";
+  })();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,9 +33,9 @@ export default function LoginPage() {
   // Already signed in — no reason to show the login form.
   useEffect(() => {
     if (!loading && user) {
-      navigate("/dashboard", { replace: true });
+      navigate(nextPath, { replace: true });
     }
-  }, [loading, user, navigate]);
+  }, [loading, user, navigate, nextPath]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -52,7 +66,7 @@ export default function LoginPage() {
       // AuthContext's onAuthStateChange listener will pick up the new
       // session; navigate once it does (handled by the effect above),
       // but also navigate directly for a snappier transition.
-      navigate("/dashboard", { replace: true });
+      navigate(nextPath, { replace: true });
     } catch (err) {
       setError(friendlyAuthError(err instanceof Error ? err.message : null));
       setSubmitting(false);

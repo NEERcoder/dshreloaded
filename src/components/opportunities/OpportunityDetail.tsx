@@ -1,30 +1,51 @@
 import { useEffect, useState } from "react";
 import Icon from "../Icon";
 import { Link } from "../../lib/router";
-import { getOpportunityById, type OpportunityRecord } from "../../lib/dataAccess";
-import { sanitizeExternalUrl } from "../../lib/urlSafety";
+import {
+  getCompetitionRegisteredTeamCount,
+  getOpportunityById,
+  type OpportunityRecord,
+} from "../../lib/dataAccess";
+import { sanitizeExternalUrl, sanitizeMailto, sanitizeWhatsAppUrl } from "../../lib/urlSafety";
 import { opportunityCategoryParam } from "../../lib/opportunityRoute";
 import { CATEGORY_BADGE } from "./OpportunityCard";
+import DeadlinePill from "./DeadlinePill";
+import ShareOpportunity from "./ShareOpportunity";
+import CompetitionRegistration from "./CompetitionRegistration";
 import { opportunityCategoryIcon } from "../../data/opportunityCategories";
+import { prizeLabel, teamSizeLabel } from "../../lib/prize";
 
 /**
- * The route body behind /opportunities/:id. Team creation and rosters live on
- * CREW and /teams/:id — a listing page only ever points at them.
+ * The route body behind /opportunities/:id.
+ *
+ * The order below is the order a student reads a competition in: what it is,
+ * who runs it, what it costs them to be eligible, what they win, when it
+ * shuts, who to ask, then the entry itself. Team creation and rosters stay on
+ * CREW and /teams/:id — this page points at them rather than rebuilding them.
  */
 export default function OpportunityDetail({ opportunityId }: { opportunityId: string }) {
   const [opp, setOpp] = useState<OpportunityRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [registeredTeams, setRegisteredTeams] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setErrorMessage(null);
+    setRegisteredTeams(null);
     getOpportunityById(opportunityId).then((res) => {
       if (cancelled) return;
       setOpp(res.data);
       setErrorMessage(res.error);
       setLoading(false);
+      if (res.data && res.data.category === "competition" && res.data.teamFormationEnabled) {
+        getCompetitionRegisteredTeamCount(res.data.id).then((count) => {
+          // A failed count stays null: the page then says the number is
+          // unavailable rather than claiming nobody has entered.
+          if (!cancelled) setRegisteredTeams(count.error ? null : count.data);
+        });
+      }
     });
     return () => {
       cancelled = true;
@@ -58,21 +79,18 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
   }
 
   const safeUrl = sanitizeExternalUrl(opp.applicationUrl);
-  const isTeamCompetition = opp.category === "competition" && opp.teamFormationEnabled;
+  const organizerEmail = sanitizeMailto(opp.organizerEmail);
+  const organizerWhatsapp = sanitizeWhatsAppUrl(opp.organizerWhatsapp);
+  const organizerWebsite = sanitizeExternalUrl(opp.organizerWebsite);
+  const prize = prizeLabel(opp);
+  const teamSize = teamSizeLabel(opp);
+  const rounds = opp.rounds ?? [];
   const categoryParam = opportunityCategoryParam(opp.category);
-  const teamSizeLabel = opp.minTeamSize && opp.maxTeamSize
-    ? `${opp.minTeamSize}–${opp.maxTeamSize} members`
-    : opp.maxTeamSize
-    ? `Up to ${opp.maxTeamSize} members`
-    : opp.minTeamSize
-    ? `Min ${opp.minTeamSize} members`
-    : null;
+  const isCompetition = opp.category === "competition";
 
   const facts: { icon: string; label: string; value: string }[] = [];
-  if (opp.mode) facts.push({ icon: "monitor", label: "Mode", value: opp.mode });
+  // Mode is already a pill above, so repeating it in the grid is noise.
   if (opp.location) facts.push({ icon: "map-pin", label: "Location", value: opp.location });
-  if (opp.deadline) facts.push({ icon: "calendar", label: "Deadline", value: opp.deadline });
-  if (opp.stipend) facts.push({ icon: "wallet", label: "Stipend", value: opp.stipend });
   if (opp.duration) facts.push({ icon: "clock", label: "Duration", value: opp.duration });
   if (opp.field) facts.push({ icon: "target", label: "Field", value: opp.field });
 
@@ -80,6 +98,8 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
 
   return (
     <article>
+      {/* 1. Poster — the detail page keeps the presentation it already had: a
+          fixed band of the original image, not the card's 676:451 crop. */}
       {opp.imageUrl && (
         <div className="h-44 w-full overflow-hidden rounded-t-3xl bg-surface-soft sm:h-52">
           <img src={opp.imageUrl} alt={`${opp.title} poster`} className="h-full w-full object-cover" />
@@ -101,21 +121,38 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
             {opp.category}
           </span>
         )}
+
+        {/* 2–3. Title and organiser */}
         <h1 className="font-display mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight text-ink-900 leading-tight">
           {opp.title}
         </h1>
         <p className="mt-1 text-base font-semibold text-ink-600">{opp.organization}</p>
 
+        {/* 4–6. Mode, prize, deadline — the three things that decide interest */}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <DeadlinePill opportunity={opp} />
+          {prize && (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700">
+              <Icon name="trophy" className="h-3.5 w-3.5" />
+              {prize}
+            </span>
+          )}
+          {opp.mode && (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-600">
+              <Icon name="monitor" className="h-3.5 w-3.5" />
+              {opp.mode}
+            </span>
+          )}
+        </div>
+
         {facts.length > 0 && (
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {facts.map((fact) => (
               <div key={fact.label} className="rounded-xl bg-surface-soft p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-500">
                   <Icon name={fact.icon} className="h-3.5 w-3.5" /> {fact.label}
                 </p>
-                <p className={`mt-1 text-sm font-semibold ${fact.label === "Stipend" ? "text-emerald-700" : "text-ink-800"}`}>
-                  {fact.value}
-                </p>
+                <p className="mt-1 text-sm font-semibold text-ink-800">{fact.value}</p>
               </div>
             ))}
           </div>
@@ -124,10 +161,7 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
         {opp.eligibleCourses.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {opp.eligibleCourses.map((course) => (
-              <span
-                key={course}
-                className="rounded-lg bg-surface-soft px-2.5 py-1 text-[11px] font-bold text-ink-600"
-              >
+              <span key={course} className="rounded-lg bg-surface-soft px-2.5 py-1 text-[11px] font-bold text-ink-600">
                 {course}
               </span>
             ))}
@@ -136,38 +170,107 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
 
         <p className="mt-5 text-sm leading-relaxed text-ink-600">{opp.description}</p>
 
-        {opp.eligibility && (
-          <div className="mt-4 rounded-xl border border-surface-border bg-surface-soft p-4">
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500">
-              <Icon name="info" className="h-3.5 w-3.5" /> Eligibility
-            </p>
-            <p className="mt-1 text-sm text-ink-700">{opp.eligibility}</p>
+        {/* 7. Eligibility */}
+        <div className="mt-4 rounded-xl border border-surface-border bg-surface-soft p-4">
+          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500">
+            <Icon name="info" className="h-3.5 w-3.5" /> Eligibility
+          </p>
+          <p className="mt-1 text-sm text-ink-700">
+            {opp.eligibility?.trim() ? opp.eligibility : "Eligibility not specified by the organiser."}
+          </p>
+        </div>
+
+        {/* 8–9. Team size and how many teams are already in */}
+        {isCompetition && opp.teamFormationEnabled && (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-surface-border p-4">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-500">
+                <Icon name="users" className="h-3.5 w-3.5" /> Team size
+              </p>
+              <p className="mt-1 text-sm font-semibold text-ink-800">
+                {teamSize ?? "Team size not specified"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-surface-border p-4">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-500">
+                <Icon name="trophy" className="h-3.5 w-3.5" /> Registered teams
+              </p>
+              <p className="mt-1 text-sm font-semibold text-ink-800">
+                {registeredTeams === null ? "Not available yet" : `${registeredTeams} registered`}
+              </p>
+            </div>
           </div>
         )}
 
-        {isTeamCompetition && (
-          <div className="mt-6 rounded-xl border border-surface-border p-4">
-            <p className="eyebrow">TEAM COMPETITION</p>
-            <h2 className="mt-2 text-base font-extrabold text-ink-900">This one takes a team</h2>
-            {teamSizeLabel && <p className="mt-1 text-sm text-ink-500">Team size: {teamSizeLabel}</p>}
-            <p className="mt-3 text-sm leading-relaxed text-ink-600">
-              Head to CREW to find a crew short on members for this competition, request to join one, or start your
-              own team.
+        {/* 10. Rounds */}
+        {isCompetition && rounds.length > 0 && (
+          <div className="mt-5 rounded-xl border border-surface-border p-4">
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500">
+              <Icon name="flag" className="h-3.5 w-3.5" /> Rounds ({rounds.length})
             </p>
-            <Link href="/crew" className="btn-outline-blue mt-4 w-full justify-center min-h-[44px] text-sm">
-              Find a team on CREW <Icon name="arrow" className="h-4 w-4" />
-            </Link>
+            <ol className="mt-3 space-y-3">
+              {rounds.map((round, index) => (
+                <li key={round.id} className="flex gap-3">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blue-soft text-[11px] font-extrabold text-brand-blue">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-ink-900">{round.title || `Round ${index + 1}`}</p>
+                    {round.details && <p className="mt-0.5 text-sm leading-relaxed text-ink-600">{round.details}</p>}
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         )}
+
+        {/* 11. Organiser contact — only what was actually provided */}
+        {(organizerEmail || organizerWhatsapp || organizerWebsite) && (
+          <div className="mt-5 rounded-xl border border-surface-border p-4">
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500">
+              <Icon name="handshake" className="h-3.5 w-3.5" /> Ask the organiser
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {organizerEmail && (
+                <a href={organizerEmail} className="btn-outline-blue min-h-[44px] px-4 text-sm">
+                  <Icon name="mail" className="h-4 w-4" /> Email Organizer
+                </a>
+              )}
+              {organizerWhatsapp && (
+                <a href={organizerWhatsapp} target="_blank" rel="noreferrer" className="btn-outline-blue min-h-[44px] px-4 text-sm">
+                  <Icon name="message" className="h-4 w-4" /> WhatsApp Organizer
+                </a>
+              )}
+              {organizerWebsite && (
+                <a href={organizerWebsite} target="_blank" rel="noreferrer" className="btn-ghost min-h-[44px] px-4 text-sm font-bold">
+                  <Icon name="external" className="h-4 w-4" /> Official Website
+                </a>
+              )}
+            </div>
+            <p className="mt-2 text-[11px] text-ink-500">
+              These reach the organiser directly. Registering on JAVLIN and contacting the organiser
+              are separate things.
+            </p>
+          </div>
+        )}
+
+        {/* 12. Share */}
+        <div className="mt-6">
+          <ShareOpportunity opportunityId={opp.id} title={opp.title} organization={opp.organization} />
+        </div>
+
+        {/* 13. Register Now */}
+        <CompetitionRegistration opportunity={opp} />
 
         {safeUrl && (
           <a
             href={safeUrl}
             target="_blank"
             rel="noreferrer"
-            className="btn-primary mt-6 w-full justify-center"
+            className={`${isCompetition && opp.teamFormationEnabled ? "btn-outline-blue" : "btn-primary"} mt-6 w-full justify-center`}
           >
-            Apply Now <Icon name="external" className="h-4 w-4" />
+            {isCompetition && opp.teamFormationEnabled ? "Continue to Official Registration" : "Apply Now"}{" "}
+            <Icon name="external" className="h-4 w-4" />
           </a>
         )}
       </div>

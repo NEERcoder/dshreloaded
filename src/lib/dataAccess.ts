@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { sanitizeExternalUrl } from "./urlSafety";
+import { deadlineInstant } from "./deadline";
 import {
   buildCollegeSearchIndex,
   searchColleges as scoreCollegeIndex,
@@ -15,6 +16,8 @@ import {
   type TeamRoleRecord,
   type OpportunityRecord,
   type OpportunityInput,
+  type CompetitionRound,
+  type PosterCrop,
 } from "./localProvider";
 
 import {
@@ -262,6 +265,21 @@ const mapVideo = (row: Record<string, unknown>): VideoRecord => ({
 });
 
 
+/** IST is a fixed +05:30; kept here so the deadline derivation reads clearly. */
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+/** A crop arriving from Postgres is jsonb, so its shape is not guaranteed. */
+function isPosterCrop(value: unknown): value is PosterCrop {
+  if (typeof value !== "object" || value === null) return false;
+  const crop = value as Record<string, unknown>;
+  if (typeof crop.x !== "number" || typeof crop.y !== "number" || typeof crop.zoom !== "number") {
+    return false;
+  }
+  // `ar` was introduced after the first crops were saved, so its absence is
+  // valid and simply means the card falls back to a plain cover crop.
+  return crop.ar === undefined || crop.ar === null || typeof crop.ar === "number";
+}
+
 const mapOpportunity = (row: Record<string, unknown>): OpportunityRecord => ({
   id: String(row.id),
   title: String(row.title),
@@ -285,6 +303,23 @@ const mapOpportunity = (row: Record<string, unknown>): OpportunityRecord => ({
   maxTeamSize: row.max_team_size != null ? Number(row.max_team_size) : null,
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
+  // Migration 013. Read defensively: a project that has not applied it yet
+  // returns none of these, and that must look identical to "not set".
+  deadlineAt: row.deadline_at ? String(row.deadline_at) : null,
+  startAt: row.start_at ? String(row.start_at) : null,
+  prizeAmount: row.prize_amount != null && row.prize_amount !== "" ? Number(row.prize_amount) : null,
+  rewards: row.rewards ? String(row.rewards) : null,
+  rounds: Array.isArray(row.rounds)
+    ? row.rounds.map((entry: Record<string, unknown>, index: number): CompetitionRound => ({
+        id: String(entry?.id ?? `round-${index}`),
+        title: String(entry?.title ?? ""),
+        details: String(entry?.details ?? ""),
+      }))
+    : [],
+  posterCrop: isPosterCrop(row.poster_crop) ? row.poster_crop : null,
+  organizerEmail: row.organizer_email ? String(row.organizer_email) : null,
+  organizerWhatsapp: row.organizer_whatsapp ? String(row.organizer_whatsapp) : null,
+  organizerWebsite: row.organizer_website ? String(row.organizer_website) : null,
 });
 
 const mapProfile = (row: Record<string, unknown>): ProfileRecord => ({
@@ -820,13 +855,24 @@ export async function deleteTeamRole(id: string): Promise<DataResult<boolean>> {
 export async function getOpportunities(category?: OpportunityRecord["category"]): Promise<DataResult<OpportunityRecord[]>> {
   if (supabase) {
     try {
-      let query = supabase.from("opportunities").select("*").eq("status", "published").order("featured", { ascending: false }).order("deadline");
-      if (category) query = query.eq("category", category);
-      const result = await query;
+      const run = async (extraFilter: string | null) => {
+        let query = supabase!
+          .from("opportunities")
+          .select("*")
+          .eq("status", "published")
+          .order("featured", { ascending: false })
+          .order("deadline");
+        if (category) query = query.eq("category", category);
+        if (extraFilter) query = query.or(extraFilter);
+        return await query;
+      };
+      const result = await selectOpenOpportunities(run);
       // A configured backend is authoritative — an empty feed stays empty rather
       // than surfacing the local development seeds as if they were real listings.
       if (result.error) return failure([], result.error);
-      return remoteSuccess((result.data || []).map(mapOpportunity));
+      // Filtered again here for the pre-013 fallback path, so an expired listing
+      // is absent from every public feed either way.
+      return remoteSuccess((result.data || []).map(mapOpportunity).filter(isListingOpen));
     } catch (err) {
       return failure([], err);
     }
@@ -867,6 +913,14 @@ export async function saveOpportunity(input: OpportunityInput, id?: string): Pro
     return failure(null, new Error("Unauthorized: Supabase admin authentication required."));
   }
   try {
+    const client = supabase;
+    // When a precise deadline is supplied without a legacy date, the date is
+    // derived from it in IST so the surfaces that still read `deadline` show the
+    // same day the admin meant, rather than a UTC day that can be one off.
+    const derivedDate = !input.deadline && input.deadlineAt
+      ? new Date(new Date(input.deadlineAt).getTime() + IST_OFFSET_MS).toISOString().slice(0, 10)
+      : input.deadline || null;
+
     const payload = {
       title: input.title,
       organization: input.organization,
@@ -879,7 +933,7 @@ export async function saveOpportunity(input: OpportunityInput, id?: string): Pro
       mode: input.mode,
       stipend: input.stipend,
       duration: input.duration,
-      deadline: input.deadline,
+      deadline: derivedDate,
       application_url: input.applicationUrl,
       image_url: input.imageUrl,
       status: input.status,
@@ -887,10 +941,47 @@ export async function saveOpportunity(input: OpportunityInput, id?: string): Pro
       team_formation_enabled: input.teamFormationEnabled,
       min_team_size: input.minTeamSize ?? null,
       max_team_size: input.maxTeamSize ?? null,
+      // Migration 013.
+      deadline_at: input.deadlineAt || null,
+      start_at: input.startAt || null,
+      prize_amount: input.prizeAmount ?? null,
+      rewards: input.rewards?.trim() || null,
+      rounds: input.rounds ?? [],
+      poster_crop: input.posterCrop ?? null,
+      organizer_email: input.organizerEmail?.trim() || null,
+      organizer_whatsapp: input.organizerWhatsapp?.trim() || null,
+      organizer_website: input.organizerWebsite?.trim() || null,
     };
-    const result = id
-      ? await supabase.from("opportunities").update(payload).eq("id", id).select("*").single()
-      : await supabase.from("opportunities").insert(payload).select("*").single();
+
+    // Migration 013 has to actually be applied for those columns to exist, and
+    // an unknown column makes PostgREST reject the whole write — which would
+    // break opportunity creation entirely on a project that is otherwise fine.
+    // So the 013 fields are separated, and a write that fails specifically on
+    // one is retried with the pre-013 shape.
+    const extendedKeys = [
+      "deadline_at",
+      "start_at",
+      "prize_amount",
+      "rewards",
+      "rounds",
+      "poster_crop",
+      "organizer_email",
+      "organizer_whatsapp",
+      "organizer_website",
+    ];
+    const corePayload = Object.fromEntries(
+      Object.entries(payload).filter(([key]) => !extendedKeys.includes(key))
+    );
+
+    const write = async (body: typeof payload | typeof corePayload) =>
+      id
+        ? await client.from("opportunities").update(body).eq("id", id).select("*").single()
+        : await client.from("opportunities").insert(body).select("*").single();
+
+    let result = await write(payload);
+    if (result.error && /could not find the .*column|PGRST204/i.test(result.error.message)) {
+      result = await write(corePayload);
+    }
     if (result.error) return failure(null, result.error);
     return remoteSuccess(mapOpportunity(result.data));
   } catch (err) {
@@ -1350,56 +1441,33 @@ export async function joinCompetitionTeamByCode(
     return failure(null, new Error("Authentication required to join a team."));
   }
   try {
-    const { data: userRes, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userRes.user) return failure(null, new Error("You must be signed in to join a team."));
-    const userId = userRes.user.id;
+    const code = inviteCode.trim().toUpperCase();
+    if (!code) return failure(null, new Error("Enter a team code."));
 
-    // Use security-definer RPC — does not expose invite_code in response
-    const { data: teamRows, error: rpcErr } = await supabase.rpc("find_team_by_invite_code", {
-      p_code: inviteCode.trim().toUpperCase(),
+    // The lookup is done twice on purpose. The RPC below is the authoritative
+    // join — it locks the team, re-checks the deadline, capacity and the
+    // one-team-per-competition rule in one transaction, and returns the team id
+    // so the caller can show the roster. Resolving the code first is only so a
+    // wrong code produces its specific message instead of a generic one, and it
+    // never sees the code value itself.
+    const { data: lookupRows, error: lookupErr } = await supabase.rpc("find_team_by_invite_code", {
+      p_code: code,
     });
-    if (rpcErr) return failure(null, rpcErr);
-    const team = Array.isArray(teamRows) ? teamRows[0] : null;
-    if (!team) return failure(null, new Error("Team code not found. Check the code and try again."));
-    if (team.status !== "active") return failure(null, new Error("This team is no longer accepting members."));
-
-    // Fetch competition details
-    const { data: opp } = await supabase
-      .from("opportunities")
-      .select("team_formation_enabled, max_team_size, status")
-      .eq("id", team.competition_id)
-      .maybeSingle();
-    if (!opp?.team_formation_enabled) return failure(null, new Error("Team formation is not enabled for this competition."));
-    if (opp?.status !== "published") return failure(null, new Error("This competition is no longer active."));
-
-    // Check not already in a team for this competition
-    const { data: existingMembership } = await supabase
-      .from("competition_team_members")
-      .select("team_id, competition_teams!inner(competition_id)")
-      .eq("user_id", userId)
-      .eq("competition_teams.competition_id", team.competition_id)
-      .maybeSingle();
-    if (existingMembership) return failure(null, new Error("You are already in a team for this competition."));
-
-    // Check team capacity — count actual members
-    const { count } = await supabase
-      .from("competition_team_members")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", team.id);
-    if (opp?.max_team_size && (count ?? 0) >= opp.max_team_size) {
-      return failure(null, new Error(`This team is full (max ${opp.max_team_size} members).`));
+    if (lookupErr) return failure(null, lookupErr);
+    const lookedUp = Array.isArray(lookupRows) ? lookupRows[0] : null;
+    if (!lookedUp) return failure(null, new Error("Team code not found. Check the code and try again."));
+    if ((lookedUp as Record<string, unknown>).status !== "active") {
+      return failure(null, new Error("This team is no longer accepting members."));
     }
 
-    // Join
-    const { error: joinErr } = await supabase.from("competition_team_members").insert({
-      team_id: team.id,
-      user_id: userId,
-      role: "member",
+    const { data: teamId, error } = await supabase.rpc("join_competition_team_by_code", {
+      p_code: code,
     });
-    if (joinErr) return failure(null, joinErr);
+    if (error) return failure(null, error);
+    if (!teamId) return failure(null, new Error("Could not join that team. Check the code and try again."));
 
-    // Pass userId so the new member sees the invite code
-    return getCompetitionTeam(team.id, userId);
+    // Pass userId so the new member sees the invite code.
+    return getCompetitionTeam(String(teamId));
   } catch (err) {
     return failure(null, err);
   }
@@ -1783,15 +1851,23 @@ export async function rejectCompetitionTeamJoinRequest(
 export async function getFeaturedOpportunities(): Promise<DataResult<OpportunityRecord[]>> {
   if (supabase) {
     try {
-      const result = await supabase
-        .from("opportunities")
-        .select("*")
-        .eq("status", "published")
-        .eq("featured", true)
-        .order("created_at", { ascending: false })
-        .limit(20);
+      const run = async (extraFilter: string | null) => {
+        let query = supabase!
+          .from("opportunities")
+          .select("*")
+          .eq("status", "published")
+          .eq("featured", true)
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (extraFilter) query = query.or(extraFilter);
+        return await query;
+      };
+      // Trending is a public active feed, so it excludes expired listings on the
+      // same terms as every other one — an expired competition must not linger
+      // here while being gone from FIELD.
+      const result = await selectOpenOpportunities(run);
       if (!result.error && result.data) {
-        return remoteSuccess(result.data.map(mapOpportunity));
+        return remoteSuccess(result.data.map(mapOpportunity).filter(isListingOpen));
       }
     } catch {
       // fallback
@@ -3053,5 +3129,272 @@ export async function deleteHomepageAnimation(id: string): Promise<DataResult<bo
     return remoteSuccess(true);
   } catch (err) {
     return failure(false, err);
+  }
+}
+
+// ==========================================
+// FIELD 2.0 — DEADLINES, REGISTRATION, ROSTERS (migration 013)
+// ==========================================
+
+export type CompetitionRegistrationStatus = "registered" | "withdrawn";
+
+export type MyCompetitionRegistration = {
+  registrationId: string;
+  registrationType: "solo" | "team";
+  status: CompetitionRegistrationStatus;
+  teamId: string | null;
+  registeredAt: string;
+};
+
+/** A team open for recruitment. Deliberately carries no member identity at all. */
+export type DiscoverableCompetitionTeam = {
+  id: string;
+  name: string;
+  memberCount: number;
+  placesAvailable: number | null;
+  recruiting: boolean;
+};
+
+export type CompetitionRosterEntry = {
+  userId: string;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  role: "captain" | "member";
+};
+
+/** Admin-only. Never returned to a non-admin, and never rendered publicly. */
+export type CompetitionRegistrationRecord = {
+  registrationId: string;
+  registrationType: "solo" | "team";
+  status: CompetitionRegistrationStatus;
+  registeredAt: string;
+  contestantName: string | null;
+  contestantEmail: string | null;
+  contestantPhone: string | null;
+  teamId: string | null;
+  teamName: string | null;
+  captainName: string | null;
+  roster: CompetitionRosterEntry[];
+};
+
+/**
+ * A listing is open when it is published and its deadline has not passed.
+ *
+ * This mirrors `competition_registration_open()` in the database so the UI and
+ * the server reach the same verdict from the same data. It is a presentation
+ * helper only — every write below is still authorised server-side, because a
+ * client clock is not a security boundary.
+ */
+export function isListingOpen(
+  opportunity: Pick<OpportunityRecord, "status" | "deadlineAt" | "deadline">,
+  now: number = Date.now()
+): boolean {
+  if (opportunity.status !== "published") return false;
+  const instant = deadlineInstant(opportunity.deadlineAt, opportunity.deadline);
+  return instant === null || now < instant;
+}
+
+/**
+ * PostgREST filter that hides an expired listing.
+ *
+ * A null deadline means "rolling", which is open — not expired — so it is kept.
+ */
+function openListingFilter(): string {
+  return `deadline_effective.is.null,deadline_effective.gt.${new Date().toISOString()}`;
+}
+
+/**
+ * Migration 013 adds `deadline_effective`. Until it is applied, filtering on
+ * that column fails outright, and the wrong failure mode would be an empty
+ * FIELD page. So: try the authoritative filter, and if the column is not there
+ * yet, fall back to the pre-013 query and let the client-side
+ * `isListingOpen` do the hiding. Once the migration is applied the server
+ * filter is what runs, and the fallback never fires.
+ */
+async function selectOpenOpportunities(
+  run: (extraFilter: string | null) => Promise<{ data: Record<string, unknown>[] | null; error: { message: string; code?: string } | null }>
+) {
+  const filtered = await run(openListingFilter());
+  if (!filtered.error) return filtered;
+  if (!/deadline_effective|does not exist|column/i.test(filtered.error.message)) return filtered;
+  return run(null);
+}
+
+/**
+ * Which registration paths a competition offers.
+ *
+ * Driven entirely by the configured team size, so a competition that needs a
+ * crew of four never offers a solo button. A competition with no team formation
+ * at all offers neither — it is an application, not an entry.
+ */
+export function competitionRegistrationOptions(opportunity: OpportunityRecord): {
+  solo: boolean;
+  createTeam: boolean;
+  joinTeam: boolean;
+} {
+  const min = opportunity.minTeamSize ?? null;
+  const max = opportunity.maxTeamSize ?? null;
+
+  if (!opportunity.teamFormationEnabled) {
+    return { solo: false, createTeam: false, joinTeam: false };
+  }
+  // Teams of two or more cannot admit a solo entry by definition.
+  if (min !== null && min >= 2) {
+    return { solo: false, createTeam: true, joinTeam: true };
+  }
+  // min 1 (or unset) with room above one means both paths are legitimate.
+  if (max !== null && max > 1) {
+    return { solo: true, createTeam: true, joinTeam: true };
+  }
+  return { solo: true, createTeam: false, joinTeam: false };
+}
+
+export async function registerForCompetitionSolo(
+  competitionId: string
+): Promise<DataResult<string | null>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("You must be signed in to register."));
+  }
+  try {
+    const { data, error } = await supabase.rpc("register_for_competition_solo", {
+      p_competition_id: competitionId,
+    });
+    if (error) return failure(null, error);
+    return remoteSuccess(data ? String(data) : null);
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
+export async function submitCompetitionTeamRegistration(
+  teamId: string
+): Promise<DataResult<string | null>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure(null, new Error("You must be signed in to register a team."));
+  }
+  try {
+    const { data, error } = await supabase.rpc("submit_competition_team_registration", {
+      p_team_id: teamId,
+    });
+    if (error) return failure(null, error);
+    return remoteSuccess(data ? String(data) : null);
+  } catch (err) {
+    return failure(null, err);
+  }
+}
+
+export async function withdrawCompetitionRegistration(
+  registrationId: string
+): Promise<DataResult<boolean>> {
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+  const { error } = await supabase.rpc("withdraw_competition_registration", {
+    p_registration_id: registrationId,
+  });
+  if (error) return failure(false, error);
+  return remoteSuccess(error === null);
+}
+
+export async function getMyCompetitionRegistration(
+  competitionId: string
+): Promise<DataResult<MyCompetitionRegistration | null>> {
+  if (!supabase || !isSupabaseConfigured) return localSuccess(null);
+  try {
+    const { data, error } = await supabase.rpc("my_competition_registration", {
+      p_competition_id: competitionId,
+    });
+    if (error || !data || typeof data !== "object") return localSuccess(null);
+    const row = data as Record<string, unknown>;
+    if (!row.registrationId) return localSuccess(null);
+    return remoteSuccess({
+      registrationId: String(row.registrationId),
+      registrationType: row.registrationType === "team" ? "team" : "solo",
+      status: row.status === "withdrawn" ? "withdrawn" : "registered",
+      teamId: row.teamId ? String(row.teamId) : null,
+      registeredAt: String(row.registeredAt ?? ""),
+    });
+  } catch {
+    return localSuccess(null);
+  }
+}
+
+/** Registered teams only — a team still looking for members is not an entry. */
+export async function getCompetitionRegisteredTeamCount(
+  competitionId: string
+): Promise<DataResult<number>> {
+  if (!supabase) return failure(0, new Error("No backend is configured."));
+  const { data, error } = await supabase.rpc("competition_registered_team_count", {
+    p_competition_id: competitionId,
+  });
+  // A failed count is reported as a failure rather than folded into zero: "no
+  // teams have registered yet" and "this project has not applied migration 013"
+  // look identical to a student and mean very different things.
+  if (error) return failure(0, error);
+  return remoteSuccess(Number(data ?? 0));
+}
+
+export async function getDiscoverableCompetitionTeams(
+  competitionId: string
+): Promise<DataResult<DiscoverableCompetitionTeam[]>> {
+  if (!supabase) return remoteSuccess([]);
+  const { data, error } = await supabase.rpc("competition_discoverable_teams", {
+    p_competition_id: competitionId,
+  });
+  if (error) return failure([], error);
+  return remoteSuccess(
+    ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+      id: String(row.id),
+      name: String(row.name),
+      memberCount: Number(row.member_count ?? 0),
+      placesAvailable: row.places_available == null ? null : Number(row.places_available),
+      recruiting: Boolean(row.recruiting),
+    }))
+  );
+}
+
+/**
+ * Admin registration records for one competition, including contact details.
+ *
+ * The function behind this raises unless public.is_admin() is true, so a
+ * non-admin gets an error rather than an empty-but-suspicious success. Personal
+ * data is read live from auth and profile_contacts at call time and is never
+ * copied into a publicly selectable column.
+ */
+export async function getCompetitionRegistrationRecords(
+  competitionId: string
+): Promise<DataResult<CompetitionRegistrationRecord[]>> {
+  if (!supabase || !isSupabaseConfigured) {
+    return failure([], new Error("Admin access requires an authenticated Supabase backend."));
+  }
+  try {
+    const { data, error } = await supabase.rpc("competition_registration_records", {
+      p_competition_id: competitionId,
+    });
+    if (error) return failure([], error);
+    return remoteSuccess(
+      ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+        registrationId: String(row.registration_id),
+        registrationType: row.registration_type === "team" ? "team" : "solo",
+        status: row.registration_status === "withdrawn" ? "withdrawn" : "registered",
+        registeredAt: String(row.registered_at ?? ""),
+        contestantName: row.contestant_name ? String(row.contestant_name) : null,
+        contestantEmail: row.contestant_email ? String(row.contestant_email) : null,
+        contestantPhone: row.contestant_phone ? String(row.contestant_phone) : null,
+        teamId: row.team_id ? String(row.team_id) : null,
+        teamName: row.team_name ? String(row.team_name) : null,
+        captainName: row.captain_name ? String(row.captain_name) : null,
+        roster: Array.isArray(row.roster)
+          ? (row.roster as Record<string, unknown>[]).map((entry) => ({
+              userId: String(entry.user_id ?? ""),
+              fullName: entry.full_name ? String(entry.full_name) : null,
+              email: entry.email ? String(entry.email) : null,
+              phone: entry.phone ? String(entry.phone) : null,
+              role: entry.role === "captain" ? "captain" : "member",
+            }))
+          : [],
+      }))
+    );
+  } catch (err) {
+    return failure([], err);
   }
 }

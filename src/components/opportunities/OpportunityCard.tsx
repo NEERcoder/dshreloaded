@@ -1,10 +1,12 @@
 import TiltCard from "../TiltCard";
 import Icon from "../Icon";
 import DeadlineProgress from "../DeadlineProgress";
+import PosterFrame from "./PosterFrame";
 import { Link } from "../../lib/router";
 import { sanitizeExternalUrl } from "../../lib/urlSafety";
 import { opportunityHref } from "../../lib/opportunityRoute";
 import { opportunityCategoryIcon } from "../../data/opportunityCategories";
+import { prizeLabel } from "../../lib/prize";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
 export const CATEGORY_BADGE: Record<string, string> = {
@@ -21,6 +23,7 @@ export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
   const safeUrl = sanitizeExternalUrl(item.applicationUrl);
   const isTeamCompetition = item.category === "competition" && item.teamFormationEnabled;
   const href = opportunityHref(item.id);
+  const prize = prizeLabel(item);
 
   return (
     <TiltCard className="h-full">
@@ -30,12 +33,8 @@ export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
       >
         {/* Poster */}
         {item.imageUrl ? (
-          <Link href={href} className="block h-36 w-full overflow-hidden bg-surface-soft">
-            <img
-              src={item.imageUrl}
-              alt={`${item.title} poster`}
-              className="h-full w-full object-cover hover:scale-105 transition-transform duration-500"
-            />
+          <Link href={href} className="block w-full overflow-hidden bg-surface-soft">
+            <PosterFrame item={item} />
           </Link>
         ) : null}
 
@@ -82,17 +81,17 @@ export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
                   {item.field}
                 </span>
               )}
-              {item.stipend && (
-                <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
-                  <Icon name="wallet" className="h-3.5 w-3.5" />
-                  {item.stipend}
+              {prize && (
+                <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
+                  <Icon name="trophy" className="h-3.5 w-3.5" />
+                  {prize}
                 </span>
               )}
             </div>
           </div>
 
           <div className="mt-4 pt-4 border-t border-surface-border sm:mt-6">
-            <DeadlineProgress deadline={item.deadline} createdAt={item.createdAt} />
+            <DeadlineProgress deadline={item.deadline} deadlineAt={item.deadlineAt} createdAt={item.createdAt} />
             <div className="mt-3 flex gap-2 sm:mt-4">
               <Link
                 href={href}

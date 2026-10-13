@@ -81,6 +81,34 @@ export type TeamRoleRecord = {
   isOpen: boolean;
 };
 
+/** One round of a competition, in the order the admin arranged them. */
+export type CompetitionRound = {
+  id: string;
+  title: string;
+  details: string;
+};
+
+/**
+ * How the original poster is framed into the 676:451 card.
+ *
+ * `x`/`y` are the centre of the crop as a fraction of the image, and `zoom` is
+ * a multiplier on the largest 3:2 window that fits. Nothing here rewrites the
+ * uploaded file: the original keeps its own aspect ratio and still renders in
+ * full on the detail page.
+ */
+export type PosterCrop = {
+  /** Pan offset as a fraction of the card frame, −1..2 tolerated, ±0.5 typical. */
+  x: number;
+  y: number;
+  zoom: number;
+  /**
+   * The original poster's own width ÷ height, recorded when the crop is framed.
+   * Without it a card cannot know which axis overflows the 676:451 box, so it
+   * falls back to a plain cover crop instead of mis-positioning the poster.
+   */
+  ar?: number;
+};
+
 export type OpportunityRecord = {
   id: string;
   title: string;
@@ -105,6 +133,21 @@ export type OpportunityRecord = {
   maxTeamSize: number | null;
   createdAt: string;
   updatedAt: string;
+  // FIELD 2.0 (migration 013). Optional so every existing construction of an
+  // OpportunityRecord — the local development seeds included — keeps compiling
+  // and keeps working with no deadline, prize or crop of its own.
+  /** Precise UTC deadline. When present it supersedes the `deadline` date. */
+  deadlineAt?: string | null;
+  startAt?: string | null;
+  /** Cash prize only. Null means unspecified, never zero. */
+  prizeAmount?: number | null;
+  /** Non-monetary rewards, free text: "Certificates + Goodies". */
+  rewards?: string | null;
+  rounds?: CompetitionRound[];
+  posterCrop?: PosterCrop | null;
+  organizerEmail?: string | null;
+  organizerWhatsapp?: string | null;
+  organizerWebsite?: string | null;
 };
 
 export type OpportunityInput = Omit<OpportunityRecord, "id" | "createdAt" | "updatedAt">;
@@ -179,6 +222,29 @@ function getInitialOpportunities(): OpportunityRecord[] {
     teamFormationEnabled: false,
     minTeamSize: null,
     maxTeamSize: null,
+    // The competition row carries the fields FIELD 2.0 added, so the offline
+    // demo shows a real team listing instead of a card that cannot exercise the
+    // countdown, the prize line or the registration paths. Everything here is
+    // demonstration data and is labelled as such.
+    ...(op.category === "Competition"
+      ? {
+          teamFormationEnabled: true,
+          minTeamSize: 2,
+          maxTeamSize: 4,
+          deadline: new Date(Date.now() + 6 * 86400000).toISOString().slice(0, 10),
+          deadlineAt: new Date(Date.now() + 6 * 86400000 - 2 * 3600000).toISOString(),
+          prizeAmount: 25000,
+          rewards: "Certificates + Medals",
+          rounds: [
+            { id: "r1", title: "Online Qualifier", details: "[SAMPLE] 60-minute objective test." },
+            { id: "r2", title: "Semifinal", details: "[SAMPLE] Case round, top 20 teams." },
+            { id: "r3", title: "Final", details: "[SAMPLE] Live presentation before the jury." },
+          ],
+          imageUrl: "/categories/field.png",
+          posterCrop: { x: 0, y: 0, zoom: 1, ar: 1 },
+          organizerEmail: "hello@javlin.space",
+        }
+      : {}),
     createdAt: new Date(Date.now() - (i + 1) * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - (i + 1) * 86400000).toISOString(),
   }));

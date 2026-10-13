@@ -33,7 +33,7 @@ export default function FeaturedOpportunityTicker() {
   return (
     <section
       ref={sectionRef}
-      className={`on-navy tone-dark reveal pb-7 pt-2 sm:pb-10 sm:pt-4 lg:pb-14 ${isVisible ? "is-visible" : ""}`}
+      className={`on-navy tone-dark reveal pb-7 pt-1 sm:pb-10 sm:pt-3 lg:pb-14 ${isVisible ? "is-visible" : ""}`}
       aria-label="Trending opportunities"
     >
       <div className="container-px mb-4">
@@ -42,7 +42,8 @@ export default function FeaturedOpportunityTicker() {
           Trending
         </p>
         <div className="mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
-          <h2 className="section-title font-display">Discover the top things cooking up.</h2>
+          {/* The hero headline is gone, so this is the page's one h1. */}
+          <h1 className="section-title font-display">Discover the top things cooking up.</h1>
           <Link href="/opportunities" className="link-pill group w-fit shrink-0">
             View all opportunities <Icon name="arrow" className="h-3.5 w-3.5" />
           </Link>

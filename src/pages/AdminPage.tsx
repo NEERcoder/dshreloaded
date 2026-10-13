@@ -3,6 +3,9 @@ import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import StarRating from "../components/StarRating";
 import PulseAdmin from "../components/admin/PulseAdmin";
+import PosterCropStudio from "../components/admin/PosterCropStudio";
+import RoundsEditor from "../components/admin/RoundsEditor";
+import CompetitionRegistrationsPanel from "../components/admin/CompetitionRegistrationsPanel";
 import {
   deleteOpportunity,
   deleteReview,
@@ -33,6 +36,7 @@ import {
   uploadOpportunityPoster,
   uploadCollegeImage,
   saveCollegeImage,
+  isListingOpen,
   type CollegeRecord,
   type OpportunityInput,
   type OpportunityRecord,
@@ -46,6 +50,7 @@ import {
 } from "../lib/dataAccess";
 import { supabase } from "../lib/supabase";
 import { sanitizeYouTubeUrl, getYouTubeThumbnailUrl } from "../lib/urlSafety";
+import { isoToIstWallClock, istWallClockToIso } from "../lib/deadline";
 
 const blankOpportunity: OpportunityInput = {
   title: "",
@@ -67,6 +72,15 @@ const blankOpportunity: OpportunityInput = {
   teamFormationEnabled: false,
   minTeamSize: null,
   maxTeamSize: null,
+  deadlineAt: null,
+  startAt: null,
+  prizeAmount: null,
+  rewards: "",
+  rounds: [],
+  posterCrop: null,
+  organizerEmail: "",
+  organizerWhatsapp: "",
+  organizerWebsite: "",
 };
 
 const blankMentor: Omit<MentorRecord, "id"> = {
@@ -273,7 +287,7 @@ function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => 
   );
 }
 
-type TabType = "opportunities" | "reviews" | "mentors" | "videos" | "pulse" | "team_roles" | "team_members" | "colleges" | "animations";
+type TabType = "opportunities" | "registrations" | "reviews" | "mentors" | "videos" | "pulse" | "team_roles" | "team_members" | "colleges" | "animations";
 
 function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabType>("opportunities");
@@ -341,6 +355,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
             <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-ink-500">Content Management</p>
             {[
               { key: "opportunities" as TabType, label: "Opportunities", count: opportunities.length },
+              { key: "registrations" as TabType, label: "Competition Registrations", count: opportunities.filter((item) => item.category === "competition").length },
               { key: "reviews" as TabType, label: "Reviews (Moderation)", count: reviews.filter((r) => r.status === "pending").length },
               { key: "mentors" as TabType, label: "Mentors", count: mentors.length },
               { key: "videos" as TabType, label: "Videos (Campus Unfiltered)", count: videos.length },
@@ -379,6 +394,12 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               <OpportunityManager
                 items={opportunities}
                 onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "registrations" && (
+              <CompetitionRegistrationsPanel
+                competitions={opportunities.filter((item) => item.category === "competition")}
+                onSaved={setMessage}
               />
             )}
             {tab === "reviews" && (
@@ -444,6 +465,11 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
   const [editingId, setEditingId] = useState<string | undefined>();
   const [coursesText, setCoursesText] = useState("");
   const [posterUploading, setPosterUploading] = useState(false);
+  // `datetime-local` holds a wall clock, and the wall clock the admin means is
+  // IST. Storing the typed text separately keeps the input honest while the
+  // ISO instant in `form` is derived from it on submit.
+  const [deadlineIst, setDeadlineIst] = useState("");
+  const [startIst, setStartIst] = useState("");
 
   async function handlePosterUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -452,8 +478,11 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
     const result = await uploadOpportunityPoster(file);
     setPosterUploading(false);
     if (result.data) {
-      setForm((prev) => ({ ...prev, imageUrl: result.data! }));
-      onSaved("Poster uploaded successfully.");
+      // A new poster is a different image, so any framing saved against the old
+      // one no longer describes it. Clearing it here is what makes the card fall
+      // back to plain cover-crop instead of panning across the wrong picture.
+      setForm((prev) => ({ ...prev, imageUrl: result.data!, posterCrop: null }));
+      onSaved("Poster uploaded successfully. Frame the card crop if needed.");
     } else {
       onSaved(result.error || "Failed to upload poster.");
     }
@@ -482,15 +511,40 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
       teamFormationEnabled: item.teamFormationEnabled,
       minTeamSize: item.minTeamSize,
       maxTeamSize: item.maxTeamSize,
+      deadlineAt: item.deadlineAt ?? null,
+      startAt: item.startAt ?? null,
+      prizeAmount: item.prizeAmount ?? null,
+      rewards: item.rewards ?? "",
+      rounds: item.rounds ?? [],
+      posterCrop: item.posterCrop ?? null,
+      organizerEmail: item.organizerEmail ?? "",
+      organizerWhatsapp: item.organizerWhatsapp ?? "",
+      organizerWebsite: item.organizerWebsite ?? "",
     });
     setCoursesText(item.eligibleCourses.join(", "));
+    setDeadlineIst(isoToIstWallClock(item.deadlineAt));
+    setStartIst(isoToIstWallClock(item.startAt));
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    const deadlineIso = deadlineIst ? istWallClockToIso(deadlineIst) : null;
+    if (deadlineIst && !deadlineIso) {
+      onSaved("That registration deadline is not a valid date and time. Use the picker or YYYY-MM-DDTHH:MM.");
+      return;
+    }
+    const startIso = startIst ? istWallClockToIso(startIst) : null;
+    if (startIst && !startIso) {
+      onSaved("That start date and time is not valid.");
+      return;
+    }
     const payload: OpportunityInput = {
       ...form,
       eligibleCourses: coursesText.split(",").map((s) => s.trim()).filter(Boolean),
+      deadlineAt: deadlineIso,
+      startAt: startIso,
+      rounds: (form.rounds ?? []).filter((round) => round.title.trim() || round.details.trim()),
+      prizeAmount: form.prizeAmount === null || Number.isNaN(form.prizeAmount) ? null : form.prizeAmount,
     };
     const result = await saveOpportunity(payload, editingId);
     if (result.error) {
@@ -499,6 +553,8 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
       onSaved(editingId ? "Opportunity updated successfully." : "Opportunity created successfully.");
       setForm(blankOpportunity);
       setCoursesText("");
+      setDeadlineIst("");
+      setStartIst("");
       setEditingId(undefined);
     }
   }
@@ -563,8 +619,85 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
             <input value={form.duration || ""} onChange={(e) => setForm({ ...form, duration: e.target.value })} className="field-input" placeholder="e.g. 2 Months" />
           </div>
           <div>
-            <label className="field-label">Deadline</label>
-            <input value={form.deadline || ""} onChange={(e) => setForm({ ...form, deadline: e.target.value })} className="field-input" placeholder="e.g. Rolling or 2026-04-15" />
+            <label className="field-label">Registration Deadline (IST)</label>
+            <input
+              type="datetime-local"
+              value={deadlineIst}
+              onChange={(e) => setDeadlineIst(e.target.value)}
+              className="field-input"
+            />
+            <p className="mt-1 text-[11px] leading-snug text-ink-500">
+              Exact cut-off in Indian Standard Time. Countdowns and registration locking use this.
+            </p>
+          </div>
+          <div>
+            <label className="field-label">Start Date &amp; Time (IST, optional)</label>
+            <input
+              type="datetime-local"
+              value={startIst}
+              onChange={(e) => setStartIst(e.target.value)}
+              className="field-input"
+            />
+          </div>
+          <div>
+            <label className="field-label">Deadline Date only (legacy)</label>
+            <input value={form.deadline || ""} onChange={(e) => setForm({ ...form, deadline: e.target.value })} className="field-input" placeholder="e.g. 2026-04-15 or Rolling" />
+            <p className="mt-1 text-[11px] leading-snug text-ink-500">
+              Used when no exact time is set: the listing stays open until 23:59:59 IST on this day.
+            </p>
+          </div>
+          <div>
+            <label className="field-label">Prize Amount (₹, optional)</label>
+            <input
+              type="number"
+              min={0}
+              step={100}
+              value={form.prizeAmount ?? ""}
+              onChange={(e) => setForm({ ...form, prizeAmount: e.target.value === "" ? null : Number(e.target.value) })}
+              className="field-input"
+              placeholder="e.g. 50000"
+            />
+          </div>
+          <div>
+            <label className="field-label">Non-monetary Rewards (optional)</label>
+            <input
+              value={form.rewards ?? ""}
+              onChange={(e) => setForm({ ...form, rewards: e.target.value })}
+              className="field-input"
+              placeholder="e.g. Certificates + Goodies + Mentorship"
+            />
+            <p className="mt-1 text-[11px] leading-snug text-ink-500">
+              Shown with the prize as “₹50,000 + Certificates + Goodies”. Left blank, nothing is invented.
+            </p>
+          </div>
+          <div>
+            <label className="field-label">Organizer Email</label>
+            <input
+              type="email"
+              value={form.organizerEmail ?? ""}
+              onChange={(e) => setForm({ ...form, organizerEmail: e.target.value })}
+              className="field-input"
+              placeholder="name@organisation.org"
+            />
+          </div>
+          <div>
+            <label className="field-label">Organizer WhatsApp</label>
+            <input
+              value={form.organizerWhatsapp ?? ""}
+              onChange={(e) => setForm({ ...form, organizerWhatsapp: e.target.value })}
+              className="field-input"
+              placeholder="+91 98XXXXXXXX"
+            />
+          </div>
+          <div>
+            <label className="field-label">Official Website / Registration Link</label>
+            <input
+              type="url"
+              value={form.organizerWebsite ?? ""}
+              onChange={(e) => setForm({ ...form, organizerWebsite: e.target.value })}
+              className="field-input"
+              placeholder="https://..."
+            />
           </div>
           <div>
             <label className="field-label">Application URL</label>
@@ -635,6 +768,22 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
           </div>
         </div>
 
+        {/* Card crop over the original poster */}
+        <div className="mt-4">
+          <PosterCropStudio
+            key={`${editingId ?? "new"}:${form.imageUrl || "none"}`}
+            imageUrl={form.imageUrl || ""}
+            crop={form.posterCrop ?? null}
+            onChange={(posterCrop) => setForm((prev) => ({ ...prev, posterCrop }))}
+          />
+        </div>
+
+        {form.category === "competition" && (
+          <div className="mt-5">
+            <RoundsEditor rounds={form.rounds ?? []} onChange={(rounds) => setForm({ ...form, rounds })} />
+          </div>
+        )}
+
         {/* Featured + Team Formation */}
         <div className="mt-5 flex flex-col gap-3">
           <label className="flex items-center gap-2 text-sm font-semibold text-ink-700">
@@ -684,7 +833,7 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
         <div className="mt-5 flex flex-wrap gap-2">
           <button className="btn-secondary">{editingId ? "Update Opportunity" : "Create Opportunity"}</button>
           {editingId && (
-            <button type="button" className="btn-ghost" onClick={() => { setEditingId(undefined); setForm(blankOpportunity); setCoursesText(""); }}>
+            <button type="button" className="btn-ghost" onClick={() => { setEditingId(undefined); setForm(blankOpportunity); setCoursesText(""); setDeadlineIst(""); setStartIst(""); }}>
               Cancel Edit
             </button>
           )}
@@ -701,6 +850,11 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
                   {item.status}
                 </span>
                 {item.featured && <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-red-ink"><Icon name="star" className="h-3 w-3" fill="currentColor" /> Featured</span>}
+                {!isListingOpen(item) && item.status === "published" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-surface-border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-ink-600">
+                    <Icon name="lock" className="h-3 w-3" /> Deadline passed · hidden publicly
+                  </span>
+                )}
               </div>
               <h3 className="mt-2 font-bold text-ink-900">{item.title}</h3>
               <p className="text-sm text-ink-500">{item.organization} · {item.location || "Remote"}</p>

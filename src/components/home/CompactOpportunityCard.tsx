@@ -1,19 +1,11 @@
 import Icon from "../Icon";
 import { Link } from "../../lib/router";
 import { CATEGORY_BADGE } from "../opportunities/OpportunityCard";
+import PosterFrame from "../opportunities/PosterFrame";
+import DeadlinePill from "../opportunities/DeadlinePill";
 import { opportunityHref } from "../../lib/opportunityRoute";
-import { opportunityCategoryIcon } from "../../data/opportunityCategories";
+import { prizeLabel } from "../../lib/prize";
 import type { OpportunityRecord } from "../../lib/dataAccess";
-
-function deadlineLabel(deadline: string | null): { text: string; urgent: boolean } | null {
-  if (!deadline) return null;
-  const date = new Date(deadline);
-  if (isNaN(date.getTime())) return { text: deadline, urgent: false };
-  const days = Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  if (days < 0) return { text: "Closed", urgent: false };
-  if (days === 0) return { text: "Closing today", urgent: true };
-  return { text: `${days}d left`, urgent: days <= 7 };
-}
 
 type CompactOpportunityCardProps = {
   item: OpportunityRecord;
@@ -21,8 +13,16 @@ type CompactOpportunityCardProps = {
   imageForward?: boolean;
 };
 
+/**
+ * The Trending and rail card.
+ *
+ * Poster, title, organiser, mode, prize, countdown — the six things that decide
+ * whether to open the listing. The paragraph that used to sit here competed
+ * with the title on a poster-forward card, and the detail page carries it in
+ * full.
+ */
 export default function CompactOpportunityCard({ item, isNew, imageForward = false }: CompactOpportunityCardProps) {
-  const deadline = deadlineLabel(item.deadline);
+  const prize = prizeLabel(item);
 
   return (
     <Link
@@ -32,31 +32,7 @@ export default function CompactOpportunityCard({ item, isNew, imageForward = fal
         imageForward ? "homepage-opportunity-card" : "min-w-[78%] p-4 sm:min-w-0 sm:p-5"
       }`}
     >
-      {imageForward && (
-        <div className="h-48 w-full shrink-0 overflow-hidden bg-surface-soft sm:h-56">
-          {item.imageUrl ? (
-            <img
-              src={item.imageUrl}
-              alt=""
-              aria-hidden="true"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            /* A listing without a poster used to show a small grey picture icon
-               floating in a white void, which read as a broken image. The empty
-               field now carries the section's own accent and the category it
-               belongs to, so it says "no poster yet" instead of "something
-               failed". */
-            <span
-              aria-hidden="true"
-              className="poster-empty flex h-full w-full flex-col items-center justify-center gap-1.5"
-            >
-              <Icon name={opportunityCategoryIcon(item.category)} className="h-9 w-9" />
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">{item.category}</span>
-            </span>
-          )}
-        </div>
-      )}
+      {imageForward && <PosterFrame item={item} className="shrink-0" />}
       <div className={imageForward ? "flex flex-1 flex-col p-4" : "flex flex-1 flex-col"}>
         <div className="flex items-center justify-between gap-2">
           <span
@@ -83,15 +59,20 @@ export default function CompactOpportunityCard({ item, isNew, imageForward = fal
           {item.title}
         </h3>
         <p className="mt-1 line-clamp-1 text-xs font-semibold text-ink-600">{item.organization}</p>
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-4 text-[11px] font-semibold text-ink-500">
-          {item.mode && <span className="text-ink-600">{item.mode}</span>}
-          {item.stipend && <span className="truncate">{item.stipend}</span>}
-          {deadline && (
-            <span className={`inline-flex items-center gap-1 ${deadline.urgent ? "text-brand-red-ink font-extrabold" : ""}`}>
-              <Icon name="flag" className="h-3 w-3" />
-              {deadline.text}
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-4">
+          {item.mode && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-500">
+              <Icon name="monitor" className="h-3.5 w-3.5" />
+              {item.mode}
             </span>
           )}
+          {prize && (
+            <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] font-extrabold text-emerald-700">
+              <Icon name="trophy" className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{prize}</span>
+            </span>
+          )}
+          <DeadlinePill opportunity={item} />
         </div>
       </div>
     </Link>

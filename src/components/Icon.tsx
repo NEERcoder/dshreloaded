@@ -350,6 +350,41 @@ const paths: Record<string, JSX.Element> = {
       <path d="M3.5 17l4.5-4.5 3.5 3.5 3-3 6 5.5" />
     </>
   ),
+
+  /* ---- registration states ---- */
+  lock: (
+    <>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+      <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" />
+      <path d="M12 14.5v2.5" />
+    </>
+  ),
+  unlock: (
+    <>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+      <path d="M8 10.5V7.8a4 4 0 0 1 7.7-1.4" />
+    </>
+  ),
+  minus: <path d="M5 12h14" />,
+  "chevron-up": <path d="M6 14.5l6-6 6 6" />,
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="M3.8 7l8.2 6 8.2-6" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2.5" />
+      <path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4H6.5A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M20 11.5a8 8 0 1 0-.7 4.5" />
+      <path d="M20 4.5v7h-7" />
+    </>
+  ),
 };
 
 export default function Icon({ name, ...props }: IconProps) {
