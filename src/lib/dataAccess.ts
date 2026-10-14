@@ -3205,25 +3205,52 @@ function openListingFilter(): string {
 }
 
 /**
- * Whether this project's database has the 013 deadline column, resolved once.
+ * Whether this project's database has the 013 deadline column.
  *
- * The homepage issues four opportunity queries in parallel. If every one of them
- * had to be rejected by PostgREST before falling back, the page would spend
- * seconds waiting on a failure it already knew was coming — measured at 8.7s to
- * fill Trending on a project where the migration has not been applied. One probe
- * answers for all of them, and for the rest of the page load.
+ * The homepage issues four opportunity queries in parallel. If each had to be
+ * rejected by PostgREST before falling back, the page would repeat the same
+ * known failure four times over, so one probe answers for all of them. Its
+ * verdict is then kept for the rest of the tab session, because the probe is
+ * itself a rejected query and measured cold it costs about as much as the feeds
+ * it protects — a toll worth paying once per visit rather than once per page.
+ *
+ * Deliberately sessionStorage rather than localStorage: a stored "no" has to
+ * expire on its own, or a visitor whose tab remembered the answer before
+ * migration 013 was applied would never use the server-side filter again.
  */
+const DEADLINE_COLUMN_KEY = "javlin.deadline-effective.available";
 let deadlineColumnProbe: Promise<boolean> | null = null;
+
+function cachedDeadlineColumnVerdict(): boolean | null {
+  try {
+    const stored = window.sessionStorage.getItem(DEADLINE_COLUMN_KEY);
+    if (stored === "1") return true;
+    if (stored === "0") return false;
+  } catch {
+    /* private mode: fall through to probing */
+  }
+  return null;
+}
 
 function deadlineColumnAvailable(): Promise<boolean> {
   if (!supabase || !isSupabaseConfigured) return Promise.resolve(false);
+  const cached = cachedDeadlineColumnVerdict();
+  if (cached !== null) return Promise.resolve(cached);
   if (!deadlineColumnProbe) {
     // PostgREST builders are thenables rather than promises, so wrap before
     // chaining — `.catch` does not exist on what they return.
     deadlineColumnProbe = Promise.resolve(
       supabase.from("opportunities").select("deadline_effective").limit(1)
     )
-      .then((result) => !result.error || !/deadline_effective/i.test(result.error.message))
+      .then((result) => {
+        const available = !result.error || !/deadline_effective/i.test(result.error.message);
+        try {
+          window.sessionStorage.setItem(DEADLINE_COLUMN_KEY, available ? "1" : "0");
+        } catch {
+          /* the in-memory answer still stands for this page */
+        }
+        return available;
+      })
       .catch(() => false);
   }
   return deadlineColumnProbe;
