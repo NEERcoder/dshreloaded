@@ -219,8 +219,12 @@ function VideoDiscovery({
         })}
       </div>
 
+      {/* min-w-0 on the grid children: a grid track refuses to shrink below its
+          content's min-content width, and a college name like "Bhaskaracharya
+          College of Applied Sciences" is wider than a 320px phone, which pushed
+          the whole panel past the viewport edge. */}
       {featuredVideo ? (
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr] items-start">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr] items-start [&>*]:min-w-0">
           <div className="card overflow-hidden bg-white border border-surface-border shadow-lift p-2">
             <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-ink-900">
               <iframe
@@ -713,7 +717,7 @@ export default function ExplorePage() {
           </div>
 
           {/* Reviews Stream / Cards */}
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
             {recentReviews.length > 0 ? (
               recentReviews.map((r) => (
                 <div
