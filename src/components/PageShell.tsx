@@ -1,12 +1,15 @@
 import { useEffect, type ReactNode } from "react";
 import Footer from "./Footer";
-import InteractiveDotGrid, { type BackgroundPreset } from "./InteractiveDotGrid";
+import type { BackgroundPreset } from "./InteractiveDotGrid";
 import Navbar from "./Navbar";
 
 type PageShellProps = {
   children: ReactNode;
   title: string;
   description?: string;
+  // Retained so the ~30 call sites keep compiling. The animated canvas that
+  // consumed it is gone; the static page-canvas texture does not vary by
+  // preset, so the value is accepted and ignored rather than deleted here.
   backgroundPreset?: BackgroundPreset;
 };
 
@@ -21,7 +24,7 @@ function updateMeta(name: string, content: string, attribute = "name") {
   el.setAttribute("content", content);
 }
 
-export default function PageShell({ children, title, description, backgroundPreset = "explore" }: PageShellProps) {
+export default function PageShell({ children, title, description }: PageShellProps) {
   useEffect(() => {
     document.title = title;
     if (description) {
@@ -46,8 +49,7 @@ export default function PageShell({ children, title, description, backgroundPres
   }, [description, title]);
 
   return (
-    <div className="relative min-h-screen isolate">
-      <InteractiveDotGrid background preset={backgroundPreset} />
+    <div className="page-canvas relative min-h-screen isolate">
       <div className="relative z-10">
         <Navbar />
         <main className="pt-16 sm:pt-20">{children}</main>

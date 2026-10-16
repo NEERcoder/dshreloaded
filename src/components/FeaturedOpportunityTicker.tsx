@@ -6,6 +6,20 @@ import { useScrollReveal } from "../hooks/useScrollReveal";
 import OpportunityCarousel from "./home/OpportunityCarousel";
 import Icon from "./Icon";
 
+/**
+ * The Trending section's one call to action. On phones it rides the eyebrow row
+ * (where it fits inline beside "Trending" and wraps under it on the narrowest
+ * handsets) instead of being pushed below the headline; from 640px up the
+ * desktop copy below is used so the header layout stays exactly as it was.
+ */
+function ViewAllLink({ className = "" }: { className?: string }) {
+  return (
+    <Link href="/opportunities" className={`link-pill group w-fit shrink-0 ${className}`}>
+      View all opportunities <Icon name="arrow" className="h-3.5 w-3.5" />
+    </Link>
+  );
+}
+
 export default function FeaturedOpportunityTicker() {
   const [items, setItems] = useState<OpportunityRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,16 +51,17 @@ export default function FeaturedOpportunityTicker() {
       aria-label="Trending opportunities"
     >
       <div className="container-px mb-4">
-        <p className="eyebrow flex items-center gap-2">
-          <span className="live-dot" aria-hidden="true" />
-          Trending
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+          <p className="eyebrow flex items-center gap-2">
+            <span className="live-dot" aria-hidden="true" />
+            Trending
+          </p>
+          <ViewAllLink className="sm:hidden" />
+        </div>
         <div className="mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
           {/* The hero headline is gone, so this is the page's one h1. */}
           <h1 className="section-title font-display">Discover the top things cooking up.</h1>
-          <Link href="/opportunities" className="link-pill group w-fit shrink-0">
-            View all opportunities <Icon name="arrow" className="h-3.5 w-3.5" />
-          </Link>
+          <ViewAllLink className="hidden sm:inline-flex" />
         </div>
       </div>
 

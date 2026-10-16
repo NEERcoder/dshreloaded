@@ -67,7 +67,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     href: "/pulse",
     iconSrc: "/categories/pulse.png",
     title: "Stay in the loop.",
-    description: "Campus updates, student stories and opportunities worth knowing about.",
+    description: "Catch campus updates, student stories and opportunities worth knowing about.",
   },
 ];
 

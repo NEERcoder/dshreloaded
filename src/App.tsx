@@ -1,7 +1,6 @@
 import { RouterProvider, useLocation } from "./lib/router";
 import { CursorProvider } from "./context/CursorContext";
 import { AuthProvider } from "./context/AuthContext";
-import CustomCursor from "./components/CustomCursor";
 import PageTransition from "./components/PageTransition";
 import Navbar from "./components/Navbar";
 import HomeSidebar from "./components/HomeSidebar";
@@ -123,7 +122,6 @@ export default function App() {
     <RouterProvider>
       <AuthProvider>
         <CursorProvider>
-          <CustomCursor />
           <AppRouter />
         </CursorProvider>
       </AuthProvider>

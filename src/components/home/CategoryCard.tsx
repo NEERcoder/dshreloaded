@@ -19,7 +19,7 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
       data-cursor="view"
       className={`cat-tile pillar-${category.id} group animate-fade-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue`}
       style={{ animationDelay: `${index * 60}ms` }}
-      aria-label={`${category.label} — ${category.description}`}
+      aria-label={`${category.label} — ${category.title} ${category.description}`}
     >
       <span className="cat-tile__well w-full p-1 sm:px-2 sm:py-2">
         <img
@@ -40,15 +40,12 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
           className="h-3 w-3 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:h-3 sm:w-3"
         />
       </span>
-      {/* Unclamped on purpose. The launcher's mobile tiles are ~100px wide, so
-          "Certificates • Internships • Jobs" needs three lines — clamping here
-          would cut the copy in half, and grid rows auto-size to the tallest
-          tile, so every tile in the row still ends at the same height.
-          `break-words` is what keeps a single long word like "Competitions"
-          inside a six-across tile at 1024px instead of pushing past its edge. */}
-      <span className="mt-0.5 block break-words text-[10px] font-medium leading-[1.25] text-ink-500 sm:text-[11px]">
-        {category.description}
-      </span>
+      {/* The promise line never clamps, so an area's promise stays readable in
+          full at every width. The description below it is visually clamped to
+          two lines on the mobile tiles only; the full string is always in the
+          DOM text and repeated in the tile's accessible name. */}
+      <span className="cat-tile__title">{category.title}</span>
+      <span className="cat-tile__desc">{category.description}</span>
     </Link>
   );
 }
