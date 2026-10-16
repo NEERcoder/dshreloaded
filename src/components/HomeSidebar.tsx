@@ -53,7 +53,7 @@ export default function HomeSidebar() {
   const isActive = (href: string) => path === href || path.startsWith(href + "/");
 
   const itemClass = (href: string) =>
-    `flex min-h-[38px] items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
+    `flex min-h-[38px] items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
       isActive(href) ? "bg-brand-blue text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
     }`;
 
@@ -77,7 +77,7 @@ export default function HomeSidebar() {
                 className={itemClass(item.href)}
               >
                 <Icon name={item.icon} className="h-4 w-4 shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <span className="min-w-0 truncate">{item.label}</span>
               </Link>
             </li>
           ))}
@@ -89,7 +89,7 @@ export default function HomeSidebar() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex min-h-[38px] w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none text-white/65 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+            className="flex min-h-[38px] w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none text-white/65 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
           >
             <Icon name="logout" className="h-4 w-4 shrink-0" />
             Sign Out

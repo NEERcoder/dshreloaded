@@ -357,6 +357,26 @@
     }
   }
 
+  /* Tile copy — the two lines that sit under the icon. The title never clamps:
+     an area name has to stay readable in full at every width. The description
+     clamps to two lines below 640px, where the mobile 3x2 launcher fixes the
+     tile height, and opens to its full length from 640px up. The clamp is
+     visual only — the whole string stays in the accessible text. */
+  .cat-tile__title {
+    @apply font-extrabold leading-[1.25] text-ink-900;
+  }
+  .cat-tile__desc {
+    @apply font-medium leading-[1.3] text-ink-500;
+  }
+  @media (max-width: 639px) {
+    .cat-tile__desc {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+    }
+  }
+
   /* ============================================================
      GLASS SURFACES — used selectively, never site-wide.
      Translucent white over the dot grid, with blur only where the

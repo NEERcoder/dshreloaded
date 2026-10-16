@@ -51,7 +51,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
   if (!render) return null;
 
   const itemClass = (href: string) =>
-    `flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+    `flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
       path === href || path.startsWith(href + "/")
         ? "text-brand-blue bg-brand-blue-soft"
         : "text-ink-900 hover:bg-brand-blue-soft"
@@ -112,7 +112,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
                 <Link
                   href="/notifications"
                   onClick={onClose}
-                  className={`flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                  className={`flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
                     path === "/notifications" ? "text-brand-blue bg-brand-blue-soft" : "text-ink-900 hover:bg-brand-blue-soft"
                   }`}
                 >
@@ -165,7 +165,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
               <Link
                 href="/admin"
                 onClick={onClose}
-                className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-extrabold transition-colors ${
+                className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-extrabold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
                   path === "/admin" ? "text-brand-navy bg-brand-red" : "text-brand-red-ink bg-brand-red-soft hover:bg-brand-red hover:text-brand-navy"
                 }`}
               >
@@ -179,7 +179,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             <div {...stagger(7)}>
               <button
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold text-ink-600 transition-colors hover:bg-surface-soft"
+                className="flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold text-ink-600 transition-colors hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
               >
                 <Icon name="logout" className="h-5 w-5 shrink-0" />
                 Sign out
