@@ -135,7 +135,7 @@ export default function CollegePage({ slug }: { slug: string }) {
   if (!college) {
     return (
       <PageShell title="College profile coming soon | JAVLIN" backgroundPreset="college">
-        <section className="container-px py-20 sm:py-28">
+        <section className="container-px py-12 sm:py-16">
           <Link href="/explore" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:underline">
             <Icon name="arrow-left" className="h-4 w-4" /> Back to College Directory
           </Link>
@@ -301,7 +301,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       </div>
 
       {/* 2. REAL STUDENT TAKES & REVIEWS — first, because it decides visits */}
-      <section id="reviews" className="scroll-mt-32 py-16 sm:py-24 bg-surface-soft/60 backdrop-blur-[2px]">
+      <section id="reviews" className="scroll-mt-32 py-10 sm:py-14 bg-surface-soft/60 backdrop-blur-[2px]">
         <div className="container-px grid gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -345,7 +345,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       </section>
 
       {/* 3. QUICK FACTS & ABOUT */}
-      <section id="overview" className="scroll-mt-32 py-14 sm:py-20 border-t border-surface-border">
+      <section id="overview" className="scroll-mt-32 py-9 sm:py-12 border-t border-surface-border">
         <div className="container-px">
           <SectionHeading
             eyebrow="QUICK FACTS"
@@ -369,7 +369,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       </section>
 
       {/* 4. COURSES OFFERED */}
-      <section id="courses" className="scroll-mt-32 py-16 sm:py-24 border-t border-surface-border bg-white">
+      <section id="courses" className="scroll-mt-32 py-10 sm:py-14 border-t border-surface-border bg-white">
         <div className="container-px">
           <div className="card p-6 sm:p-8 bg-white shadow-card border border-surface-border">
             <SectionHeading align="left" eyebrow="COURSES OFFERED" title="What can you study here?" />
@@ -394,7 +394,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       </section>
 
       {/* 5. OPPORTUNITY RADAR FOR THIS COLLEGE */}
-      <section id="related-opps" className="scroll-mt-32 border-t border-surface-border bg-surface-soft/60 backdrop-blur-[2px] py-16 sm:py-24">
+      <section id="related-opps" className="scroll-mt-32 border-t border-surface-border bg-surface-soft/60 backdrop-blur-[2px] py-10 sm:py-14">
         <div className="container-px">
           <SectionHeading
             eyebrow="OPPORTUNITY RADAR"
@@ -424,7 +424,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       </section>
 
       {/* 6. CAMPUS UNFILTERED MEDIA */}
-      <section id="videos" className="scroll-mt-32 border-t border-surface-border bg-white py-16 sm:py-24">
+      <section id="videos" className="scroll-mt-32 border-t border-surface-border bg-white py-10 sm:py-14">
         <div className="container-px">
           <SectionHeading
             eyebrow="CAMPUS UNFILTERED"
@@ -500,7 +500,7 @@ export default function CollegePage({ slug }: { slug: string }) {
       </section>
 
       {/* 7. SENIORS & MENTORS */}
-      <section id="mentors-section" className="scroll-mt-32 border-t border-surface-border bg-surface-soft/60 backdrop-blur-[2px] py-16 sm:py-24">
+      <section id="mentors-section" className="scroll-mt-32 border-t border-surface-border bg-surface-soft/60 backdrop-blur-[2px] py-10 sm:py-14">
         <div className="container-px">
           <SectionHeading
             eyebrow="SENIORS & MENTORS"

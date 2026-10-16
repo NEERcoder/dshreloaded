@@ -135,7 +135,7 @@ export default function ConnectionsPage() {
         </div>
       </section>
 
-      <section className="container-px py-8 sm:py-10 max-w-2xl">
+      <section className="container-px py-6 sm:py-8 max-w-2xl">
         {error && (
           <div className="mb-6 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink">
             We couldn't load your connections. {error}

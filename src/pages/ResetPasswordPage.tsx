@@ -127,7 +127,7 @@ export default function ResetPasswordPage() {
       description="Reset the password for your JAVLIN student account."
       backgroundPreset="explore"
     >
-      <section className="container-px py-16 sm:py-24">
+      <section className="container-px py-10 sm:py-14">
         <div className="mx-auto max-w-md animate-fade-up">
           {mode === "verifying" && (
             <div className="card p-8 text-center">

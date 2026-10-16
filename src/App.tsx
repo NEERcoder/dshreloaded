@@ -16,6 +16,7 @@ import CirclePreview from "./components/home/CirclePreview";
 import MarkPreview from "./components/home/MarkPreview";
 import PulsePreview from "./components/home/PulsePreview";
 import ReviewsPreview from "./components/home/ReviewsPreview";
+import OrganizerCta from "./components/home/OrganizerCta";
 import JoinPreview from "./components/home/JoinPreview";
 import ExplorePage from "./pages/ExplorePage";
 import CollegePage from "./pages/CollegePage";
@@ -64,6 +65,7 @@ function JavlinHome() {
           <CirclePreview />
           <PulsePreview />
           <ReviewsPreview />
+          <OrganizerCta />
           <JoinPreview />
         </main>
       </div>

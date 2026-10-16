@@ -105,6 +105,15 @@ const paths: Record<string, JSX.Element> = {
       <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
     </>
   ),
+  linkedin: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <path d="M7.5 10.5V16" />
+      <circle cx="7.5" cy="7.7" r="0.9" fill="currentColor" stroke="none" />
+      <path d="M11.5 16v-3.1a2.45 2.45 0 0 1 4.9 0V16" />
+      <path d="M11.5 10.5V16" />
+    </>
+  ),
   phone: (
     <>
       <path d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 006 6l1.5-2 4 1.5v3a2 2 0 01-2.2 2A16.5 16.5 0 014.5 5.7 2 2 0 016.5 3.5z" />

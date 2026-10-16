@@ -24,7 +24,7 @@ export default function FieldPreview() {
 
   return (
     <section id="field" className="band pillar-field tone-dark scroll-mt-24">
-      <div className="container-px py-6 sm:py-8 lg:py-10">
+      <div className="container-px py-5 sm:py-6 lg:py-8">
         <SectionHeader
           eyebrow="FIELD"
           title="Case competitions, hackathons, contests"
@@ -33,7 +33,7 @@ export default function FieldPreview() {
           viewAllLabel="Explore FIELD"
           iconSrc={categoryById("field")?.iconSrc}
         />
-        <div className="mt-5">
+        <div className="mt-4">
           {loading ? (
             <CardRowSkeleton />
           ) : items.length === 0 ? (

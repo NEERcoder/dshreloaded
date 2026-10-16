@@ -173,7 +173,7 @@ export default function SignupPage() {
   if (needsManualLogin) {
     return (
       <PageShell title="Account created | JAVLIN" backgroundPreset="explore">
-        <section className="container-px py-16 sm:py-24">
+        <section className="container-px py-10 sm:py-14">
           <div className="mx-auto max-w-md text-center animate-fade-up">
             <span className="inline-block rounded-full bg-brand-blue-soft px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-blue">
               Account created
@@ -196,7 +196,7 @@ export default function SignupPage() {
   if (profileError) {
     return (
       <PageShell title="Almost done | JAVLIN" backgroundPreset="explore">
-        <section className="container-px py-16 sm:py-24">
+        <section className="container-px py-10 sm:py-14">
           <div className="mx-auto max-w-md text-center animate-fade-up">
             <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red-ink">
               One step left
@@ -235,7 +235,7 @@ export default function SignupPage() {
       description="Create a JAVLIN student account."
       backgroundPreset="explore"
     >
-      <section className="container-px py-16 sm:py-24">
+      <section className="container-px py-10 sm:py-14">
         <div className="mx-auto max-w-xl animate-fade-up">
           <BrandMark className="h-10 w-auto" />
           <p className="eyebrow mt-4">STUDENT ACCOUNT</p>

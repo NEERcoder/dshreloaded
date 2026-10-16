@@ -221,7 +221,7 @@ export default function HomeChoices() {
           ===================================================== */}
       <section className="py-12 sm:py-16 border-t border-surface-border">
         <div className="container-px max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 rounded-2xl border border-surface-border bg-white p-6 sm:p-8 shadow-soft">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-surface-border bg-white p-4 sm:p-5 shadow-soft">
             <div className="flex items-center gap-5">
               <div className="h-12 w-12 rounded-2xl bg-brand-red-soft flex items-center justify-center shrink-0">
                 <Icon name="users" className="h-6 w-6 text-brand-red" />

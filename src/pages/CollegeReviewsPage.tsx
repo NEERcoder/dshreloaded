@@ -107,7 +107,7 @@ export default function CollegeReviewsPage() {
         </div>
       </section>
 
-      <section className="container-px py-8 sm:py-10">
+      <section className="container-px py-6 sm:py-8">
         <div className="card p-5">
           <label className="field-label" htmlFor="review-college-search">
             Search college

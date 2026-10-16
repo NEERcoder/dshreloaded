@@ -33,7 +33,7 @@ export default function FeaturedOpportunityTicker() {
   return (
     <section
       ref={sectionRef}
-      className={`on-navy tone-dark reveal pb-7 pt-1 sm:pb-10 sm:pt-3 lg:pb-14 ${isVisible ? "is-visible" : ""}`}
+      className={`on-navy tone-dark reveal pb-6 pt-1 sm:pb-8 sm:pt-2 lg:pb-9 ${isVisible ? "is-visible" : ""}`}
       aria-label="Trending opportunities"
     >
       <div className="container-px mb-4">

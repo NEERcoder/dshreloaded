@@ -198,7 +198,7 @@ export default function CirclePreview() {
 
   return (
     <section id="circle" className="band pillar-circle scroll-mt-24">
-      <div className="container-px py-6 sm:py-8 lg:py-10">
+      <div className="container-px py-5 sm:py-6 lg:py-8">
         <SectionHeader
           eyebrow="CIRCLE"
           title="Find your people with common interests"
@@ -208,7 +208,7 @@ export default function CirclePreview() {
           iconSrc={categoryById("circle")?.iconSrc}
         />
 
-        <div className="mt-5">
+        <div className="mt-4">
           {loading ? (
             <div className="flex gap-4">
               {Array.from({ length: 5 }).map((_, index) => (

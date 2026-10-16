@@ -236,7 +236,7 @@ export default function CrewPage() {
         </div>
       </section>
 
-      <section className="container-px py-8 sm:py-10 space-y-10">
+      <section className="container-px py-6 sm:py-8 space-y-10">
         {loadError && (
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-red/20 bg-brand-red-soft px-4 py-3 text-sm font-bold text-brand-red-ink">
             <span className="inline-flex items-center gap-2">

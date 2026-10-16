@@ -690,7 +690,7 @@ export default function ExplorePage() {
       </section>
 
       {/* 2. STUDENT REVIEWS SPOTLIGHT (HIGH-PRIORITY FEATURE) */}
-      <section id="reviews" className="scroll-mt-24 py-16 sm:py-24 border-b border-surface-border">
+      <section id="reviews" className="scroll-mt-24 py-10 sm:py-14 border-b border-surface-border">
         <div className="container-px max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
@@ -764,7 +764,7 @@ export default function ExplorePage() {
       </section>
 
       {/* 3. COLLEGE DIRECTORY WITH STICKY FILTER BAR */}
-      <section id="college-directory" className="scroll-mt-24 py-16 sm:py-24 border-b border-surface-border">
+      <section id="college-directory" className="scroll-mt-24 py-10 sm:py-14 border-b border-surface-border">
         <div className="container-px">
           <SectionHeading
             eyebrow="VERIFIED DIRECTORY"
@@ -873,7 +873,7 @@ export default function ExplorePage() {
       </section>
 
       {/* 4. CAMPUS UNFILTERED MEDIA EXPERIENCE */}
-      <section id="du-unfiltered" className="scroll-mt-24 py-16 sm:py-24 border-b border-surface-border">
+      <section id="du-unfiltered" className="scroll-mt-24 py-10 sm:py-14 border-b border-surface-border">
         <div className="container-px">
           <SectionHeading
             eyebrow="CAMPUS UNFILTERED"
@@ -892,7 +892,7 @@ export default function ExplorePage() {
       </section>
 
       {/* 5. SENIORS & MENTORS SHOWCASE */}
-      <section id="mentors" className="scroll-mt-24 bg-surface-soft/60 backdrop-blur-[2px] py-16 sm:py-24">
+      <section id="mentors" className="scroll-mt-24 bg-surface-soft/60 backdrop-blur-[2px] py-10 sm:py-14">
         <div className="container-px">
           <SectionHeading
             eyebrow="SENIORS & MENTORS"

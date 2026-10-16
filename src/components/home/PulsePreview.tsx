@@ -42,7 +42,7 @@ export default function PulsePreview() {
 
   return (
     <section id="pulse" className="band pillar-pulse scroll-mt-24">
-      <div className="container-px py-6 sm:py-8 lg:py-10">
+      <div className="container-px py-5 sm:py-6 lg:py-8">
         <SectionHeader
           eyebrow="PULSE"
           title="See what's happening."
@@ -51,7 +51,7 @@ export default function PulsePreview() {
           viewAllLabel="See What's Happening"
           iconSrc={categoryById("pulse")?.iconSrc}
         />
-        <div className="mt-5">
+        <div className="mt-4">
           {loading ? (
             <CardRowSkeleton />
           ) : posts.length === 0 ? (

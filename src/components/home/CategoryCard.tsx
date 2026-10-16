@@ -43,8 +43,10 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
       {/* Unclamped on purpose. The launcher's mobile tiles are ~100px wide, so
           "Certificates • Internships • Jobs" needs three lines — clamping here
           would cut the copy in half, and grid rows auto-size to the tallest
-          tile, so every tile in the row still ends at the same height. */}
-      <span className="mt-0.5 block text-[10px] font-medium leading-[1.25] text-ink-500 sm:text-[11px]">
+          tile, so every tile in the row still ends at the same height.
+          `break-words` is what keeps a single long word like "Competitions"
+          inside a six-across tile at 1024px instead of pushing past its edge. */}
+      <span className="mt-0.5 block break-words text-[10px] font-medium leading-[1.25] text-ink-500 sm:text-[11px]">
         {category.description}
       </span>
     </Link>

@@ -33,7 +33,7 @@ export default function AimPreview() {
 
   return (
     <section id="aim" className="band pillar-aim scroll-mt-24">
-      <div className="container-px py-6 sm:py-8 lg:py-10">
+      <div className="container-px py-5 sm:py-6 lg:py-8">
         <SectionHeader
           eyebrow="AIM"
           title="Internships, jobs, certifications"
@@ -42,7 +42,7 @@ export default function AimPreview() {
           viewAllLabel="View All AIM"
           iconSrc={categoryById("aim")?.iconSrc}
         />
-        <div className="mt-5">
+        <div className="mt-4">
           {loading ? (
             <CardRowSkeleton />
           ) : items.length === 0 ? (

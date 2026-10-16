@@ -128,7 +128,7 @@ function GeneralApplication() {
   }
 
   return (
-    <section id="general" className="scroll-mt-24 border-t border-surface-border bg-brand-blue-pale/50 backdrop-blur-[2px] py-16 sm:py-24">
+    <section id="general" className="scroll-mt-24 border-t border-surface-border bg-brand-blue-pale/50 backdrop-blur-[2px] py-10 sm:py-14">
       <div className="container-px">
         <div className="grid gap-10 lg:grid-cols-[1fr_0.85fr] lg:items-start max-w-6xl mx-auto">
           <div>
@@ -230,7 +230,7 @@ const COLLABORATION_KINDS = [
  */
 function Collaborate() {
   return (
-    <section id="collaborate" className="scroll-mt-24 py-16 sm:py-20 border-b border-surface-border">
+    <section id="collaborate" className="scroll-mt-24 py-10 sm:py-14 border-b border-surface-border">
       <div className="container-px max-w-6xl mx-auto">
         <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
@@ -333,7 +333,7 @@ export default function JoinPage({ roleId }: { roleId?: string }) {
       <Collaborate />
 
       {/* 3. AVAILABLE ROLES (SIMPLE, SCANNABLE FORMAT) */}
-      <section id="open-roles" className="scroll-mt-24 py-16 sm:py-24 border-b border-surface-border">
+      <section id="open-roles" className="scroll-mt-24 py-10 sm:py-14 border-b border-surface-border">
         <div className="container-px max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -486,7 +486,7 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
   return (
     <PageShell title={`${role.title} | Join JAVLIN`} backgroundPreset="team">
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border">
-        <div className="container-px py-14 sm:py-20">
+        <div className="container-px py-9 sm:py-12">
           <Link href="/join" className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-bold text-brand-blue hover:underline uppercase tracking-wider sm:min-h-0">
             <Icon name="arrow-left" className="h-4 w-4" /> Back to Open Positions
           </Link>
@@ -528,7 +528,7 @@ function RoleDetail({ role }: { role?: RoleCardData }) {
         </div>
       </section>
 
-      <section className="py-14 sm:py-20">
+      <section className="py-9 sm:py-12">
         <div className="container-px max-w-4xl">
           {role.responsibilities && role.responsibilities.length > 0 && (
             <div>

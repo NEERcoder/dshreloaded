@@ -15,7 +15,7 @@ const TRACKS = [
 export default function MarkPreview() {
   return (
     <section id="mark" className="band pillar-mark tone-dark scroll-mt-24">
-      <div className="container-px py-6 sm:py-8 lg:py-10">
+      <div className="container-px py-5 sm:py-6 lg:py-8">
         <SectionHeader
           eyebrow="MARK"
           title="Document your college years. Build your record."
@@ -24,7 +24,7 @@ export default function MarkPreview() {
           viewAllLabel="Build Your MARK"
           iconSrc={categoryById("mark")?.iconSrc}
         />
-        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-6 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
+        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
           {TRACKS.map((track) => (
             <div
               key={track.label}
@@ -37,7 +37,7 @@ export default function MarkPreview() {
             </div>
           ))}
         </div>
-        <div className="mt-5 flex justify-center sm:mt-6">
+        <div className="mt-4 flex justify-center sm:mt-5">
           <Link href="/mark" className="btn-accent">
             Start Your MARK
             <Icon name="arrow" className="h-4 w-4" />

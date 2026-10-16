@@ -48,7 +48,7 @@ export default function CrewPreview() {
 
   return (
     <section id="crew" className="band pillar-crew scroll-mt-24">
-      <div className="container-px py-6 sm:py-8 lg:py-10">
+      <div className="container-px py-5 sm:py-6 lg:py-8">
         <SectionHeader
           eyebrow="CREW"
           title="Teams looking for teammates"
@@ -57,7 +57,7 @@ export default function CrewPreview() {
           viewAllLabel="Find Your Crew"
           iconSrc={categoryById("crew")?.iconSrc}
         />
-        <div className="mt-5 space-y-6">
+        <div className="mt-4 space-y-4">
           {loading ? (
             <CardRowSkeleton />
           ) : teams.length > 0 ? (

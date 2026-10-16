@@ -106,7 +106,7 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
         </div>
       )}
 
-      <div className="p-6 sm:p-8">
+      <div className="p-5 sm:p-6">
         {categoryParam ? (
           <Link
             href={`/opportunities/${categoryParam}`}

@@ -79,7 +79,7 @@ export default function LoginPage() {
       description="Log in to your JAVLIN student account."
       backgroundPreset="explore"
     >
-      <section className="container-px py-16 sm:py-24">
+      <section className="container-px py-10 sm:py-14">
         <div className="mx-auto max-w-md animate-fade-up">
           <BrandMark className="h-10 w-auto" />
           <p className="eyebrow mt-4">STUDENT ACCOUNT</p>

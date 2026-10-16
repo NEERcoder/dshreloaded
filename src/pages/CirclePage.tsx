@@ -166,7 +166,7 @@ export default function CirclePage() {
         </div>
       </section>
 
-      <section className="container-px py-8 sm:py-10">
+      <section className="container-px py-6 sm:py-8">
         {authLoading || loading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, index) => (

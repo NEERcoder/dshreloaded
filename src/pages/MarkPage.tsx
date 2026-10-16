@@ -333,7 +333,7 @@ export default function MarkPage() {
     >
       <MarkHeader />
 
-      <div className="container-px py-8 sm:py-10">
+      <div className="container-px py-6 sm:py-8">
         {/* PROFILE HEADER */}
         <section className="card border border-surface-border bg-white p-6 sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">

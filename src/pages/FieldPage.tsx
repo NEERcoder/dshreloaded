@@ -21,7 +21,7 @@ export default function FieldPage() {
         </div>
       </section>
 
-      <section className="container-px py-8 sm:py-10">
+      <section className="container-px py-6 sm:py-8">
         <OpportunityBrowser
           categories={["competition"]}
           showCompensation
