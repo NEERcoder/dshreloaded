@@ -39,6 +39,8 @@ import SignupPage from "./pages/SignupPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import TeamPage from "./pages/TeamPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 function JavlinHome() {
   return (
@@ -112,6 +114,8 @@ function AppRouter() {
   else if (path === "/reset-password") page = <ResetPasswordPage />;
   else if (path === "/dashboard") page = <DashboardPage />;
   else if (path.startsWith("/teams/")) page = <TeamPage teamId={path.replace("/teams/", "").replace(/\/$/, "")} />;
+  else if (path === "/terms" || path === "/terms-and-conditions") page = <TermsPage />;
+  else if (path === "/privacy" || path === "/privacy-policy") page = <PrivacyPolicyPage />;
   else page = <JavlinHome />;
 
   return <PageTransition>{page}</PageTransition>;

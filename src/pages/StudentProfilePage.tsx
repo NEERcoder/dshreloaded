@@ -237,6 +237,9 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
               <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-ink-900 leading-tight">
                 {student.fullName}
               </h1>
+              {student.headline && (
+                <p className="mt-1 text-sm font-medium text-ink-700">{student.headline}</p>
+              )}
               <p className="mt-1 text-sm font-semibold text-ink-500">
                 {student.course}
                 {student.yearOfStudy ? ` · ${yearLabel(student.yearOfStudy)}` : ""}

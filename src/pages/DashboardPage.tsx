@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
+import CollegeSearch from "../components/CollegeSearch";
 import { StudentAvatar } from "../components/circle/StudentCard";
 import { useUnreadNotificationCount } from "../components/NotificationBell";
 import { useAuth } from "../context/AuthContext";
@@ -11,20 +12,39 @@ import {
   createProfile,
   updateProfile,
   getMyCompetitionTeams,
+  getMyCompetitionRegistrations,
+  getOpportunityById,
+  getStudentRecords,
   getConnectionSummary,
   setProfileVisibility,
   uploadStudentAvatar,
   normalizeInstagramHandle,
   normalizePhoneNumber,
+  countHeadlineWords,
+  validateHeadline,
+  MAX_HEADLINE_CHARS,
   instagramProfileUrl,
   type CollegeRecord,
   type ProfileRecord,
   type ProfileInput,
   type CompetitionTeamRecord,
+  type MyCompetitionRegistrationSummary,
   type ConnectionSummary,
+  type OpportunityRecord,
 } from "../lib/dataAccess";
+import { deadlineInstant, formatDeadlineCountdown } from "../lib/deadline";
+import { useDeadlineNow } from "../hooks/useDeadlineNow";
 
 const GENDER_OPTIONS = ["Female", "Male", "Non-binary", "Prefer not to say"];
+
+/** Countdown pill tones, mirroring the FIELD deadline styling. */
+const DEADLINE_TONE_CLASS: Record<ReturnType<typeof formatDeadlineCountdown>["tone"], string> = {
+  none: "bg-surface-soft text-ink-500",
+  open: "bg-emerald-50 text-emerald-700",
+  soon: "bg-amber-50 text-amber-700",
+  urgent: "bg-brand-red-soft text-brand-red-ink",
+  closed: "bg-surface-border text-ink-500",
+};
 
 type FormState = {
   fullName: string;
@@ -33,6 +53,8 @@ type FormState = {
   yearOfStudy: string;
   graduationYear: string;
   gender: string;
+  /** Optional public headline, max 60 words. */
+  headline: string;
   /** Bare handle, no @ and no URL. Public on the profile. */
   instagramHandle: string;
   /** Optional and unverified. Visible only to the owner and shared teammates. */
@@ -46,6 +68,7 @@ const blankForm: FormState = {
   yearOfStudy: "",
   graduationYear: "",
   gender: "",
+  headline: "",
   instagramHandle: "",
   phone: "",
 };
@@ -59,6 +82,7 @@ function formFromProfile(p: ProfileRecord): FormState {
     yearOfStudy: p.yearOfStudy ? String(p.yearOfStudy) : "",
     graduationYear: p.graduationYear ? String(p.graduationYear) : "",
     gender: p.gender,
+    headline: p.headline ?? "",
     instagramHandle: p.instagramHandle ?? "",
     phone: p.phone ?? "",
   };
@@ -85,7 +109,17 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [myTeams, setMyTeams] = useState<CompetitionTeamRecord[]>([]);
+  const [teamOpportunities, setTeamOpportunities] = useState<Record<string, OpportunityRecord>>({});
+  const [myRegistrations, setMyRegistrations] = useState<MyCompetitionRegistrationSummary[]>([]);
+  const [registrationsError, setRegistrationsError] = useState<string | null>(null);
   const [connectionSummary, setConnectionSummary] = useState<ConnectionSummary | null>(null);
+
+  // Student-record summary: null count means "not loaded / failed", never 0.
+  const [recordsCount, setRecordsCount] = useState<number | null>(null);
+  const [recordsError, setRecordsError] = useState<string | null>(null);
+
+  // Shared clock so every competition countdown ticks from one interval.
+  const now = useDeadlineNow();
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
@@ -110,14 +144,53 @@ export default function DashboardPage() {
   async function loadData() {
     setDataLoading(true);
     setLoadError(null);
-    const [collegesResult, profileResult, teamsResult, connectionsResult] = await Promise.all([
+    setRecordsError(null);
+    const uid = user?.id;
+    const [collegesResult, profileResult, teamsResult, connectionsResult, recordsResult, registrationsResult] = await Promise.all([
       getColleges(),
       getCurrentUserProfile(),
       getMyCompetitionTeams(),
       getConnectionSummary(),
+      uid
+        ? getStudentRecords(uid)
+        : Promise.resolve({ data: [], error: "No active session.", configured: false }),
+      getMyCompetitionRegistrations(),
     ]);
     setColleges(collegesResult.data);
-    setMyTeams(teamsResult.data ?? []);
+    const teams = teamsResult.data ?? [];
+    setMyTeams(teams);
+
+    // Enrich each team with its competition's organizer + deadline. Team
+    // membership is not a registration, so this stays a "teams" view; the
+    // organizer/deadline come from the linked opportunity when RLS allows it.
+    const competitionIds = Array.from(new Set(teams.map((team) => team.competitionId)));
+    const oppResults = await Promise.all(competitionIds.map((id) => getOpportunityById(id)));
+    const oppMap: Record<string, OpportunityRecord> = {};
+    oppResults.forEach((result, index) => {
+      if (result.data) oppMap[competitionIds[index]] = result.data;
+    });
+    setTeamOpportunities(oppMap);
+
+    // Registrations are read straight from competition_registrations under RLS.
+    // A failure (e.g. migration 013 not applied on this project) is surfaced as
+    // an "unavailable" state, never as a fake empty list presented as success.
+    if (registrationsResult.error) {
+      setMyRegistrations([]);
+      setRegistrationsError(registrationsResult.error);
+    } else {
+      setMyRegistrations(registrationsResult.data);
+      setRegistrationsError(null);
+    }
+
+    // Records: only a real, configured read yields a number. A failure or an
+    // unavailable backend surfaces as an error/retry, never a silent zero.
+    if (recordsResult.error || !recordsResult.configured) {
+      setRecordsCount(null);
+      setRecordsError(recordsResult.error ?? "We couldn't load your records.");
+    } else {
+      setRecordsCount(recordsResult.data.length);
+    }
+
     // Connections are optional context: if the backend can't answer, the
     // dashboard renders without the section instead of failing.
     setConnectionSummary(
@@ -165,6 +238,9 @@ export default function DashboardPage() {
 
     if (!form.gender) return "Please select a gender.";
 
+    const headlineError = validateHeadline(form.headline);
+    if (headlineError) return headlineError;
+
     if (form.instagramHandle.trim() && !normalizeInstagramHandle(form.instagramHandle)) {
       return "Instagram should be just your username, like neer_singh — no @ and no link.";
     }
@@ -196,6 +272,7 @@ export default function DashboardPage() {
       yearOfStudy: Number(form.yearOfStudy),
       graduationYear: Number(form.graduationYear),
       gender: form.gender,
+      headline: form.headline,
       instagramHandle: form.instagramHandle,
       phone: form.phone,
     };
@@ -364,24 +441,14 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="field-label" htmlFor="dash-college">College</label>
-                  <select
-                    id="dash-college"
-                    required
-                    disabled={saving}
-                    value={form.collegeId}
-                    onChange={(e) => setForm({ ...form, collegeId: e.target.value })}
-                    className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <option value="" disabled>Select your college</option>
-                    {colleges.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} {c.campus ? `(${c.campus})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <CollegeSearch
+                  id="dash-college"
+                  label="College"
+                  colleges={colleges}
+                  value={form.collegeId}
+                  onChange={(id) => setForm({ ...form, collegeId: id })}
+                  disabled={saving}
+                />
 
                 <div>
                   <label className="field-label" htmlFor="dash-course">Course</label>
@@ -415,7 +482,7 @@ export default function DashboardPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="field-label" htmlFor="dash-graduation-year">Graduation Year</label>
+                    <label className="field-label" htmlFor="dash-graduation-year">Graduation Year / Post-Graduation Year</label>
                     <select
                       id="dash-graduation-year"
                       required
@@ -447,6 +514,34 @@ export default function DashboardPage() {
                       <option key={g} value={g}>{g}</option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="field-label" htmlFor="dash-headline">
+                      Headline <span className="font-medium normal-case text-ink-500">(optional)</span>
+                    </label>
+                    <span
+                      className={`text-[11px] font-semibold ${
+                        countHeadlineWords(form.headline) > 60 ? "text-brand-red-ink" : "text-ink-500"
+                      }`}
+                    >
+                      {countHeadlineWords(form.headline)}/60 words
+                    </span>
+                  </div>
+                  <textarea
+                    id="dash-headline"
+                    rows={2}
+                    maxLength={MAX_HEADLINE_CHARS}
+                    disabled={saving}
+                    value={form.headline}
+                    onChange={(e) => setForm({ ...form, headline: e.target.value })}
+                    className="field-input min-h-[64px] resize-y disabled:opacity-60 disabled:cursor-not-allowed"
+                    placeholder="A short line shown on your public profile, e.g. BSc Physics student | ML enthusiast"
+                  />
+                  <p className="mt-1 text-[11px] font-semibold text-ink-500">
+                    Up to 60 words. Appears on your public profile where it is visible to others.
+                  </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -562,13 +657,19 @@ export default function DashboardPage() {
                   <dd className="mt-1 text-sm font-semibold text-ink-900">{yearLabel(profile.yearOfStudy)}</dd>
                 </div>
                 <div>
-                  <dt className="field-label">Graduation Year</dt>
+                  <dt className="field-label">Graduation Year / Post-Graduation Year</dt>
                   <dd className="mt-1 text-sm font-semibold text-ink-900">{profile.graduationYear}</dd>
                 </div>
                 <div>
                   <dt className="field-label">Gender</dt>
                   <dd className="mt-1 text-sm font-semibold text-ink-900">{profile.gender}</dd>
                 </div>
+                {profile.headline && (
+                  <div className="sm:col-span-2">
+                    <dt className="field-label">Headline</dt>
+                    <dd className="mt-1 text-sm font-semibold text-ink-900">{profile.headline}</dd>
+                  </div>
+                )}
                 <div>
                   <dt className="field-label">Instagram</dt>
                   <dd className="mt-1 text-sm font-semibold text-ink-900">
@@ -704,10 +805,65 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* MY COMPETITIONS — real submitted registrations (migration 013) */}
+        <div className="mt-10 max-w-2xl">
+          <h2 className="text-lg font-extrabold text-ink-900">My Competitions</h2>
+          <p className="mt-1 text-sm text-ink-500">Competitions you have registered for.</p>
+
+          {dataLoading ? (
+            <div className="mt-4 card p-6 text-sm text-ink-500 animate-pulse">Loading your registrations…</div>
+          ) : registrationsError ? (
+            <div className="mt-4 card p-6 text-sm text-ink-500">
+              Competition registrations aren&apos;t available on this deployment yet.
+            </div>
+          ) : myRegistrations.length === 0 ? (
+            <div className="mt-4 card p-6 text-center border-dashed">
+              <p className="text-sm font-semibold text-ink-500">You haven&apos;t registered for a competition yet.</p>
+              <Link href="/field" className="btn-secondary mt-4 inline-flex text-sm">
+                Browse competitions on FIELD
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {myRegistrations.map((reg) => {
+                const instant = deadlineInstant(reg.deadlineAt, reg.deadline);
+                const countdown = formatDeadlineCountdown(instant, now);
+                return (
+                  <Link
+                    key={reg.registrationId}
+                    href={`/opportunities/${reg.competitionId}`}
+                    className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between hover:shadow-lift hover:-translate-y-0.5 transition-all duration-200 block"
+                  >
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-ink-900 truncate">
+                        {reg.title || "Competition"}
+                      </h3>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
+                        {reg.organization && (
+                          <span className="max-w-[16rem] truncate">{reg.organization}</span>
+                        )}
+                        <span className={`rounded-full px-2 py-0.5 font-bold ${DEADLINE_TONE_CLASS[countdown.tone]}`}>
+                          {countdown.text}
+                        </span>
+                        <span className="rounded-full bg-surface-soft px-2 py-0.5 font-bold text-ink-600">
+                          {reg.registrationType === "team" ? "Team entry" : "Solo entry"}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-blue shrink-0">
+                      View <Icon name="arrow" className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* MY TEAMS */}
         <div className="mt-10 max-w-2xl">
           <h2 className="text-lg font-extrabold text-ink-900">My Teams</h2>
-          <p className="mt-1 text-sm text-ink-500">Competitions you're part of.</p>
+          <p className="mt-1 text-sm text-ink-500">Teams you&apos;ve created or joined.</p>
 
           {dataLoading ? (
             <div className="mt-4 card p-6 text-sm text-ink-500 animate-pulse">Loading teams…</div>
@@ -737,6 +893,22 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <p className="mt-0.5 text-xs text-ink-500">{team.competitionTitle}</p>
+                    {(() => {
+                      const opp = teamOpportunities[team.competitionId];
+                      if (!opp) return null;
+                      const instant = deadlineInstant(opp.deadlineAt, opp.deadline);
+                      const countdown = formatDeadlineCountdown(instant, now);
+                      return (
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
+                          {opp.organization && (
+                            <span className="max-w-[16rem] truncate">{opp.organization}</span>
+                          )}
+                          <span className={`rounded-full px-2 py-0.5 font-bold ${DEADLINE_TONE_CLASS[countdown.tone]}`}>
+                            {countdown.text}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     <p className="text-xs text-ink-500">{team.memberCount} member{team.memberCount !== 1 ? "s" : ""}</p>
                   </div>
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-blue shrink-0">View team <Icon name="arrow" className="h-3.5 w-3.5" /></span>
@@ -776,6 +948,40 @@ export default function DashboardPage() {
                 )}
                 <Link href="/circle/connections" className="btn-outline-blue text-xs">
                   View connections
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STUDENT RECORDS — compact summary backed by the real MARK count */}
+        {!dataLoading && (
+          <div className="mt-10 max-w-2xl">
+            <div className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-extrabold text-ink-900">Student records</h2>
+                {recordsError ? (
+                  <p className="mt-1 text-sm font-semibold text-brand-red-ink">{recordsError}</p>
+                ) : recordsCount === null ? (
+                  <p className="mt-1 text-sm font-semibold text-ink-500 animate-pulse">Loading your records…</p>
+                ) : recordsCount === 0 ? (
+                  <p className="mt-1 text-sm font-semibold text-ink-500">
+                    No records yet — add your first achievement.
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm font-semibold text-ink-500">
+                    {recordsCount} record{recordsCount === 1 ? "" : "s"} on your MARK profile.
+                  </p>
+                )}
+              </div>
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {recordsError && (
+                  <button type="button" className="btn-secondary text-xs" onClick={loadData}>
+                    Retry
+                  </button>
+                )}
+                <Link href="/mark" className="btn-outline-blue text-xs">
+                  {recordsCount === 0 ? "Add a record" : "View & manage"}
                 </Link>
               </div>
             </div>

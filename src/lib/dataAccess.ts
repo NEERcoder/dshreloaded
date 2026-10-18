@@ -74,6 +74,8 @@ export type ProfileRecord = {
   yearOfStudy: number;
   graduationYear: number;
   gender: string;
+  /** Optional owner-authored public headline (max 60 words, enforced in the app). */
+  headline: string | null;
   /** Mirrors public.profiles.is_public — owner-controlled visitor visibility. */
   isPublic: boolean;
   avatarUrl: string | null;
@@ -99,6 +101,8 @@ export type ProfileInput = {
   phone?: string | null;
   /** Optional bare handle. Anything that looks like a URL is rejected. */
   instagramHandle?: string | null;
+  /** Optional public headline, max 60 words (enforced in the app). */
+  headline?: string | null;
 };
 
 const INSTAGRAM_HANDLE_RE = /^[A-Za-z0-9._]{1,30}$/;
@@ -135,6 +139,41 @@ export function normalizePhoneNumber(raw: string | null | undefined): string | n
   return cleaned;
 }
 
+/** Collapses repeated whitespace and trims a headline; blank becomes null. */
+export function normalizeHeadline(raw: string | null | undefined): string | null {
+  const collapsed = String(raw ?? "").replace(/\s+/g, " ").trim();
+  return collapsed || null;
+}
+
+/** Word count for the 60-word headline limit and the live editor counter. */
+export function countHeadlineWords(text: string | null | undefined): number {
+  const trimmed = String(text ?? "").trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+export const MAX_HEADLINE_WORDS = 60;
+// Backstop that comfortably fits an ordinary 60-word headline (60 words at
+// ~12 characters each plus spaces is well under this) while bounding storage
+// and abuse. The semantic limit is the 60-word rule enforced here and in the UI.
+export const MAX_HEADLINE_CHARS = 1000;
+
+/**
+ * Normalizes and validates a headline against the same limits the UI uses, so
+ * no caller can bypass them. Returns an error message, or null when the value
+ * is acceptable (an empty/whitespace-only headline is valid and stores as null).
+ */
+export function validateHeadline(raw: string | null | undefined): string | null {
+  const collapsed = String(raw ?? "").replace(/\s+/g, " ").trim();
+  if (!collapsed) return null;
+  if (collapsed.split(/\s+/).length > MAX_HEADLINE_WORDS) {
+    return `Headline must be ${MAX_HEADLINE_WORDS} words or fewer.`;
+  }
+  if (collapsed.length > MAX_HEADLINE_CHARS) {
+    return `Headline must be ${MAX_HEADLINE_CHARS} characters or fewer.`;
+  }
+  return null;
+}
+
 /** A CIRCLE directory entry — the discovery-safe projection of public.profiles. */
 export type StudentProfileRecord = {
   userId: string;
@@ -148,6 +187,8 @@ export type StudentProfileRecord = {
   avatarUrl: string | null;
   /** Whether the owner has let anonymous visitors read this profile. */
   isPublic: boolean;
+  /** Optional owner-authored public headline. */
+  headline: string | null;
   /** Bare handle, public by design. Phone number is never part of this view. */
   instagramHandle: string | null;
 };
@@ -331,6 +372,7 @@ const mapProfile = (row: Record<string, unknown>): ProfileRecord => ({
   yearOfStudy: Number(row.year_of_study ?? 0),
   graduationYear: Number(row.graduation_year ?? 0),
   gender: String(row.gender ?? ""),
+  headline: row.headline ? String(row.headline) : null,
   isPublic: Boolean(row.is_public),
   avatarUrl: row.avatar_url ? String(row.avatar_url) : null,
   instagramHandle: row.instagram_handle ? String(row.instagram_handle) : null,
@@ -1968,6 +2010,13 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
       return failure(null, new Error("You must be signed in to create a profile."));
     }
 
+    // Validate before any write so an over-limit headline cannot be persisted by
+    // a caller that skipped the UI check.
+    if (input.headline !== undefined) {
+      const headlineError = validateHeadline(input.headline);
+      if (headlineError) return failure(null, new Error(headlineError));
+    }
+
     const payload = {
       user_id: user.id, // always the authenticated session's user id
       full_name: input.fullName.trim(),
@@ -2001,6 +2050,20 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
       if (extra.error) console.error("Instagram handle could not be saved:", extra.error);
     }
 
+    // Headline sits behind migration 014. It is a value the owner chose, so a
+    // failed write must never be presented as saved: on error we leave the
+    // returned profile's headline at its last confirmed value (null for a
+    // brand-new account) rather than echoing back an unpersisted string.
+    const headline = normalizeHeadline(input.headline);
+    let headlineSaved = true;
+    if (input.headline !== undefined) {
+      const hl = await supabase.from("profiles").update({ headline }).eq("user_id", user.id);
+      if (hl.error) {
+        headlineSaved = false;
+        console.error("Headline could not be saved:", hl.error);
+      }
+    }
+
     // A phone number is optional and unverified, so a failure here must not
     // strand a student who already has a working account.
     const contact = await savePhoneNumber(String(user.id), input.phone);
@@ -2008,6 +2071,7 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
 
     const profile = mapProfile(result.data);
     profile.instagramHandle = handle;
+    profile.headline = headlineSaved ? headline : null;
     profile.phone = normalizePhoneNumber(input.phone);
     return remoteSuccess(profile);
   } catch (err) {
@@ -2026,7 +2090,7 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
 // Row visibility stays with RLS ("Authenticated users can read profiles"),
 // so this list is a projection, not a security boundary.
 const DIRECTORY_COLUMNS =
-  "user_id, full_name, college_id, course, year_of_study, graduation_year, is_public, avatar_url, instagram_handle, colleges(name)";
+  "user_id, full_name, college_id, course, year_of_study, graduation_year, is_public, avatar_url, instagram_handle, headline, colleges(name)";
 
 const mapStudent = (row: Record<string, unknown>): StudentProfileRecord => ({
   userId: String(row.user_id),
@@ -2040,6 +2104,7 @@ const mapStudent = (row: Record<string, unknown>): StudentProfileRecord => ({
   graduationYear: Number(row.graduation_year ?? 0),
   avatarUrl: row.avatar_url ? String(row.avatar_url) : null,
   isPublic: Boolean(row.is_public),
+  headline: row.headline ? String(row.headline) : null,
   instagramHandle: row.instagram_handle ? String(row.instagram_handle) : null,
 });
 
@@ -2088,6 +2153,13 @@ export async function updateProfile(input: ProfileInput): Promise<DataResult<Pro
       return failure(null, new Error("You must be signed in to update your profile."));
     }
 
+    // The word/character limit lives here too, not only in the form, so no
+    // caller can bypass it by writing straight through the data layer.
+    if (input.headline !== undefined) {
+      const headlineError = validateHeadline(input.headline);
+      if (headlineError) return failure(null, new Error(headlineError));
+    }
+
     // user_id is intentionally omitted from the payload — it can never be changed.
     const payload = {
       full_name: input.fullName.trim(),
@@ -2120,6 +2192,25 @@ export async function updateProfile(input: ProfileInput): Promise<DataResult<Pro
         .eq("user_id", user.id);
       if (extra.error) console.error("Instagram handle could not be saved:", extra.error);
       profile.instagramHandle = handle;
+    }
+
+    if (input.headline !== undefined) {
+      const headline = normalizeHeadline(input.headline);
+      const hl = await supabase.from("profiles").update({ headline }).eq("user_id", user.id);
+      if (hl.error) {
+        // The headline is the value the owner just chose, so a failed write
+        // must surface rather than being echoed back as saved. Core fields
+        // persisted above; `profile.headline` still holds the last confirmed
+        // value from the row we just re-read, so return that with a clear
+        // error instead of the unpersisted string. This also covers an
+        // unapplied migration 014 (missing column) without claiming success.
+        console.error("Headline could not be saved:", hl.error);
+        return failure(
+          profile,
+          new Error("Couldn't save your headline. Your other changes were saved — please try the headline again."),
+        );
+      }
+      profile.headline = headline;
     }
 
     if (input.phone !== undefined) {
@@ -2531,6 +2622,7 @@ const optionalUrl = (raw: string | null | undefined): string | null => sanitizeE
 
 /** What the navbar's type-ahead needs: enough to identify and link a college. */
 export type CollegeSearchResult = {
+  id: string;
   name: string;
   slug: string;
   location: string;
@@ -2545,8 +2637,9 @@ function sanitizeSearchTerm(raw: string): string {
   return raw.replace(/[%_]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function toCollegeSearchResult(row: { name?: string; slug?: string; location?: string; campus?: string }): CollegeSearchResult {
+function toCollegeSearchResult(row: { id?: string; name?: string; slug?: string; location?: string; campus?: string }): CollegeSearchResult {
   return {
+    id: String(row.id ?? ""),
     name: String(row.name ?? ""),
     slug: String(row.slug ?? ""),
     location: String(row.location ?? ""),
@@ -3365,6 +3458,69 @@ export async function getMyCompetitionRegistration(
     });
   } catch {
     return localSuccess(null);
+  }
+}
+
+export type MyCompetitionRegistrationSummary = {
+  registrationId: string;
+  competitionId: string;
+  title: string;
+  organization: string;
+  registrationType: "solo" | "team";
+  teamId: string | null;
+  registeredAt: string;
+  deadline: string | null;
+  deadlineAt: string | null;
+};
+
+/**
+ * The signed-in student's own submitted competition registrations.
+ *
+ * Reads public.competition_registrations (migration 013) directly through the
+ * authenticated client. Its RLS policy already limits rows to those where the
+ * caller is the participant or a member of the registered team, so this query
+ * cannot widen that access — no filter here bypasses RLS. Withdrawn entries are
+ * excluded. Competition name and organizer come from the embedded opportunities
+ * row, which RLS returns only for published listings; a missing embed simply
+ * means those fields are unavailable, never that the registration is invented.
+ */
+export async function getMyCompetitionRegistrations(): Promise<
+  DataResult<MyCompetitionRegistrationSummary[]>
+> {
+  if (!supabase || !isSupabaseConfigured) return remoteSuccess([]);
+  try {
+    const { data, error } = await supabase
+      .from("competition_registrations")
+      .select(
+        "id, competition_id, registration_type, team_id, registered_at, opportunities(id, title, organization, deadline, deadline_at)"
+      )
+      .eq("status", "registered")
+      .order("registered_at", { ascending: false });
+    if (error) return failure([], error);
+
+    // One card per competition: a student could hold both a solo and a team
+    // entry for the same listing, and the newest (already first) wins.
+    const byCompetition = new Map<string, MyCompetitionRegistrationSummary>();
+    for (const raw of data ?? []) {
+      const row = raw as Record<string, unknown>;
+      const competitionId = String(row.competition_id ?? "");
+      if (!competitionId || byCompetition.has(competitionId)) continue;
+      const opp = (row.opportunities as Record<string, unknown> | null) ?? null;
+      byCompetition.set(competitionId, {
+        registrationId: String(row.id ?? ""),
+        competitionId,
+        title: opp ? String(opp.title ?? "") : "",
+        organization: opp ? String(opp.organization ?? "") : "",
+        registrationType: row.registration_type === "team" ? "team" : "solo",
+        teamId: row.team_id ? String(row.team_id) : null,
+        registeredAt: String(row.registered_at ?? ""),
+        deadline: opp?.deadline ? String(opp.deadline) : null,
+        deadlineAt: opp?.deadline_at ? String(opp.deadline_at) : null,
+      });
+    }
+    return remoteSuccess([...byCompetition.values()]);
+  } catch (err) {
+    return failure([], err);
   }
 }
 

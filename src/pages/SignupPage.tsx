@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import BrandMark from "../components/BrandMark";
+import CollegeSearch from "../components/CollegeSearch";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
@@ -83,8 +84,11 @@ export default function SignupPage() {
     }
 
     if (!gender) return "Please select a gender.";
-    if (phone.trim() && !normalizePhoneNumber(phone)) {
-      return "Enter a valid phone number, or leave it blank.";
+    if (!phone.trim()) {
+      return "Please enter your mobile phone number.";
+    }
+    if (!normalizePhoneNumber(phone)) {
+      return "Enter a valid phone number (at least 6 digits; include your country code for international numbers).";
     }
 
     return null;
@@ -312,26 +316,15 @@ export default function SignupPage() {
                 />
               </div>
 
-              <div>
-                <label className="field-label" htmlFor="signup-college">College</label>
-                <select
-                  id="signup-college"
-                  required
-                  disabled={submitting || collegesLoading}
-                  value={collegeId}
-                  onChange={(e) => setCollegeId(e.target.value)}
-                  className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <option value="" disabled>
-                    {collegesLoading ? "Loading colleges…" : "Select your college"}
-                  </option>
-                  {colleges.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} {c.campus ? `(${c.campus})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CollegeSearch
+                id="signup-college"
+                label="College"
+                placeholder={collegesLoading ? "Loading colleges…" : "Search your college…"}
+                colleges={colleges}
+                value={collegeId}
+                onChange={(id) => setCollegeId(id)}
+                disabled={submitting || collegesLoading}
+              />
 
               <div>
                 <label className="field-label" htmlFor="signup-course">Course</label>
@@ -367,7 +360,7 @@ export default function SignupPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="field-label" htmlFor="signup-graduation-year">Graduation Year</label>
+                  <label className="field-label" htmlFor="signup-graduation-year">Graduation Year / Post-Graduation Year</label>
                   <select
                     id="signup-graduation-year"
                     required
@@ -402,13 +395,11 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="field-label" htmlFor="signup-phone">
-                  Phone Number{" "}
-                  <span className="font-medium normal-case text-ink-500">(optional)</span>
-                </label>
+                <label className="field-label" htmlFor="signup-phone">Phone Number</label>
                 <input
                   id="signup-phone"
                   type="tel"
+                  required
                   autoComplete="tel"
                   inputMode="tel"
                   maxLength={20}
@@ -419,8 +410,8 @@ export default function SignupPage() {
                   placeholder="+91 98765 43210"
                 />
                 <p className="mt-1 text-[11px] font-semibold text-ink-500">
-                  No verification code. It stays private — only students who share a team with you
-                  can see it.
+                  Required, but not verified — no code is sent. It stays private: only students who
+                  share a team with you can see it.
                 </p>
               </div>
             </div>
@@ -438,6 +429,24 @@ export default function SignupPage() {
                 {error}
               </div>
             )}
+
+            <p className="mt-4 text-center text-xs leading-relaxed text-ink-500">
+              By creating an account, you agree to our{" "}
+              <Link
+                href="/terms"
+                className="rounded font-semibold text-brand-blue hover:text-brand-blue-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40"
+              >
+                Terms &amp; Conditions
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="rounded font-semibold text-brand-blue hover:text-brand-blue-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </form>
 
           <p className="mt-6 text-center text-sm text-ink-600">

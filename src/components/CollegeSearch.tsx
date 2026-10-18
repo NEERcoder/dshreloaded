@@ -1,6 +1,7 @@
 import {
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type FocusEvent,
@@ -8,6 +9,8 @@ import {
 } from "react";
 import Icon from "./Icon";
 import { searchColleges, type CollegeSearchResult } from "../lib/dataAccess";
+import { buildCollegeSearchIndex, searchColleges as scoreLocalColleges } from "../lib/collegeSearch";
+import type { CollegeRecord } from "../lib/localProvider";
 import { useLocation } from "../lib/router";
 
 const DEBOUNCE_MS = 200;
@@ -19,19 +22,53 @@ function placeOf(result: CollegeSearchResult): string {
   return result.location.trim() || result.campus.trim();
 }
 
+type CollegeSearchProps = {
+  className?: string;
+  /**
+   * Controlled "select" mode. When `colleges` + `onChange` are supplied the
+   * component becomes a searchable field that reports the chosen college's id
+   * instead of navigating to its profile. It scores the passed list with the
+   * same `collegeSearch` engine the directory uses — no second dataset, no
+   * second selector implementation. Without these props it stays the navbar
+   * type-ahead it always was.
+   */
+  colleges?: CollegeRecord[];
+  value?: string;
+  onChange?: (collegeId: string, college: CollegeRecord | null) => void;
+  label?: string;
+  placeholder?: string;
+  id?: string;
+  disabled?: boolean;
+};
+
 /**
- * The navbar college type-ahead.
+ * JAVLIN's college type-ahead, in two modes:
  *
- * Selections always land on a real college profile route (/explore/:slug) built
- * from the slug the directory itself publishes — there is no "search results"
- * fallback page, because a partial term is a question the directory can answer
- * directly. The data helper already tolerates an unavailable backend.
+ *   * navigate (default) — the navbar / explore / reviews search. Selections
+ *     land on a real college profile route (/explore/:slug).
+ *   * select (controlled) — the signup / dashboard profile forms. Selections
+ *     report the college id so the caller can persist `college_id`.
+ *
+ * Both modes share one scoring engine and one result list; the data source is
+ * the same college directory the rest of the app already loads.
  */
-export default function CollegeSearch({ className = "" }: { className?: string }) {
+export default function CollegeSearch({
+  className = "",
+  colleges,
+  value,
+  onChange,
+  label,
+  placeholder = "Search your college...",
+  id,
+  disabled = false,
+}: CollegeSearchProps) {
   const { navigate } = useLocation();
   const baseId = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const inputId = id ?? `${baseId}-college-input`;
   const listboxId = `${baseId}-college-results`;
   const optionId = (index: number) => `${baseId}-option-${index}`;
+
+  const isSelectMode = Boolean(colleges && onChange);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [term, setTerm] = useState("");
@@ -39,13 +76,36 @@ export default function CollegeSearch({ className = "" }: { className?: string }
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [editing, setEditing] = useState(false);
+
+  const selectedIndex = isSelectMode
+    ? colleges?.find((college) => college.id === value) ?? null
+    : null;
+
+  const localIndex = useMemo(
+    () => buildCollegeSearchIndex(colleges ?? []),
+    [colleges]
+  );
 
   const isTyping = term.trim().length >= MIN_QUERY_LENGTH;
-  const showPanel = open && isTyping;
+  const showPanel = open && isTyping && !(isSelectMode && !editing);
 
   // One debounced contains search per burst of keystrokes, never per keypress.
   useEffect(() => {
     const trimmed = term.trim();
+    if (isSelectMode) {
+      // Select mode scores the already-loaded list locally; only while typing.
+      if (!editing || trimmed.length < MIN_QUERY_LENGTH) {
+        setResults([]);
+        setActiveIndex(-1);
+        setLoading(false);
+        return;
+      }
+      setResults(scoreLocalColleges(localIndex, trimmed, MAX_RESULTS).map((m) => m.college));
+      setActiveIndex(-1);
+      setLoading(false);
+      return;
+    }
     if (trimmed.length < MIN_QUERY_LENGTH) {
       setResults([]);
       setActiveIndex(-1);
@@ -76,7 +136,7 @@ export default function CollegeSearch({ className = "" }: { className?: string }
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [term]);
+  }, [term, isSelectMode, editing, localIndex]);
 
   // Dismiss when the pointer goes anywhere outside the combobox.
   useEffect(() => {
@@ -96,6 +156,16 @@ export default function CollegeSearch({ className = "" }: { className?: string }
     setLoading(false);
     setTerm("");
     navigate(`/explore/${result.slug}`);
+  }
+
+  function selectCollege(college: CollegeRecord) {
+    onChange?.(college.id, college);
+    setOpen(false);
+    setActiveIndex(-1);
+    setResults([]);
+    setLoading(false);
+    setTerm("");
+    setEditing(false);
   }
 
   function handleKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
@@ -122,7 +192,12 @@ export default function CollegeSearch({ className = "" }: { className?: string }
         activeIndex >= 0 && activeIndex < results.length ? results[activeIndex] : results[0];
       if (chosen) {
         event.preventDefault();
-        choose(chosen);
+        if (isSelectMode) {
+          const match = colleges?.find((college) => college.id === chosen.id);
+          if (match) selectCollege(match);
+        } else {
+          choose(chosen);
+        }
       }
       return;
     }
@@ -142,6 +217,152 @@ export default function CollegeSearch({ className = "" }: { className?: string }
     : results.length === 0
       ? "No colleges match that search"
       : `${results.length} ${results.length === 1 ? "college" : "colleges"} found`;
+
+  // Select mode renders a labelled, full-width field; navigate mode keeps its
+  // compact navbar pill untouched.
+  if (isSelectMode) {
+    const showClear = Boolean(selectedIndex) && !editing;
+    return (
+      <div ref={containerRef} className={`relative min-w-0 ${className}`} onBlur={handleFocusOut}>
+        {label && (
+          <label className="field-label" htmlFor={inputId}>
+            {label}
+          </label>
+        )}
+        <div className="relative flex w-full items-center">
+          <Icon
+            name="search"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+          />
+          <input
+            id={inputId}
+            type="text"
+            role="combobox"
+            aria-label={label ?? "Search colleges"}
+            aria-haspopup="listbox"
+            aria-expanded={showPanel}
+            aria-controls={showPanel ? listboxId : undefined}
+            aria-autocomplete="list"
+            aria-activedescendant={showPanel && activeIndex >= 0 ? optionId(activeIndex) : undefined}
+            autoComplete="off"
+            spellCheck={false}
+            disabled={disabled}
+            enterKeyHint="search"
+            placeholder={selectedIndex ? selectedIndex.name : placeholder}
+            value={editing ? term : ""}
+            onChange={(event) => {
+              const next = event.target.value;
+              setEditing(true);
+              setTerm(next);
+              setActiveIndex(-1);
+              setOpen(next.trim().length >= MIN_QUERY_LENGTH);
+            }}
+            onFocus={() => setOpen(isTyping && editing)}
+            onKeyDown={handleKeyDown}
+            className="field-input w-full pl-9 pr-9 disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+          {showClear ? (
+            <button
+              type="button"
+              aria-label="Clear selected college"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                onChange?.("", null);
+                setTerm("");
+                setEditing(false);
+                setResults([]);
+                setActiveIndex(-1);
+                setOpen(false);
+              }}
+              className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-ink-400 transition-colors hover:text-ink-700"
+            >
+              <Icon name="close" className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            editing &&
+            term && (
+              <button
+                type="button"
+                aria-label="Clear college search"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setTerm("");
+                  setResults([]);
+                  setActiveIndex(-1);
+                  setOpen(false);
+                }}
+                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-ink-400 transition-colors hover:text-ink-700"
+              >
+                <Icon name="close" className="h-3.5 w-3.5" />
+              </button>
+            )
+          )}
+        </div>
+
+        <p className="sr-only" role="status" aria-live="polite">
+          {showPanel ? statusText : ""}
+        </p>
+
+        {showPanel && (
+          <div
+            id={listboxId}
+            role="listbox"
+            aria-label="Colleges matching your search"
+            className="card absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden shadow-lift"
+          >
+            {results.length ? (
+              <ul role="presentation" className="max-h-72 overflow-y-auto py-1">
+                {results.map((result, index) => {
+                  const isActive = index === activeIndex;
+                  const place = placeOf(result);
+                  return (
+                    <li
+                      key={`${result.slug}-${index}`}
+                      id={optionId(index)}
+                      role="option"
+                      aria-selected={isActive}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onClick={() => {
+                        const match = colleges?.find((college) => college.id === result.id);
+                        if (match) selectCollege(match);
+                      }}
+                      className={`mx-1 flex min-w-0 cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors ${
+                        isActive ? "bg-brand-blue-soft" : "hover:bg-brand-blue-pale"
+                      }`}
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-blue-pale text-xs font-black text-brand-blue">
+                        {result.name.charAt(0)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13px] font-bold text-ink-900">
+                          {result.name}
+                        </span>
+                        {place && (
+                          <span className="mt-0.5 flex min-w-0 items-center gap-1 text-[11px] font-medium text-ink-500">
+                            <Icon name="map-pin" className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{place}</span>
+                          </span>
+                        )}
+                      </span>
+                      <Icon
+                        name="arrow"
+                        className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-brand-blue" : "text-ink-400"}`}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="px-4 py-4 text-[13px] font-semibold text-ink-500">
+                No colleges match that search.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

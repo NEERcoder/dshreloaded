@@ -116,6 +116,14 @@ export default function Footer() {
           <p className="font-display text-xs font-bold italic text-ink-600">Shoot Your Shot.</p>
           <p className="text-xs text-ink-500">Built by students, for students.</p>
         </div>
+        <nav aria-label="Legal" className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 sm:justify-start">
+          <Link href="/terms" className="text-xs font-semibold text-ink-500 transition-colors hover:text-brand-blue">
+            Terms &amp; Conditions
+          </Link>
+          <Link href="/privacy" className="text-xs font-semibold text-ink-500 transition-colors hover:text-brand-blue">
+            Privacy Policy
+          </Link>
+        </nav>
       </div>
     </footer>
   );
