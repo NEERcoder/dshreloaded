@@ -243,7 +243,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
   if (authLoading || (!user && !authLoading)) {
     return (
       <PageShell title="Team | JAVLIN" backgroundPreset="explore">
-        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+        <div className="container-px py-10 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading…
         </div>
       </PageShell>
@@ -253,7 +253,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
   if (loading) {
     return (
       <PageShell title="Team | JAVLIN" backgroundPreset="explore">
-        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+        <div className="container-px py-10 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading team…
         </div>
       </PageShell>
@@ -263,7 +263,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
   if (error || !team) {
     return (
       <PageShell title="Team not found | JAVLIN" backgroundPreset="explore">
-        <div className="container-px py-24 text-center max-w-md mx-auto">
+        <div className="container-px py-10 text-center max-w-md mx-auto">
           <p className="text-sm font-bold text-brand-red-ink">{error ?? "Team not found."}</p>
           <Link href="/crew" className="btn-secondary mt-6 inline-flex">
             Back to CREW
@@ -290,7 +290,7 @@ export default function TeamPage({ teamId }: { teamId: string }) {
         {/* Header */}
         <div className="mt-6 animate-fade-up">
           <p className="eyebrow">COMPETITION TEAM</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">{team.name}</h1>
+          <h1 className="page-title font-display mt-2">{team.name}</h1>
           <p className="mt-2 text-base font-semibold text-ink-500">{team.competitionTitle}</p>
           <div className="mt-2 flex items-center gap-2 flex-wrap">
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${team.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-surface-border text-ink-500"}`}>

@@ -77,7 +77,7 @@ export default function NotificationsPage() {
   if (authLoading || loading) {
     return (
       <PageShell title="Notifications | JAVLIN" backgroundPreset="directory">
-        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+        <div className="container-px py-10 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading your notifications…
         </div>
       </PageShell>

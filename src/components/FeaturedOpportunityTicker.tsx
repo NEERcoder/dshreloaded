@@ -20,6 +20,26 @@ function ViewAllLink({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * A single poster-card skeleton. Reuses the live `homepage-opportunity-card`
+ * class so the loading row is measured exactly like the populated cards, and is
+ * placed inside the same mobile-strip / desktop-window layout the loaded state
+ * uses — otherwise the skeleton widths diverge from the real cards and the row
+ * clips them.
+ */
+function SkeletonCard() {
+  return (
+    <div className="card homepage-opportunity-card overflow-hidden shadow-soft">
+      <div className="h-48 skeleton-shimmer sm:h-56" />
+      <div className="space-y-2 p-4">
+        <div className="h-3 w-16 rounded skeleton-shimmer" />
+        <div className="h-4 w-full rounded skeleton-shimmer" />
+        <div className="h-3 w-32 rounded skeleton-shimmer" />
+      </div>
+    </div>
+  );
+}
+
 export default function FeaturedOpportunityTicker() {
   const [items, setItems] = useState<OpportunityRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,24 +79,35 @@ export default function FeaturedOpportunityTicker() {
           <ViewAllLink className="sm:hidden" />
         </div>
         <div className="mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
-          {/* The hero headline is gone, so this is the page's one h1. */}
-          <h1 className="section-title font-display">Discover the top things cooking up.</h1>
+          {/* The launcher carries no headline of its own, so this is the page's
+              one h1 and stands in for the homepage's title. Sized with
+              .page-title (display font, ~26→48px) — clearly above the
+              .section-title h2s below it, but deliberately not a full
+              .hero-title splash, which would push the poster row down the
+              first viewport on phones. */}
+          <h1 className="page-title font-display">Discover the top things cooking up.</h1>
           <ViewAllLink className="hidden sm:inline-flex" />
         </div>
       </div>
 
       {loading ? (
-        <div className="container-px flex gap-4 overflow-hidden pb-1">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="card homepage-opportunity-card overflow-hidden shadow-soft">
-              <div className="h-48 skeleton-shimmer sm:h-56" />
-              <div className="space-y-2 p-4">
-                <div className="h-3 w-16 rounded skeleton-shimmer" />
-                <div className="h-4 w-full rounded skeleton-shimmer" />
-                <div className="h-3 w-32 rounded skeleton-shimmer" />
-              </div>
+        <div className="container-px" aria-hidden="true">
+          {/* Mirror OpportunityCarousel's two layouts so the skeleton is measured
+              identically: a scroll strip below lg, a static window at lg+ (no
+              loop yet). The old single `flex overflow-hidden` row clipped the
+              78%-wide cards with no way to reach them. */}
+          <div className="h-scroll no-scrollbar flex gap-3 overflow-x-auto overflow-y-hidden pb-1 sm:gap-4 lg:hidden">
+            {[...Array(4)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+          <div className="homepage-carousel-window hidden lg:block">
+            <div className="homepage-carousel-track">
+              {[...Array(4)].map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       ) : (
         <div className="container-px">

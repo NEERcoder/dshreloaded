@@ -141,7 +141,7 @@ export default function CollegePage({ slug }: { slug: string }) {
           </Link>
           <div className="mt-8 max-w-2xl">
             <p className="eyebrow">COLLEGE PROFILE</p>
-            <h1 className="mt-3 text-4xl sm:text-5xl font-extrabold tracking-tight text-ink-900">
+            <h1 className="page-title font-display mt-3">
               This college profile is coming soon.
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-ink-500">
@@ -203,7 +203,7 @@ export default function CollegePage({ slug }: { slug: string }) {
               </div>
 
               {/* College name appears first */}
-              <h1 className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink-900 animate-fade-up">
+              <h1 className="page-title font-display mt-3 animate-fade-up">
                 {college.name}
               </h1>
 

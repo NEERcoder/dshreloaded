@@ -146,7 +146,7 @@ export default function AdminPage() {
   if (loading) {
     return (
       <PageShell title="Admin | JAVLIN" backgroundPreset="admin">
-        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+        <div className="container-px py-10 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Verifying credentials…
         </div>
       </PageShell>
@@ -202,10 +202,10 @@ function AdminLogin() {
 
   return (
     <PageShell title="Admin sign in | JAVLIN" backgroundPreset="admin">
-      <section className="container-px py-20 sm:py-28">
+      <section className="container-px py-10 sm:py-14">
         <div className="mx-auto max-w-md">
           <p className="eyebrow">PROTECTED WORKSPACE</p>
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">Admin sign in</h1>
+          <h1 className="page-title mt-3">Admin sign in</h1>
           <p className="mt-4 text-sm leading-relaxed text-ink-500">
             Access requires an authenticated Supabase account verified in the admin_users table.
           </p>
@@ -262,12 +262,12 @@ function AdminLogin() {
 function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
   return (
     <PageShell title="Admin access denied | JAVLIN" backgroundPreset="admin">
-      <section className="container-px py-20 sm:py-28">
+      <section className="container-px py-10 sm:py-14">
         <div className="mx-auto max-w-lg text-center">
           <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red-ink">
             ACCESS DENIED
           </span>
-          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">
+          <h1 className="page-title mt-4">
             Admin permission required.
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-ink-600">
@@ -338,7 +338,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               <p className="eyebrow text-emerald-600">VERIFIED ADMIN WORKSPACE</p>
             </div>
-            <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">
+            <h1 className="page-title mt-2">
               Keep the hub useful.
             </h1>
             <p className="mt-2 text-xs font-semibold text-ink-500 font-mono">

@@ -83,7 +83,7 @@ export default function LoginPage() {
         <div className="mx-auto max-w-md animate-fade-up">
           <BrandMark className="h-10 w-auto" />
           <p className="eyebrow mt-4">STUDENT ACCOUNT</p>
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
+          <h1 className="page-title mt-3">
             Welcome back.
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-500">
@@ -135,7 +135,7 @@ export default function LoginPage() {
             </button>
 
             {error && (
-              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
+              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-sm font-semibold text-brand-red-ink">
                 {error}
               </div>
             )}

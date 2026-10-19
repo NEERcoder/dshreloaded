@@ -140,7 +140,7 @@ export default function ResetPasswordPage() {
               <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red-ink">
                 Link expired
               </span>
-              <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-ink-900">
+              <h1 className="section-title mt-4">
                 This reset link is invalid or has expired.
               </h1>
               <p className="mt-3 text-sm leading-relaxed text-ink-600">
@@ -159,7 +159,7 @@ export default function ResetPasswordPage() {
           {mode === "request" && (
             <>
               <p className="eyebrow">RESET PASSWORD</p>
-              <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
+              <h1 className="page-title mt-3">
                 Forgot your password?
               </h1>
               <p className="mt-3 text-sm leading-relaxed text-ink-500">
@@ -194,7 +194,7 @@ export default function ResetPasswordPage() {
                     {requestSubmitting ? "Sending…" : "Send reset link"}
                   </button>
                   {requestError && (
-                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
+                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-sm font-semibold text-brand-red-ink">
                       {requestError}
                     </div>
                   )}
@@ -212,7 +212,7 @@ export default function ResetPasswordPage() {
           {mode === "update" && (
             <>
               <p className="eyebrow">RESET PASSWORD</p>
-              <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
+              <h1 className="page-title mt-3">
                 Set a new password.
               </h1>
               <p className="mt-3 text-sm leading-relaxed text-ink-500">
@@ -262,7 +262,7 @@ export default function ResetPasswordPage() {
                     {updateSubmitting ? "Saving…" : "Save new password"}
                   </button>
                   {updateError && (
-                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
+                    <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-sm font-semibold text-brand-red-ink">
                       {updateError}
                     </div>
                   )}

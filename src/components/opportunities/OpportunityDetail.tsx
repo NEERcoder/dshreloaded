@@ -123,7 +123,7 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
         )}
 
         {/* 2–3. Title and organiser */}
-        <h1 className="font-display mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight text-ink-900 leading-tight">
+        <h1 className="page-title font-display mt-3">
           {opp.title}
         </h1>
         <p className="mt-1 text-base font-semibold text-ink-600">{opp.organization}</p>

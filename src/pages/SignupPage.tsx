@@ -182,7 +182,7 @@ export default function SignupPage() {
             <span className="inline-block rounded-full bg-brand-blue-soft px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-blue">
               Account created
             </span>
-            <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-ink-900">
+            <h1 className="section-title mt-4">
               Your account is ready.
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-ink-600">
@@ -205,13 +205,13 @@ export default function SignupPage() {
             <span className="inline-block rounded-full bg-brand-red/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-brand-red-ink">
               One step left
             </span>
-            <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-ink-900">
+            <h1 className="section-title mt-4">
               Your account was created.
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-ink-600">
               You're signed in, but we couldn't save your profile details yet:
             </p>
-            <div role="alert" className="mt-3 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
+            <div role="alert" className="mt-3 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-sm font-semibold text-brand-red-ink">
               {profileError}
             </div>
             <div className="mt-8 flex flex-col gap-3">
@@ -243,7 +243,7 @@ export default function SignupPage() {
         <div className="mx-auto max-w-xl animate-fade-up">
           <BrandMark className="h-10 w-auto" />
           <p className="eyebrow mt-4">STUDENT ACCOUNT</p>
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink-900">
+          <h1 className="page-title mt-3">
             Create your account.
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-500">
@@ -409,7 +409,7 @@ export default function SignupPage() {
                   className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
                   placeholder="+91 98765 43210"
                 />
-                <p className="mt-1 text-[11px] font-semibold text-ink-500">
+                <p className="mt-1 meta">
                   Required, but not verified — no code is sent. It stays private: only students who
                   share a team with you can see it.
                 </p>
@@ -425,7 +425,7 @@ export default function SignupPage() {
             </button>
 
             {error && (
-              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-xs font-bold text-brand-red-ink">
+              <div role="alert" className="mt-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-sm font-semibold text-brand-red-ink">
                 {error}
               </div>
             )}

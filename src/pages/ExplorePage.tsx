@@ -580,7 +580,7 @@ export default function ExplorePage() {
         <div className="container-px max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="eyebrow">COLLEGE DIRECTORY</p>
-            <h1 className="mt-3 font-display text-[1.875rem] sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
+            <h1 className="page-title font-display mt-3">
               Explore Colleges & Student Reviews.
             </h1>
             <p className="mt-4 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium">

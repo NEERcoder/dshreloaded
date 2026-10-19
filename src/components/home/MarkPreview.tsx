@@ -38,7 +38,11 @@ export default function MarkPreview() {
           ))}
         </div>
         <div className="mt-4 flex justify-center sm:mt-5">
-          <Link href="/mark" className="btn-accent">
+          {/* The homepage keeps exactly one ignition-orange action (the Organizer
+              CTA). MARK's own link matches its sibling pillar CTAs (Field/Crew
+              use btn-outline-blue) so it reads as a strong secondary, not a
+              competing hero button. */}
+          <Link href="/mark" className="btn-outline-blue">
             Start Your MARK
             <Icon name="arrow" className="h-4 w-4" />
           </Link>

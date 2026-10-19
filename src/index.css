@@ -199,6 +199,32 @@
     transform: translateY(1px) scale(0.99);
   }
 
+  /* Destructive actions — the ONE red-filled control, deliberately distinct
+     from the legacy orange "brand-red" tokens (Ignition Orange is a brand hue,
+     not a warning colour) and never applied to ordinary secondary actions.
+     Built on the existing --javlin-error hue; the white label clears AA and
+     the darker stop is just that same red pushed down for hover, mirroring how
+     btn-primary/btn-accent each declare one explicit hover shade. */
+  .btn-danger {
+    @apply btn text-white;
+    background: var(--javlin-error);
+    border-color: #b02121;
+    box-shadow:
+      0 1px 2px rgba(7, 26, 51, 0.16),
+      0 10px 20px -10px rgba(220, 38, 38, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+  @media (hover: hover) {
+    .btn-danger:hover {
+      background: #b91c1c;
+      transform: translateY(-1px);
+    }
+  }
+  .btn-danger:active {
+    transform: translateY(1px) scale(0.99);
+    box-shadow: inset 0 2px 4px rgba(7, 26, 51, 0.28);
+  }
+
   .btn-tertiary {
     @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors duration-200 select-none min-h-[44px] sm:min-h-[36px];
     color: var(--band-muted);
@@ -210,6 +236,20 @@
       color: var(--accent);
       background: rgba(23, 105, 255, 0.08);
     }
+  }
+
+  /* Compact modifiers — density for toolbars and admin rows. They retune only
+     padding and label size; colour, behaviour and the base .btn geometry stay
+     with whatever variant they ride on, and min-height is pinned to 44px so the
+     visible control can shrink without shrinking the touch target. Applied as
+     `btn-primary btn-sm`, etc. — additive, not adopted site-wide this batch. */
+  .btn-sm {
+    @apply px-3 py-2 text-[13px];
+    min-height: 44px;
+  }
+  .btn-xs {
+    @apply px-2.5 py-1.5 text-xs;
+    min-height: 44px;
   }
 
   /* ------------------------------------------------------------
@@ -431,6 +471,16 @@
   .eyebrow {
     @apply text-xs font-black uppercase tracking-[0.18em];
     color: var(--eyebrow);
+  }
+
+  /* .meta — the reusable secondary-information line (card metadata, counts,
+     helper text) that pages kept re-inventing as raw 11px utilities. 12px,
+     weight 600, sentence case, no added tracking, in the established muted
+     ink (ink-500, the same tone metadata already used so contrast is preserved).
+     Purely additive this batch — pages adopt it in a later pass. */
+  .meta {
+    @apply text-[12px] font-semibold normal-case tracking-normal text-ink-500;
+    line-height: 1.35;
   }
 
   /* ============================================================
@@ -749,13 +799,17 @@
     background-size: var(--band-size);
     color: var(--band-ink);
     border-bottom: 1px solid var(--band-rule);
-    padding-top: 1.5rem;
+    /* PageShell already pushes <main> below the fixed navbar (pt-16/20 = the
+       bar's own height), so the hero only needs its own modest air here — the
+       previous 1.5rem stacked on top of that clearance was the duplicated half
+       of the mobile first-screen gap. Desktop keeps more breathing room. */
+    padding-top: 1rem;
     padding-bottom: 1.25rem;
     overflow: hidden;
   }
   @media (min-width: 640px) {
     .page-hero {
-      padding-top: 2.25rem;
+      padding-top: 1.75rem;
       padding-bottom: 1.75rem;
     }
   }
@@ -1324,9 +1378,15 @@
 }
 
 @media (min-width: 1024px) {
-  /* Four poster cards across the container. */
+  /* Four poster cards across the ACTUAL content column, not the viewport. The
+     homepage reserves ~w-52 (208px) for the sidebar plus its gutters — wrapper
+     px-6, gap-6, the band island margin-inline and container-px padding, about
+     23.5rem in total — and the row still caps at the 64rem container. Measuring
+     off 100vw alone made each card ~50% too wide between 1024–1279, so the loop
+     showed too few cards with a cut edge. min() keeps it parent-relative and
+     stops the cards growing past the column on ultrawide. Three 1rem gaps = 3rem. */
   .homepage-opportunity-card {
-    flex-basis: calc((min(80rem, 100vw) - 7rem) / 4);
+    flex-basis: calc((min(64rem, 100vw - 23.5rem) - 3rem) / 4);
   }
 
   .homepage-profile-card {
@@ -1335,9 +1395,10 @@
 }
 
 @media (min-width: 1280px) {
-  /* Five student profiles across the container. */
+  /* Five student profiles across the same content column (see note above):
+     reserved sidebar inset 23.5rem, four 1rem gaps = 4rem. */
   .homepage-profile-card {
-    flex-basis: calc((min(80rem, 100vw) - 8rem) / 5);
+    flex-basis: calc((min(64rem, 100vw - 23.5rem) - 4rem) / 5);
   }
 }
 

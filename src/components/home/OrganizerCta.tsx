@@ -30,7 +30,7 @@ export default function OrganizerCta() {
             <a
               href={ORGANIZER_FORM_URL}
               {...EXTERNAL_LINK_PROPS}
-              className="btn-accent shadow-card w-full justify-center sm:w-auto"
+              className="btn-accent w-full justify-center sm:w-auto"
             >
               {ORGANIZER_CTA.label} <Icon name="arrow" className="h-4 w-4" />
             </a>

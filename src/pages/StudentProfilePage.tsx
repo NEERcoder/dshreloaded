@@ -138,7 +138,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
   if (authLoading || loading) {
     return (
       <PageShell title="Student profile | JAVLIN" backgroundPreset="directory">
-        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+        <div className="container-px py-10 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading profile…
         </div>
       </PageShell>
@@ -234,7 +234,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
               className="h-16 w-16 text-xl ring-2 ring-white"
             />
             <div className="min-w-0">
-              <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-ink-900 leading-tight">
+              <h1 className="page-title font-display">
                 {student.fullName}
               </h1>
               {student.headline && (
@@ -261,17 +261,17 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
           <h2 className="text-base font-extrabold text-ink-900">Education</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
-              <dt className="text-[11px] font-black uppercase tracking-widest text-ink-500">College</dt>
+              <dt className="field-label">College</dt>
               <dd className="mt-1 text-sm font-semibold text-ink-900">
                 {student.collegeName || "Not listed"}
               </dd>
             </div>
             <div>
-              <dt className="text-[11px] font-black uppercase tracking-widest text-ink-500">Course</dt>
+              <dt className="field-label">Course</dt>
               <dd className="mt-1 text-sm font-semibold text-ink-900">{student.course || "Not listed"}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-black uppercase tracking-widest text-ink-500">Graduation</dt>
+              <dt className="field-label">Graduation</dt>
               <dd className="mt-1 text-sm font-semibold text-ink-900">
                 {student.graduationYear || "Not listed"}
               </dd>
@@ -284,7 +284,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
                 <Icon name="instagram" className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">Instagram</p>
+                <p className="field-label">Instagram</p>
                 <a
                   href={instagramProfileUrl(student.instagramHandle) ?? "#"}
                   target="_blank"

@@ -371,7 +371,7 @@ export default function DashboardPage() {
   if (authLoading || !user) {
     return (
       <PageShell title="Dashboard | JAVLIN" backgroundPreset="explore">
-        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+        <div className="container-px py-10 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading your dashboard…
         </div>
       </PageShell>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between pb-6 border-b border-surface-border">
           <div>
             <p className="eyebrow">STUDENT DASHBOARD</p>
-            <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-900">
+            <h1 className="page-title mt-2">
               {profile ? `Hey, ${profile.fullName.split(" ")[0]}.` : "Let's finish setting up."}
             </h1>
             <p className="mt-2 text-xs font-semibold text-ink-500 font-mono">
@@ -417,7 +417,7 @@ export default function DashboardPage() {
             </div>
           ) : editing ? (
             <form onSubmit={save} className="card p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-ink-900">
+              <h2 className="text-lg font-extrabold text-ink-900">
                 {profile ? "Edit your profile" : "Complete your profile"}
               </h2>
               {!profile && (
@@ -625,7 +625,7 @@ export default function DashboardPage() {
           ) : profile ? (
             <div className="card p-6 sm:p-8">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-bold text-ink-900">Your profile</h2>
+                <h2 className="text-lg font-extrabold text-ink-900">Your profile</h2>
                 <button className="btn-secondary px-4 py-2 text-xs" onClick={startEdit}>
                   Edit Profile
                 </button>
@@ -692,7 +692,7 @@ export default function DashboardPage() {
                   <dt className="field-label">Phone</dt>
                   <dd className="mt-1 text-sm font-semibold text-ink-900">
                     {profile.phone || "Not added"}
-                    <span className="mt-0.5 block text-[11px] font-semibold text-ink-500">
+                    <span className="mt-0.5 block meta">
                       Visible only to you and students on a team with you.
                     </span>
                   </dd>
@@ -710,7 +710,7 @@ export default function DashboardPage() {
         {!dataLoading && !loadError && profile && (
           <div className="mt-6 max-w-2xl">
             <div className="card p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-ink-900">Profile photo &amp; visibility</h2>
+              <h2 className="text-lg font-extrabold text-ink-900">Profile photo &amp; visibility</h2>
               <p className="mt-1 text-sm text-ink-500">
                 How you appear in CIRCLE and on your public profile link.
               </p>
@@ -835,7 +835,7 @@ export default function DashboardPage() {
                     className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between hover:shadow-lift hover:-translate-y-0.5 transition-all duration-200 block"
                   >
                     <div className="min-w-0">
-                      <h3 className="font-bold text-sm text-ink-900 truncate">
+                      <h3 className="card-title truncate text-ink-900">
                         {reg.title || "Competition"}
                       </h3>
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
@@ -884,7 +884,7 @@ export default function DashboardPage() {
                 >
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-sm text-ink-900">{team.name}</h3>
+                      <h3 className="card-title text-ink-900">{team.name}</h3>
                       {team.captainUserId === user?.id && (
                         <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">Captain</span>
                       )}

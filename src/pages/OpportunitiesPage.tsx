@@ -84,7 +84,7 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
         <div className="container-px max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="eyebrow">{voice.eyebrow}</p>
-            <h1 className="font-display mt-3 text-[1.875rem] sm:text-5xl lg:text-6xl font-black tracking-tight text-ink-900 leading-[1.1]">
+            <h1 className="page-title font-display mt-3">
               {voice.title}
             </h1>
             <p className="mt-4 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium">

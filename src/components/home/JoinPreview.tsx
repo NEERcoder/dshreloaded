@@ -41,7 +41,7 @@ export default function JoinPreview() {
                 {openCount} role{openCount === 1 ? "" : "s"} open
               </span>
             )}
-            <Link href="/join" className="btn-primary shadow-card justify-center">
+            <Link href="/join" className="btn-primary justify-center">
               Join Our Team <Icon name="arrow" className="h-4 w-4" />
             </Link>
           </div>

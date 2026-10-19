@@ -254,7 +254,7 @@ export default function MarkPage() {
   if (authLoading || loading) {
     return (
       <PageShell title="MARK — Your Record | JAVLIN" backgroundPreset="explore">
-        <div className="container-px py-24 text-center text-sm font-semibold text-ink-500 animate-pulse">
+        <div className="container-px py-10 text-center text-sm font-semibold text-ink-500 animate-pulse">
           Loading your record…
         </div>
       </PageShell>
