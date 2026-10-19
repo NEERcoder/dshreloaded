@@ -1411,5 +1411,12 @@
   .homepage-carousel-animate {
     animation: none !important;
   }
+  /* The CIRCLE row auto-slides for everyone else; when motion is reduced that
+     slide is off, so let the window scroll horizontally instead of stranding
+     the profiles beyond the first one or two. */
+  .circle-carousel {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
