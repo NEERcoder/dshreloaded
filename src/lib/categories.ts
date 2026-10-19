@@ -27,7 +27,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     href: "/aim",
     iconSrc: "/categories/aim.png",
     title: "Find your next opportunity.",
-    description: "Internships, jobs and certifications to move you forward.",
+    description: "Internships, Jobs and Certifications.",
   },
   {
     id: "field",
@@ -35,7 +35,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     href: "/field",
     iconSrc: "/categories/field.png",
     title: "Step up. Compete. Stand out.",
-    description: "Discover competitions, hackathons and challenges worth taking on.",
+    description: "Competitions, Hackathons and Challenges.",
   },
   {
     id: "crew",
@@ -43,7 +43,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     href: "/crew",
     iconSrc: "/categories/crew.png",
     title: "Great things take a team.",
-    description: "Find teammates, build your crew and take on challenges together.",
+    description: "Find teammates, build your team.",
   },
   {
     id: "circle",
@@ -51,7 +51,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     href: "/circle",
     iconSrc: "/categories/circle.png",
     title: "Your people are out there.",
-    description: "Discover students across colleges, courses and shared interests.",
+    description: "Connect with students across colleges, courses and interests.",
   },
   {
     id: "mark",
@@ -59,7 +59,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     href: "/mark",
     iconSrc: "/categories/mark.png",
     title: "Make your college years count.",
-    description: "Build your record of competitions, projects, certifications and achievements.",
+    description: "Add your achievements, projects, certifications and competitions in one profile.",
   },
   {
     id: "pulse",
@@ -67,7 +67,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     href: "/pulse",
     iconSrc: "/categories/pulse.png",
     title: "Stay in the loop.",
-    description: "Catch campus updates, student stories and opportunities worth knowing about.",
+    description: "Student NEWS",
   },
 ];
 

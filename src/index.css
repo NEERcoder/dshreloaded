@@ -725,10 +725,10 @@
   /* The account rail is part of the same navy family as the canvas, lifted
      just enough to read as a surface rather than a hole in the page. */
   .home-rail {
-    background: rgba(11, 40, 80, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(12px);
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-left: 0;
+    box-shadow: 0 8px 28px rgba(7, 26, 51, 0.12);
   }
 
   /* Anything that sits directly on the navy canvas — the hero and the trending

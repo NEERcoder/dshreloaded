@@ -49,7 +49,7 @@ function JavlinHome() {
           particle grid is deliberately not mounted here: it costs an animation
           frame on every scroll for decoration a background paint gives free. */}
       <Navbar />
-      <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 gap-6 lg:px-6">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 gap-6 lg:px-6 lg:pl-64">
         <HomeSidebar />
         <main className="min-w-0 flex-1">
           {/* 1. HERO — the front door and the six-area launcher */}
@@ -61,9 +61,9 @@ function JavlinHome() {
           {/* 3. Content islands — one per pillar, each on its own surface */}
           <AimPreview />
           <FieldPreview />
-          <MarkPreview />
-          <CrewPreview />
           <CirclePreview />
+          <CrewPreview />
+          <MarkPreview />
           <PulsePreview />
           <ReviewsPreview />
           <OrganizerCta />

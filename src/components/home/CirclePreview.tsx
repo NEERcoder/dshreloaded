@@ -5,7 +5,7 @@ import { categoryById } from "../../lib/categories";
 import { Link } from "../../lib/router";
 import { useAuth } from "../../context/AuthContext";
 import EmptyState from "./EmptyState";
-import { LevelBadge, StudentAvatar, VerifiedMark, yearLabel } from "../circle/StudentCard";
+import { LevelBadge, StudentAvatar } from "../circle/StudentCard";
 import {
   acceptConnectionRequest,
   cancelConnectionRequest,
@@ -36,44 +36,64 @@ function ProfileCard({
   const state = connection?.state ?? "none";
 
   return (
-    <div className="homepage-profile-card glass-card flex flex-col items-center p-4 text-center sm:p-5">
+    <div className="homepage-profile-card glass-card flex min-h-[252px] flex-col p-4 text-left">
+      <div className="flex min-h-[22px] items-center justify-between gap-2">
+        {student.isPublic ? (
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-ink-600">
+            <img
+              src="/brand/javlin-favicon.png"
+              alt=""
+              width={14}
+              height={14}
+              draggable={false}
+              className="h-3.5 w-3.5 rounded-full object-cover"
+            />
+            J verified
+            <Icon name="check" className="h-3.5 w-3.5 text-emerald-600" />
+          </span>
+        ) : (
+          <span />
+        )}
+        {competitions > 0 && <LevelBadge competitions={competitions} />}
+      </div>
+
       <Link
         href={`/circle/${student.userId}`}
         data-cursor="view"
         aria-label={`View ${student.fullName}'s profile`}
-        className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue rounded-full"
+        className="group mt-2 flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
       >
-        <span className="avatar-ring">
+        <span className="avatar-ring shrink-0">
           <StudentAvatar
             src={student.avatarUrl}
             name={student.fullName}
-            className="h-16 w-16 text-lg ring-2 ring-white transition-transform duration-300 group-hover:scale-[1.03] sm:h-20 sm:w-20 sm:text-xl"
+            className="h-12 w-12 text-base ring-2 ring-white transition-transform duration-300 group-hover:scale-[1.03] sm:h-14 sm:w-14"
           />
         </span>
-        <h3 className="card-title mt-2.5 line-clamp-2 text-ink-900 transition-colors group-hover:text-brand-blue sm:mt-3">
-          {student.fullName}
-        </h3>
+        <span className="min-w-0 flex-1">
+          <span className="card-title block truncate text-ink-900 transition-colors group-hover:text-brand-blue">
+            {student.fullName}
+          </span>
+          {student.headline ? (
+            <span className="mt-0.5 block line-clamp-2 text-xs font-medium leading-snug text-ink-700">
+              {student.headline}
+            </span>
+          ) : (
+            <span className="block min-h-[2rem]" aria-hidden="true" />
+          )}
+        </span>
       </Link>
-      <p className="mt-1 line-clamp-2 text-xs font-semibold text-ink-600">{student.collegeName || "College not listed yet"}</p>
-      {student.course && (
-        <p className="mt-0.5 line-clamp-1 text-[11px] font-semibold text-ink-500">{student.course}</p>
-      )}
-      <p className="mt-0.5 text-[11px] font-semibold text-ink-500">
-        {student.yearOfStudy ? yearLabel(student.yearOfStudy) : "Year not listed"}
-      </p>
 
-      <div className="mt-2 flex min-h-[18px] flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
-        {(competitions > 0 || student.isPublic) && (
-          <>
-            <LevelBadge competitions={competitions} />
-            {student.isPublic && <VerifiedMark />}
-          </>
-        )}
+      <div className="mt-3 rounded-xl border border-surface-border bg-surface-soft px-3 py-2">
+        <p className="line-clamp-1 text-xs font-bold text-ink-700">
+          {student.collegeName || "College not listed yet"}
+        </p>
+        <p className="meta mt-0.5 line-clamp-1">{student.course || "Course not listed yet"}</p>
       </div>
 
-      <div className="mt-4 w-full">
+      <div className="mt-auto w-full pt-3">
         {state === "accepted" ? (
-          <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+          <span className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-full bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
             <Icon name="check" className="h-3.5 w-3.5" />
             Connected
           </span>
@@ -212,10 +232,20 @@ export default function CirclePreview() {
           {loading ? (
             <div className="flex gap-4">
               {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="homepage-profile-card glass-card p-4 sm:p-5">
-                  <div className="mx-auto h-20 w-20 rounded-full skeleton-shimmer" />
-                  <div className="mx-auto mt-3 h-3 w-24 rounded skeleton-shimmer" />
-                  <div className="mx-auto mt-2 h-3 w-16 rounded skeleton-shimmer" />
+                <div key={index} className="homepage-profile-card glass-card flex min-h-[252px] flex-col p-4">
+                  <div className="h-3 w-20 rounded skeleton-shimmer" />
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="h-14 w-14 shrink-0 rounded-full skeleton-shimmer" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="h-3.5 w-3/4 rounded skeleton-shimmer" />
+                      <div className="h-3 w-full rounded skeleton-shimmer" />
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-2 rounded-xl bg-surface-soft p-3">
+                    <div className="h-3 w-full rounded skeleton-shimmer" />
+                    <div className="h-3 w-2/3 rounded skeleton-shimmer" />
+                  </div>
+                  <div className="mt-auto h-11 w-full rounded-xl skeleton-shimmer" />
                 </div>
               ))}
             </div>

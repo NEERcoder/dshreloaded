@@ -53,8 +53,8 @@ export default function HomeSidebar() {
   const isActive = (href: string) => path === href || path.startsWith(href + "/");
 
   const itemClass = (href: string) =>
-    `flex min-h-[38px] items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
-      isActive(href) ? "bg-brand-blue text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
+    `flex min-h-[40px] items-center gap-3 rounded-xl px-3 text-[13px] font-bold leading-none transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
+      isActive(href) ? "bg-brand-blue text-white" : "text-brand-navy hover:bg-brand-blue-soft hover:text-brand-blue"
     }`;
 
   const visibleItems = RAIL_ITEMS.filter((item) => !item.requiresUser || user);
@@ -62,9 +62,9 @@ export default function HomeSidebar() {
   return (
     <aside
       aria-label="JAVLIN sections"
-      className="home-rail hidden w-52 shrink-0 self-start lg:sticky lg:top-20 lg:mt-20 lg:flex lg:h-[calc(100vh-5rem)] lg:flex-col lg:gap-0.5 lg:rounded-2xl lg:p-2.5"
+      className="home-rail hidden w-56 shrink-0 lg:fixed lg:bottom-0 lg:left-0 lg:top-20 lg:z-30 lg:flex lg:flex-col lg:gap-1 lg:overflow-y-auto lg:rounded-r-2xl lg:p-3"
     >
-      <p className="px-2.5 pb-1.5 pt-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/45">
+      <p className="px-3 pb-1.5 pt-1 text-[11px] font-black uppercase tracking-[0.16em] text-brand-navy/70">
         {authLoading ? "JAVLIN" : user ? "Your JAVLIN" : "Explore"}
       </p>
 
@@ -89,7 +89,7 @@ export default function HomeSidebar() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex min-h-[38px] w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-bold leading-none text-white/65 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+            className="flex min-h-[40px] w-full items-center gap-3 rounded-xl px-3 text-[13px] font-bold leading-none text-brand-navy transition-colors duration-200 hover:bg-brand-blue-soft hover:text-brand-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
           >
             <Icon name="logout" className="h-4 w-4 shrink-0" />
             Sign Out
@@ -97,7 +97,7 @@ export default function HomeSidebar() {
         ) : (
           <Link
             href="/login"
-            className="flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-brand-red px-2.5 text-[12.5px] font-black leading-none text-brand-navy transition-transform hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="flex min-h-[40px] w-full items-center justify-center gap-2.5 rounded-xl bg-brand-blue px-3 text-[13px] font-black leading-none text-white transition-transform hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
           >
             <Icon name="user" className="h-4 w-4 shrink-0" />
             Sign In
