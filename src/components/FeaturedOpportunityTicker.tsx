@@ -70,23 +70,15 @@ export default function FeaturedOpportunityTicker() {
       className={`on-navy tone-dark reveal pb-6 pt-1 sm:pb-8 sm:pt-2 lg:pb-9 ${isVisible ? "is-visible" : ""}`}
       aria-label="Trending opportunities"
     >
-      <div className="container-px mb-4">
+      <div className="container-px mb-3">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-          <p className="eyebrow flex items-center gap-2">
+          {/* "Trending" is the section's live indicator and the homepage's h1;
+              the large "Discover…" subheading was removed by request. */}
+          <h1 className="eyebrow flex items-center gap-2 text-2xl">
             <span className="live-dot" aria-hidden="true" />
             Trending
-          </p>
-          <ViewAllLink className="sm:hidden" />
-        </div>
-        <div className="mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
-          {/* The launcher carries no headline of its own, so this is the page's
-              one h1 and stands in for the homepage's title. Sized with
-              .page-title (display font, ~26→48px) — clearly above the
-              .section-title h2s below it, but deliberately not a full
-              .hero-title splash, which would push the poster row down the
-              first viewport on phones. */}
-          <h1 className="page-title font-display">Discover the top things cooking up.</h1>
-          <ViewAllLink className="hidden sm:inline-flex" />
+          </h1>
+          <ViewAllLink className="shrink-0" />
         </div>
       </div>
 

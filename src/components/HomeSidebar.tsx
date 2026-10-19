@@ -62,7 +62,7 @@ export default function HomeSidebar() {
   return (
     <aside
       aria-label="JAVLIN sections"
-      className="home-rail hidden w-52 shrink-0 self-start lg:sticky lg:top-20 lg:mt-20 lg:flex lg:flex-col lg:gap-0.5 lg:rounded-2xl lg:p-2.5"
+      className="home-rail hidden w-52 shrink-0 self-start lg:sticky lg:top-20 lg:mt-20 lg:flex lg:h-[calc(100vh-5rem)] lg:flex-col lg:gap-0.5 lg:rounded-2xl lg:p-2.5"
     >
       <p className="px-2.5 pb-1.5 pt-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/45">
         {authLoading ? "JAVLIN" : user ? "Your JAVLIN" : "Explore"}
@@ -84,7 +84,7 @@ export default function HomeSidebar() {
         </ul>
       </nav>
 
-      <div className="mt-1.5 border-t border-white/10 pt-1.5">
+      <div className="mt-auto border-t border-white/10 pt-1.5">
         {!authLoading && user ? (
           <button
             type="button"

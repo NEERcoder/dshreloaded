@@ -19,8 +19,13 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
       data-cursor="view"
       className={`cat-tile pillar-${category.id} group animate-fade-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue`}
       style={{ animationDelay: `${index * 60}ms` }}
-      aria-label={`${category.label} — ${category.title} ${category.description}`}
+      aria-label={`${category.label} — ${category.description}`}
     >
+      {/* Persistent affordance arrow in the tile's top-right corner. */}
+      <Icon
+        name="arrow"
+        className="pointer-events-none absolute right-2 top-2.5 h-3.5 w-3.5 text-ink-400 transition-all duration-200 group-hover:right-1.5 group-hover:text-brand-blue"
+      />
       <span className="cat-tile__well w-full p-1 sm:px-2 sm:py-2">
         <img
           src={category.iconSrc}
@@ -33,18 +38,11 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
         />
       </span>
 
-      <span className="cat-tile__label mt-1 gap-0.5 uppercase tracking-[0.12em] sm:mt-1.5">
+      <span className="cat-tile__label mt-1 uppercase tracking-[0.12em] sm:mt-1.5">
         <span className="truncate">{category.label}</span>
-        <Icon
-          name="arrow"
-          className="h-3 w-3 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 sm:h-3 sm:w-3"
-        />
       </span>
-      {/* The promise line never clamps, so an area's promise stays readable in
-          full at every width. The description below it is visually clamped to
-          two lines on the mobile tiles only; the full string is always in the
-          DOM text and repeated in the tile's accessible name. */}
-      <span className="cat-tile__title">{category.title}</span>
+      {/* The area's description. Clamped to two lines on the mobile tiles only;
+          the full string stays in the DOM and in the tile's accessible name. */}
       <span className="cat-tile__desc">{category.description}</span>
     </Link>
   );
