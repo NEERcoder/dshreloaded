@@ -87,11 +87,20 @@ export default function Navbar({ sidebarOpen = true, onToggleSidebar }: NavbarPr
         }`}
       >
         <nav
-          className="container-px flex items-center gap-1 h-16 sm:h-20 sm:gap-2"
+          className={`container-px flex items-center gap-1 h-16 sm:h-20 sm:gap-2 ${
+            onToggleSidebar ? "lg:max-w-none lg:pl-0 lg:pr-8" : ""
+          }`}
           aria-label="Primary"
         >
-          {/* LEFT — the JAVLIN logo (home link), then the drawer/sidebar handle. */}
-          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          {/* LEFT — the JAVLIN logo (home link), then the drawer/sidebar handle.
+              On the homepage at lg+ this block is exactly the rail's width
+              (w-56): the logo sits on the left edge and the hamburger lines up
+              with the rail's right border. */}
+          <div
+            className={`flex shrink-0 items-center gap-0.5 sm:gap-1 ${
+              onToggleSidebar ? "lg:w-56 lg:justify-between lg:pl-3" : ""
+            }`}
+          >
             <Link
               href="/"
               aria-label="JAVLIN home"
@@ -107,7 +116,7 @@ export default function Navbar({ sidebarOpen = true, onToggleSidebar }: NavbarPr
                 width={2172}
                 height={724}
                 draggable={false}
-                className="h-7 w-auto max-w-[40vw] object-contain sm:h-8"
+                className="h-[42px] w-auto max-w-[40vw] object-contain sm:h-12"
               />
             </Link>
             <button
