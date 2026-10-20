@@ -19,11 +19,11 @@ export default function CategorySelector() {
               own ground, so `lighten` lets the surface behind it show through
               untouched instead of framing it in a box. */}
           <img
-            src="/brand/javlin-wordmark.png"
+            src="/brand/javlin-logo-transparent.png"
             alt="JAVLIN"
-            width={764}
-            height={237}
-            className="h-5 w-auto object-contain mix-blend-lighten sm:h-6"
+            width={2172}
+            height={724}
+            className="h-6 w-auto object-contain sm:h-7"
           />
         </div>
 

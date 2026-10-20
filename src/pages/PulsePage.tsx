@@ -4,7 +4,7 @@ import Icon from "../components/Icon";
 import EmptyState from "../components/home/EmptyState";
 import { SkeletonOpportunityGrid } from "../components/Skeleton";
 import OpportunityCard from "../components/opportunities/OpportunityCard";
-import { Link } from "../lib/router";
+import { Link, useLocation } from "../lib/router";
 import {
   getOpportunities,
   getOpenTeamRoles,
@@ -45,6 +45,7 @@ export default function PulsePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const { search } = useLocation();
 
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +67,13 @@ export default function PulsePage() {
       cancelled = true;
     };
   }, []);
+
+  // Deep link: the homepage Pulse News panel links to `/pulse?post=<id>`, which
+  // opens that article in the existing detail modal once posts have loaded.
+  useEffect(() => {
+    const postId = new URLSearchParams(search).get("post");
+    if (postId && posts.some((post) => post.id === postId)) setSelectedPostId(postId);
+  }, [search, posts]);
 
   // Filters only offer categories that actually have published content.
   const categoryOptions = useMemo(() => {

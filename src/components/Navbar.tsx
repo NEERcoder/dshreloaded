@@ -1,33 +1,49 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import AccountMenu from "./AccountMenu";
 import CollegeSearch from "./CollegeSearch";
 import HomepageAnimation from "./HomepageAnimation";
 import MobileMenu from "./MobileMenu";
 import NotificationBell from "./NotificationBell";
 import { Link, useLocation } from "../lib/router";
+import { EXTERNAL_LINK_PROPS, ORGANIZER_FORM_URL } from "../lib/organizerCta";
 
 /**
- * The top bar is deliberately thin: menu, search and notifications. Everything
- * account-related (profile, dashboard, sign in/out, admin) lives in the drawer.
- * Row height is fixed at h-16 / sm:h-20 — nothing in here may make it taller.
- */
-
-/**
- * One treatment for every icon control in the bar, so the menu handle and the
- * home affordance can never drift apart: a 44px target, a rounded hover chip
- * and the shared focus ring. `.nav-control` is the hook the navy homepage uses
- * to invert these colours, so it has to stay on the element.
+ * The top bar keeps its height and its controls over the navy canvas and
+ * only inverts its surface. Row height is fixed at h-16 / sm:h-20 — nothing
+ * in here may make it taller.
+ *
+ * On the homepage the parent passes `onToggleSidebar`, so the hamburger
+ * collapses/expands the desktop rail; on every other surface (and on phones)
+ * it opens the drawer exactly as before.
  */
 const CONTROL_CLASS =
   "nav-control inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl p-2.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue";
 
-export default function Navbar() {
+type NavbarProps = {
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+};
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return isDesktop;
+}
+
+export default function Navbar({ sidebarOpen = true, onToggleSidebar }: NavbarProps) {
   const { path } = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const isDesktop = useIsDesktop();
 
-  // Home is the current page only on the homepage — the one surface where the
-  // bar sits on navy, so the active chip is tuned for that dark ground.
   const isHome = path === "/";
 
   useEffect(() => {
@@ -53,6 +69,16 @@ export default function Navbar() {
     };
   }, [menuOpen]);
 
+  const togglesSidebar = Boolean(onToggleSidebar) && isDesktop;
+
+  function handleMenuClick() {
+    if (togglesSidebar) {
+      onToggleSidebar?.();
+    } else {
+      setMenuOpen(true);
+    }
+  }
+
   return (
     <>
       <header
@@ -64,39 +90,54 @@ export default function Navbar() {
           className="container-px flex items-center gap-1 h-16 sm:h-20 sm:gap-2"
           aria-label="Primary"
         >
-          {/* LEFT — the drawer handle and a plain home affordance. The JAVLIN
-              wordmark stays in the drawer, the hero and the footer, which are
-              the branding positions; here it competed with navigation. */}
+          {/* LEFT — the JAVLIN logo (home link), then the drawer/sidebar handle. */}
           <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+            <Link
+              href="/"
+              aria-label="JAVLIN home"
+              aria-current={isHome ? "page" : undefined}
+              className="flex min-h-[44px] items-center rounded-xl px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+            >
+              {/* The transparent lockup carries a white wordmark, so it is
+                  legible on the navy homepage bar; the blue "J" still reads on
+                  lighter bars. Height stays within the existing h-16/sm:h-20. */}
+              <img
+                src="/brand/javlin-logo-transparent.png"
+                alt="JAVLIN"
+                width={2172}
+                height={724}
+                draggable={false}
+                className="h-7 w-auto max-w-[40vw] object-contain sm:h-8"
+              />
+            </Link>
             <button
               type="button"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open navigation"
-              aria-expanded={menuOpen}
+              onClick={handleMenuClick}
+              aria-label={togglesSidebar ? (sidebarOpen ? "Hide menu" : "Show menu") : "Open navigation"}
+              aria-expanded={togglesSidebar ? sidebarOpen : menuOpen}
               className={`${CONTROL_CLASS} text-ink-900 hover:bg-brand-blue-soft`}
             >
               <Icon name="menu" className="h-6 w-6" />
             </button>
-            <Link
-              href="/"
-              aria-label="Home"
-              aria-current={isHome ? "page" : undefined}
-              className={`${CONTROL_CLASS} ${
-                isHome ? "bg-white/10 text-white" : "text-ink-900 hover:bg-brand-blue-soft"
-              }`}
-            >
-              <Icon name="home" className="h-6 w-6" />
-            </Link>
           </div>
 
-          {/* CENTER — the admin animation slot, the compact college search,
-              with the bell beside it. The search is the only flexible item, so
-              a late-loading animation shrinks it instead of displacing the
-              menu and home controls on the left. */}
+          {/* CENTER — the animation slot, the college search and the bell. */}
           <div className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:gap-1.5">
             <HomepageAnimation />
             <CollegeSearch />
             <NotificationBell className="shrink-0 px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue" />
+          </div>
+
+          {/* RIGHT — List Your Event and the account dropdown. */}
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            <a
+              href={ORGANIZER_FORM_URL}
+              {...EXTERNAL_LINK_PROPS}
+              className="btn-primary btn-sm min-h-[44px] px-3 text-[13px]"
+            >
+              List Your Event
+            </a>
+            <AccountMenu />
           </div>
         </nav>
       </header>

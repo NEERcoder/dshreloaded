@@ -4,6 +4,7 @@ import BrandMark from "./BrandMark";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { useUnreadNotificationCount } from "./NotificationBell";
+import { SIDEBAR_NAV } from "../lib/sidebarNav";
 
 type MobileMenuProps = {
   open: boolean;
@@ -88,6 +89,41 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
         </div>
 
         <div className="px-5 py-6 flex flex-col gap-1">
+          {/* Primary destinations shared with the desktop rail (lib/sidebarNav)
+              so the two never drift. Certificates is visible but disabled. */}
+          {SIDEBAR_NAV.map((item) =>
+            item.disabled ? (
+              <span
+                key={item.label}
+                aria-disabled="true"
+                title="Coming soon"
+                className="flex cursor-not-allowed select-none items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold text-ink-400"
+              >
+                <Icon name={item.icon} className="h-5 w-5 shrink-0" />
+                {item.label}
+                <span className="ml-auto rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-ink-500">
+                  Soon
+                </span>
+              </span>
+            ) : (
+              <Link
+                key={item.label}
+                href={item.href!}
+                onClick={onClose}
+                className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
+                  (item.exact
+                    ? path === item.href
+                    : path === item.href || path.startsWith(item.href + "/"))
+                    ? "text-brand-blue bg-brand-blue-soft"
+                    : "text-ink-900 hover:bg-brand-blue-soft"
+                }`}
+              >
+                <Icon name={item.icon} className="h-5 w-5 shrink-0" />
+                {item.label}
+              </Link>
+            )
+          )}
+
           {!authLoading && user && (
             <>
               <div {...stagger(0)}>

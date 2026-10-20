@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { RouterProvider, useLocation } from "./lib/router";
 import { CursorProvider } from "./context/CursorContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -41,16 +42,25 @@ import DashboardPage from "./pages/DashboardPage";
 import TeamPage from "./pages/TeamPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function JavlinHome() {
+  // The desktop rail is open by default; the navbar hamburger collapses it and
+  // the content reclaims the gutter. Phones use the drawer instead, so this
+  // state only ever affects lg+.
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   return (
     <div className="homepage-canvas relative flex min-h-screen flex-col">
       {/* The dot field is one CSS radial-gradient on this wrapper. The canvas
           particle grid is deliberately not mounted here: it costs an animation
           frame on every scroll for decoration a background paint gives free. */}
-      <Navbar />
-      <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 gap-6 lg:px-6 lg:pl-64">
-        <HomeSidebar />
+      <Navbar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
+      <div
+        className={`relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 gap-6 lg:px-6 ${
+          sidebarOpen ? "lg:pl-64" : ""
+        }`}
+      >
+        {sidebarOpen && <HomeSidebar />}
         <main className="min-w-0 flex-1">
           {/* 1. HERO — the front door and the six-area launcher */}
           <Hero />
@@ -116,6 +126,7 @@ function AppRouter() {
   else if (path.startsWith("/teams/")) page = <TeamPage teamId={path.replace("/teams/", "").replace(/\/$/, "")} />;
   else if (path === "/terms" || path === "/terms-and-conditions") page = <TermsPage />;
   else if (path === "/privacy" || path === "/privacy-policy") page = <PrivacyPolicyPage />;
+  else if (path === "/settings") page = <SettingsPage />;
   else page = <JavlinHome />;
 
   return <PageTransition>{page}</PageTransition>;
