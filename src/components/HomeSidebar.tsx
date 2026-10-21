@@ -97,45 +97,94 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </ul>
       </nav>
 
-      {/* Pulse News — takes the leftover vertical space and scrolls inside. */}
+      {/* Pulse News — takes the leftover vertical space and scrolls inside. The
+          box is exactly what the rail already allotted (same classes), only the
+          contents are composed as an editorial brief: a masthead, then one
+          headline per published post newest first on a single accent timeline. */}
       <section
         aria-label="Pulse News"
         className="mt-1 flex min-h-0 flex-1 flex-col rounded-xl border border-surface-border bg-surface-soft/60 p-2.5"
       >
-        <h2 className="flex shrink-0 items-center gap-1.5 px-0.5 pb-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-brand-navy/70">
-          <Icon name="presentation" className="h-3.5 w-3.5" />
-          Pulse News
-        </h2>
+        <header className="shrink-0 border-b border-surface-border pb-1.5">
+          <div className="flex items-center gap-1.5">
+            <Icon name="newspaper" className="h-3.5 w-3.5 shrink-0 text-brand-blue" />
+            <h2 className="text-[10px] font-black uppercase leading-none tracking-[0.2em] text-brand-navy">
+              Pulse
+            </h2>
+            {/* A still orange mark: it flags the panel as the news slot without
+                claiming the feed is streaming in real time. */}
+            <span aria-hidden="true" className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-brand-red" />
+          </div>
+          <p className="mt-1 text-[8px] font-bold uppercase leading-none tracking-[0.13em] text-ink-500">
+            Campus &amp; opportunity briefing
+          </p>
+        </header>
 
         {pulseState === "error" ? (
-          <p className="px-0.5 text-[11px] font-semibold text-brand-red-ink">
+          <p className="mt-1.5 px-0.5 text-[11px] font-semibold text-brand-red-ink">
             Couldn’t load Pulse News right now.
           </p>
         ) : (
-          <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5">
+          <ol className="mt-0.5 min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-1">
             {pulseState === "loading" &&
               Array.from({ length: 3 }).map((_, i) => (
-                <li key={i} className="h-9 rounded-lg skeleton-shimmer" />
-              ))}
-            {pulseState === "ready" &&
-              posts.map((post) => (
-                <li key={post.id}>
-                  <Link
-                    href={`/pulse?post=${post.id}`}
-                    onClick={onNavigate}
-                    className="block rounded-lg px-2 py-1.5 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
-                  >
-                    <span className="line-clamp-2 text-xs font-bold leading-snug text-brand-navy">
-                      {post.title}
-                    </span>
-                    <span className="mt-0.5 block text-[10px] font-semibold text-ink-500">
-                      {formatPulseDate(post.publishedAt ?? post.createdAt)}
-                    </span>
-                  </Link>
+                <li key={i} className="border-l border-surface-border py-1.5 pl-2.5">
+                  <div className="h-2 w-16 rounded-full skeleton-shimmer" />
+                  <div className="mt-1.5 h-2.5 w-full rounded skeleton-shimmer" />
+                  <div className="mt-1 h-2.5 w-2/3 rounded skeleton-shimmer" />
                 </li>
               ))}
+            {pulseState === "ready" &&
+              posts.map((post, index) => {
+                // Newest first, so index 0 is genuinely the latest published
+                // story — the mark is order-derived, never decorative.
+                const isLatest = index === 0;
+                return (
+                  <li
+                    key={post.id}
+                    className={`relative border-l py-1 pl-2.5 ${
+                      isLatest ? "border-brand-red" : "border-surface-border"
+                    }`}
+                  >
+                    {isLatest && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -left-[3.5px] top-3 h-1.5 w-1.5 rounded-full bg-brand-red"
+                      />
+                    )}
+                    <Link
+                      href={`/pulse?post=${post.id}`}
+                      onClick={onNavigate}
+                      className="group -mx-1 block rounded-lg px-1 py-0.5 transition-colors duration-150 hover:bg-brand-blue-soft/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+                    >
+                      <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                        {isLatest && (
+                          <span className="shrink-0 rounded-full bg-brand-red-soft px-1 py-px text-[8px] font-black uppercase leading-none tracking-wide text-brand-red-ink">
+                            Latest
+                          </span>
+                        )}
+                        <span className="min-w-0 text-[9px] font-black uppercase leading-none tracking-[0.06em] text-ink-500">
+                          {formatPulseCategory(post.category)}
+                        </span>
+                        <span className="ml-auto shrink-0 text-[9px] font-bold leading-none text-ink-400 tabular-nums">
+                          {formatPulseDate(post.publishedAt ?? post.createdAt)}
+                        </span>
+                      </span>
+                      <span className="mt-1 flex items-start gap-1">
+                        <span className="line-clamp-3 min-w-0 flex-1 text-xs font-extrabold leading-snug text-brand-navy transition-transform duration-150 group-hover:translate-x-px">
+                          {post.title}
+                        </span>
+                        <Icon
+                          name="arrow"
+                          className="mt-[3px] h-3 w-3 shrink-0 -translate-x-0.5 text-brand-blue opacity-0 transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+                        />
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             {/* No published news: leave the area empty, no placeholder. */}
-          </ul>
+          </ol>
         )}
       </section>
 
@@ -157,9 +206,32 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+/** "campus_story" → "Campus Story". Same derivation the /pulse page uses. */
+function formatPulseCategory(value: string): string {
+  return value
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+/**
+ * Editorial stamp sized for a 199px column: "Today" / "Yesterday" / "4d" while
+ * the story is fresh, then day + month, and the year only when it is not this
+ * year. A missing or unreadable date renders nothing — the headline stands on
+ * its own rather than showing a placeholder.
+ */
 function formatPulseDate(iso: string | null): string {
   if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d`;
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
 }

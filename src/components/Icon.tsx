@@ -394,6 +394,13 @@ const paths: Record<string, JSX.Element> = {
       <path d="M20 4.5v7h-7" />
     </>
   ),
+  newspaper: (
+    <>
+      <path d="M4 5.5h11a1 1 0 0 1 1 1V19H6.5A2.5 2.5 0 0 1 4 16.5z" />
+      <path d="M16 9h2.5A1.5 1.5 0 0 1 20 10.5V17a2 2 0 0 1-2 2h-2" />
+      <path d="M7 9h5M7 12.5h5M7 16h3" />
+    </>
+  ),
 };
 
 export default function Icon({ name, ...props }: IconProps) {
