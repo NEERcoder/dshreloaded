@@ -1196,6 +1196,23 @@
   transform: none;
 }
 
+/* ------------------------------------------------------------
+   In-shell section swaps (desktop rail navigation). The navbar and
+   the sidebar stay mounted, so only the content container animates:
+   a quick fade-out, then a short 8px fade-up. Declared after
+   .page-transition so its shorter timings win on the same element,
+   and the reduced-motion block below already kills the transition
+   because both classes sit on one node.
+   ------------------------------------------------------------ */
+.section-swap {
+  transition: opacity 120ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.section-swap.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
 /* ============================================================
    MOTION PASS — Stagger Reveal (scroll-driven)
    Defined with .reveal in the components layer so both share the

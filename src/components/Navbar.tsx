@@ -6,6 +6,7 @@ import HomepageAnimation from "./HomepageAnimation";
 import MobileMenu from "./MobileMenu";
 import NotificationBell from "./NotificationBell";
 import { Link, useLocation } from "../lib/router";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 import { EXTERNAL_LINK_PROPS, ORGANIZER_FORM_URL } from "../lib/organizerCta";
 
 /**
@@ -24,19 +25,6 @@ type NavbarProps = {
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
 };
-
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const onChange = () => setIsDesktop(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return isDesktop;
-}
 
 export default function Navbar({ sidebarOpen = true, onToggleSidebar }: NavbarProps) {
   const { path } = useLocation();

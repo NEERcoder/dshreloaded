@@ -28,3 +28,24 @@ export const SIDEBAR_DASHBOARD: SidebarNavItem = {
   href: "/dashboard",
   icon: "grid",
 };
+
+/**
+ * The routes the desktop rail can render inside its own shell. Derived from the
+ * nav list above so a destination added once appears in both places; "/pulse" is
+ * included because the rail's Pulse News panel links into it.
+ */
+export const SECTION_PATHS: string[] = [
+  ...SIDEBAR_NAV.flatMap((item) => (item.href ? [item.href] : [])),
+  SIDEBAR_DASHBOARD.href as string,
+  "/pulse",
+];
+
+/**
+ * True for the exact route only, so deeper paths (`/circle/<id>`, an
+ * opportunity detail, `/teams/<id>`) keep their own standalone layout and
+ * profile/detail links behave exactly as they did before. A query string is not
+ * part of `path` in this router, so `/pulse?post=<id>` still resolves here.
+ */
+export function isSectionPath(path: string): boolean {
+  return SECTION_PATHS.includes(path);
+}

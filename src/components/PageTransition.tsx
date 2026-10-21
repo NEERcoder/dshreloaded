@@ -6,20 +6,27 @@ type Phase = "idle" | "exit" | "enter";
 
 interface PageTransitionProps {
   children: ReactNode;
+  /**
+   * "page" (default) is the full-route swap. "section" is the lighter swap the
+   * desktop rail uses inside the homepage shell, where the navbar and sidebar
+   * never move: quick fade out, then a short 8px fade-up in (see `.section-swap`
+   * in index.css).
+   */
+  variant?: "page" | "section";
 }
 
 /**
  * Lightweight page transition wrapper.
  *
  * On route change:
- *   1. phase = "exit" → 200ms opacity fade-out
+ *   1. phase = "exit" → 200ms opacity fade-out (120ms for the "section" variant)
  *   2. Swap content + scroll to top
- *   3. phase = "enter" → 280ms fade-up entrance
+ *   3. phase = "enter" → 280ms fade-up entrance (180ms for "section")
  *   4. phase = "idle"
  *
  * Skips animation for /admin, /dot-grid, and prefers-reduced-motion.
  */
-export default function PageTransition({ children }: PageTransitionProps) {
+export default function PageTransition({ children, variant = "page" }: PageTransitionProps) {
   const { path } = useLocation();
   const [phase, setPhase] = useState<Phase>("idle");
   const [displayedChildren, setDisplayedChildren] = useState(children);
@@ -55,7 +62,7 @@ export default function PageTransition({ children }: PageTransitionProps) {
     // Start exit phase (fade out current content)
     setPhase("exit");
 
-    const exitDuration = DURATION.micro + 50; // 200ms
+    const exitDuration = variant === "section" ? 120 : DURATION.micro + 50; // 200ms
 
     const exitTimer = window.setTimeout(() => {
       // Swap content & scroll to top
@@ -88,7 +95,7 @@ export default function PageTransition({ children }: PageTransitionProps) {
         : "page-idle";
 
   return (
-    <div className={`page-transition ${phaseClass}`}>
+    <div className={`page-transition ${variant === "section" ? "section-swap" : ""} ${phaseClass}`}>
       {displayedChildren}
     </div>
   );
