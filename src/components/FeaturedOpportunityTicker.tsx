@@ -7,15 +7,22 @@ import OpportunityCarousel from "./home/OpportunityCarousel";
 import Icon from "./Icon";
 
 /**
- * The Trending section's one call to action. On phones it rides the eyebrow row
- * (where it fits inline beside "Trending" and wraps under it on the narrowest
- * handsets) instead of being pushed below the headline; from 640px up the
- * desktop copy below is used so the header layout stays exactly as it was.
+ * The Trending section's one call to action. Below 640px the eyebrow row is
+ * kept on a single line, so the pill sits to the side of the "Trending" heading
+ * instead of dropping under the section: the heading holds its width and the
+ * pill takes what is left, letting its label break onto two lines only on the
+ * narrowest handsets. Its arrow tilts 45° there, the way the sidebar's
+ * Dashboard button does. From 640px up nothing is overridden, so the desktop
+ * header is exactly as it was.
  */
 function ViewAllLink({ className = "" }: { className?: string }) {
   return (
-    <Link href="/opportunities" className={`link-pill group w-fit shrink-0 ${className}`}>
-      View all opportunities <Icon name="arrow" className="h-3.5 w-3.5" />
+    <Link
+      href="/opportunities"
+      className={`link-pill group w-fit shrink-0 max-sm:min-w-0 max-sm:shrink max-sm:justify-end max-sm:gap-1 max-sm:px-2.5 max-sm:text-right max-sm:text-[11px] max-sm:leading-tight ${className}`}
+    >
+      View all opportunities{" "}
+      <Icon name="arrow" className="h-3.5 w-3.5 shrink-0 max-sm:h-3 max-sm:w-3 max-sm:-rotate-45" />
     </Link>
   );
 }
@@ -71,14 +78,14 @@ export default function FeaturedOpportunityTicker() {
       aria-label="Trending opportunities"
     >
       <div className="container-px mb-3">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 max-sm:flex-nowrap max-sm:gap-x-2">
           {/* "Trending" is the section's live indicator and the homepage's h1;
               the large "Discover…" subheading was removed by request. */}
-          <h1 className="eyebrow flex items-center gap-2 text-2xl">
+          <h1 className="eyebrow flex items-center gap-2 text-2xl max-sm:text-xl">
             <span className="live-dot" aria-hidden="true" />
             Trending
           </h1>
-          <ViewAllLink className="shrink-0" />
+          <ViewAllLink />
         </div>
       </div>
 

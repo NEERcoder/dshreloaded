@@ -6,16 +6,27 @@ import { getPulsePosts, type PulsePostRecord } from "../lib/dataAccess";
 
 /**
  * The account rail beside the homepage on large screens. Its width (w-56) and
- * fixed position are unchanged by design; only the contents are laid out here.
- * Nav order and destinations come from lib/sidebarNav — the same list the
- * mobile drawer uses — so the two can never drift.
- *
- * Layout: logo header, then the primary nav, then the Pulse News panel which
- * takes the remaining flexible height and scrolls on its own, then Dashboard
- * pinned to the bottom. Nothing is given a hard-coded height that could push
- * Dashboard off-screen on a short laptop.
+ * fixed position are unchanged by design; the contents live in SidebarContent,
+ * which the mobile drawer renders too, so desktop and mobile can never drift.
  */
 export default function HomeSidebar() {
+  return (
+    <aside
+      aria-label="JAVLIN sections"
+      className="home-rail hidden w-56 shrink-0 lg:fixed lg:bottom-0 lg:left-0 lg:top-20 lg:z-30 lg:flex lg:flex-col lg:gap-2 lg:overflow-hidden lg:rounded-r-2xl lg:p-3"
+    >
+      <SidebarContent />
+    </aside>
+  );
+}
+
+/**
+ * Primary nav, then the Pulse News panel which takes the remaining flexible
+ * height and scrolls on its own, then Dashboard pinned to the bottom. Renders
+ * as a fragment so the parent flex column (rail or drawer) lays it out.
+ * `onNavigate` lets the drawer close itself after a destination is chosen.
+ */
+export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { path } = useLocation();
   const [posts, setPosts] = useState<PulsePostRecord[]>([]);
   const [pulseState, setPulseState] = useState<"loading" | "ready" | "error">("loading");
@@ -58,10 +69,7 @@ export default function HomeSidebar() {
     }`;
 
   return (
-    <aside
-      aria-label="JAVLIN sections"
-      className="home-rail hidden w-56 shrink-0 lg:fixed lg:bottom-0 lg:left-0 lg:top-20 lg:z-30 lg:flex lg:flex-col lg:gap-2 lg:overflow-hidden lg:rounded-r-2xl lg:p-3"
-    >
+    <>
       <nav aria-label="Homepage sections" className="shrink-0">
         <ul className="flex flex-col gap-1">
           {SIDEBAR_NAV.map((item) => (
@@ -79,7 +87,7 @@ export default function HomeSidebar() {
                   </span>
                 </span>
               ) : (
-                <Link href={item.href!} className={itemClass(item)}>
+                <Link href={item.href!} onClick={onNavigate} className={itemClass(item)}>
                   <Icon name={item.icon} className="h-4 w-4 shrink-0" />
                   <span className="min-w-0">{item.label}</span>
                 </Link>
@@ -114,6 +122,7 @@ export default function HomeSidebar() {
                 <li key={post.id}>
                   <Link
                     href={`/pulse?post=${post.id}`}
+                    onClick={onNavigate}
                     className="block rounded-lg px-2 py-1.5 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
                   >
                     <span className="line-clamp-2 text-xs font-bold leading-snug text-brand-navy">
@@ -133,6 +142,7 @@ export default function HomeSidebar() {
       <div className="mt-auto shrink-0 border-t border-surface-border pt-2">
         <Link
           href={SIDEBAR_DASHBOARD.href!}
+          onClick={onNavigate}
           className="group flex min-h-[44px] items-center gap-3 rounded-xl bg-brand-blue px-3 py-2 text-[13px] font-extrabold leading-snug text-white shadow-soft transition-colors duration-200 hover:bg-brand-blue-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
         >
           <Icon name={SIDEBAR_DASHBOARD.icon} className="h-4 w-4 shrink-0" />
@@ -143,7 +153,7 @@ export default function HomeSidebar() {
           />
         </Link>
       </div>
-    </aside>
+    </>
   );
 }
 

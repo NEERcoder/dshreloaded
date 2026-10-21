@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import BrandMark from "./BrandMark";
-import { Link, useLocation } from "../lib/router";
-import { useAuth } from "../context/AuthContext";
-import { useUnreadNotificationCount } from "./NotificationBell";
-import { SIDEBAR_NAV } from "../lib/sidebarNav";
+import { SidebarContent } from "./HomeSidebar";
 
 type MobileMenuProps = {
   open: boolean;
@@ -12,21 +9,13 @@ type MobileMenuProps = {
 };
 
 /**
- * The app drawer. It carries account actions plus the two utility destinations
- * that used to sit in the top bar, so the navbar itself can stay minimal.
+ * The phone drawer. It renders the exact same SidebarContent as the desktop
+ * rail — primary nav, Pulse News, bottom-anchored Dashboard — so the two
+ * cannot drift, and it adds no mobile-only destinations of its own.
  */
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
   const [render, setRender] = useState(open);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const { path, navigate } = useLocation();
-  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const unread = useUnreadNotificationCount();
-
-  async function handleSignOut() {
-    onClose();
-    await signOut();
-    navigate("/");
-  }
 
   useEffect(() => {
     if (open) setRender(true);
@@ -51,17 +40,6 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
 
   if (!render) return null;
 
-  const itemClass = (href: string) =>
-    `flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
-      path === href || path.startsWith(href + "/")
-        ? "text-brand-blue bg-brand-blue-soft"
-        : "text-ink-900 hover:bg-brand-blue-soft"
-    }`;
-
-  function stagger(index: number) {
-    return { className: `drawer-link ${open ? "is-visible" : ""}`, style: { transitionDelay: open ? `${index * 45 + 50}ms` : "0ms" } };
-  }
-
   return (
     <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Menu">
       <div
@@ -71,12 +49,12 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
         onClick={onClose}
       />
       <div
-        className={`absolute top-0 left-0 h-full w-[82%] max-w-sm bg-white/90 backdrop-blur-xl shadow-lift border-r border-white/70 transition-transform duration-300 ${
+        className={`absolute top-0 left-0 flex h-full w-[82%] max-w-sm flex-col bg-white/90 backdrop-blur-xl shadow-lift border-r border-white/70 transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
       >
-        <div className="flex items-center justify-between h-16 px-5 border-b border-surface-border">
+        <div className="flex shrink-0 items-center justify-between h-16 px-5 border-b border-surface-border">
           <BrandMark className="h-8 w-auto" />
           <button
             ref={closeButtonRef}
@@ -88,140 +66,8 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
           </button>
         </div>
 
-        <div className="px-5 py-6 flex flex-col gap-1">
-          {/* Primary destinations shared with the desktop rail (lib/sidebarNav)
-              so the two never drift. Certificates is visible but disabled. */}
-          {SIDEBAR_NAV.map((item) =>
-            item.disabled ? (
-              <span
-                key={item.label}
-                aria-disabled="true"
-                title="Coming soon"
-                className="flex cursor-not-allowed select-none items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold text-ink-400"
-              >
-                <Icon name={item.icon} className="h-5 w-5 shrink-0" />
-                {item.label}
-                <span className="ml-auto rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-ink-500">
-                  Soon
-                </span>
-              </span>
-            ) : (
-              <Link
-                key={item.label}
-                href={item.href!}
-                onClick={onClose}
-                className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
-                  (item.exact
-                    ? path === item.href
-                    : path === item.href || path.startsWith(item.href + "/"))
-                    ? "text-brand-blue bg-brand-blue-soft"
-                    : "text-ink-900 hover:bg-brand-blue-soft"
-                }`}
-              >
-                <Icon name={item.icon} className="h-5 w-5 shrink-0" />
-                {item.label}
-              </Link>
-            )
-          )}
-
-          {!authLoading && user && (
-            <>
-              <div {...stagger(0)}>
-                <Link href="/dashboard" onClick={onClose} className={itemClass("/dashboard")}>
-                  <Icon name="grid" className="h-5 w-5 shrink-0" />
-                  Dashboard
-                </Link>
-              </div>
-              <div {...stagger(1)}>
-                <Link href={`/circle/${user.id}`} onClick={onClose} className={itemClass("/circle")}>
-                  <Icon name="user" className="h-5 w-5 shrink-0" />
-                  Profile
-                </Link>
-              </div>
-              <div {...stagger(2)}>
-                <Link href="/circle/connections" onClick={onClose} className={itemClass("/circle/connections")}>
-                  <Icon name="link" className="h-5 w-5 shrink-0" />
-                  Connections
-                </Link>
-              </div>
-              <div {...stagger(3)}>
-                <Link
-                  href="/notifications"
-                  onClick={onClose}
-                  className={`flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
-                    path === "/notifications" ? "text-brand-blue bg-brand-blue-soft" : "text-ink-900 hover:bg-brand-blue-soft"
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Icon name="bell" className="h-5 w-5 shrink-0" />
-                    Notifications
-                  </span>
-                  {unread > 0 && (
-                    <span className="rounded-full bg-brand-red px-2 py-0.5 text-[11px] font-black text-brand-navy">
-                      {unread > 9 ? "9+" : unread}
-                    </span>
-                  )}
-                </Link>
-              </div>
-            </>
-          )}
-
-          {!authLoading && !user && (
-            <>
-              <div {...stagger(0)}>
-                <Link href="/login" onClick={onClose} className={itemClass("/login")}>
-                  <Icon name="user" className="h-5 w-5 shrink-0" />
-                  Login
-                </Link>
-              </div>
-              <div {...stagger(1)}>
-                <Link href="/signup" onClick={onClose} className={itemClass("/signup")}>
-                  <Icon name="plus" className="h-5 w-5 shrink-0" />
-                  Create Profile
-                </Link>
-              </div>
-            </>
-          )}
-
-          <div {...stagger(!authLoading && user ? 4 : 2)}>
-            <Link href="/college-reviews" onClick={onClose} className={itemClass("/college-reviews")}>
-              <Icon name="star" className="h-5 w-5 shrink-0" />
-              College Reviews
-            </Link>
-          </div>
-          <div {...stagger(!authLoading && user ? 5 : 3)}>
-            <Link href="/join" onClick={onClose} className={itemClass("/join")}>
-              <Icon name="handshake" className="h-5 w-5 shrink-0" />
-              Collaborate With Us
-            </Link>
-          </div>
-
-          {isAdmin && !authLoading && (
-            <div {...stagger(!authLoading && user ? 6 : 4)}>
-              <Link
-                href="/admin"
-                onClick={onClose}
-                className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-extrabold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
-                  path === "/admin" ? "text-brand-navy bg-brand-red" : "text-brand-red-ink bg-brand-red-soft hover:bg-brand-red hover:text-brand-navy"
-                }`}
-              >
-                <span className="h-2 w-2 rounded-full bg-current animate-pulse" />
-                Admin Dashboard
-              </Link>
-            </div>
-          )}
-
-          {!authLoading && user && (
-            <div {...stagger(7)}>
-              <button
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-base font-semibold text-ink-600 transition-colors hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
-              >
-                <Icon name="logout" className="h-5 w-5 shrink-0" />
-                Sign out
-              </button>
-            </div>
-          )}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-4 py-3">
+          <SidebarContent onNavigate={onClose} />
         </div>
       </div>
     </div>

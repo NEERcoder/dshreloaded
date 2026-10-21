@@ -16,7 +16,7 @@ import {
  * session and existing data-access calls — no invented name, avatar, league or
  * connection count. When a value is unavailable we show a neutral em dash.
  */
-export default function AccountMenu() {
+export default function AccountMenu({ className = "" }: { className?: string }) {
   const { user, signOut } = useAuth();
   const { path, navigate } = useLocation();
   const [open, setOpen] = useState(false);
@@ -71,7 +71,7 @@ export default function AccountMenu() {
     "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue";
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} className={`relative ${className}`}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
