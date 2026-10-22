@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import {
@@ -8,7 +8,7 @@ import {
   initialsOf,
   yearLabel,
 } from "../components/circle/StudentCard";
-import { Link } from "../lib/router";
+import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
   STUDENT_RECORD_CATEGORIES,
@@ -73,6 +73,9 @@ function statusLabel(status: CompetitionTeamRecord["status"]): string {
 
 export default function MarkPage() {
   const { user, loading: authLoading } = useAuth();
+  const { search } = useLocation();
+  /** The homepage's "+" links here with ?add=record; open the form once. */
+  const addRequested = useRef(false);
 
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [colleges, setColleges] = useState<CollegeRecord[]>([]);
@@ -132,6 +135,16 @@ export default function MarkPage() {
       cancelled = true;
     };
   }, [user, reloadKey]);
+
+  // /mark?add=record is the homepage tile's "+" shortcut. It opens the same
+  // inline form a student reaches with the "Add record" button on this page —
+  // no second form, no new route.
+  useEffect(() => {
+    if (addRequested.current || !user || loading) return;
+    if (new URLSearchParams(search).get("add") !== "record") return;
+    addRequested.current = true;
+    openNewRecord();
+  }, [search, user, loading]);
 
   const college = useMemo(
     () => colleges.find((c) => c.id === profile?.collegeId) ?? null,

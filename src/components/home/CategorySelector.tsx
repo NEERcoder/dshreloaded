@@ -28,8 +28,11 @@ export default function CategorySelector() {
         </div>
 
         {/* Mobile: all six areas in one 3x2 grid so the launcher and Trending share
-            the first viewport. Desktop keeps the single six-across row. */}
-        <div className="grid grid-cols-3 gap-2 sm:mt-4 sm:gap-2.5 lg:grid-cols-6 lg:gap-3">
+            the first viewport. Desktop keeps the single six-across row. Every row
+            shares one height (`auto-rows-fr`) because AIM carries two CTAs: without
+            it the first row would sit taller than the second and the six tiles
+            would stop reading as one system. */}
+        <div className="grid auto-rows-fr grid-cols-3 gap-2 sm:mt-4 sm:gap-2.5 lg:grid-cols-6 lg:gap-3">
           {JAVLIN_CATEGORIES.map((category, index) => (
             <CategoryCard key={category.id} category={category} index={index} />
           ))}
