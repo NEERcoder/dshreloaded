@@ -69,7 +69,7 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
     label: "CIRCLE",
     href: "/circle",
     iconSrc: "/categories/circle.png",
-    ctas: [{ label: "Connect with People with Common Interests", href: "/circle", icon: "handshake" }],
+    ctas: [{ label: "Connect with Like-Minded People", href: "/circle", icon: "handshake" }],
     title: "Your people are out there.",
     description: "Connect with students across colleges, courses and interests.",
   },
@@ -94,6 +94,21 @@ export const JAVLIN_CATEGORIES: JavlinCategory[] = [
 ];
 
 const BY_ID = new Map(JAVLIN_CATEGORIES.map((category) => [category.id, category]));
+
+/**
+ * The four cards the homepage launcher shows, in display order.
+ *
+ * CREW and MARK are deliberately absent from the launcher only — their routes,
+ * rail/drawer entries, pages and previews are untouched. The catalogue keeps
+ * all six entries so `categoryById` still resolves every area's artwork.
+ */
+const LAUNCHER_IDS: CategoryId[] = ["aim", "field", "circle", "pulse"];
+
+export const LAUNCHER_CATEGORIES: JavlinCategory[] = LAUNCHER_IDS.map((id) => {
+  const category = BY_ID.get(id);
+  if (!category) throw new Error(`Launcher category "${id}" is not in JAVLIN_CATEGORIES`);
+  return category;
+});
 
 export function categoryById(id: CategoryId): JavlinCategory | undefined {
   return BY_ID.get(id);

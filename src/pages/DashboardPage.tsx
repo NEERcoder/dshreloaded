@@ -22,6 +22,7 @@ import {
   normalizePhoneNumber,
   countHeadlineWords,
   validateHeadline,
+  normalizeHeadline,
   MAX_HEADLINE_CHARS,
   instagramProfileUrl,
   type CollegeRecord,
@@ -126,6 +127,8 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  /** Inline error for the required headline, shown under the field itself. */
+  const [headlineError, setHeadlineError] = useState<string | null>(null);
 
   // Privacy + avatar are owner-controlled and separate from the profile form.
   const [visibilitySaving, setVisibilitySaving] = useState(false);
@@ -239,7 +242,18 @@ export default function DashboardPage() {
     if (!form.gender) return "Please select a gender.";
 
     const headlineError = validateHeadline(form.headline);
-    if (headlineError) return headlineError;
+    if (headlineError) {
+      setHeadlineError(headlineError);
+      return headlineError;
+    }
+    // Required from here on: this is the profile-completion/edit flow, not
+    // sign-up. The field is the one line other students read on the profile.
+    if (!normalizeHeadline(form.headline)) {
+      const message = "Add a headline — it is the one line shown on your public profile.";
+      setHeadlineError(message);
+      return message;
+    }
+    setHeadlineError(null);
 
     if (form.instagramHandle.trim() && !normalizeInstagramHandle(form.instagramHandle)) {
       return "Instagram should be just your username, like neer_singh — no @ and no link.";
@@ -425,6 +439,11 @@ export default function DashboardPage() {
                   Your account is ready — just a few details left before you can use the hub.
                 </p>
               )}
+              {profile && !normalizeHeadline(profile.headline) && (
+                <p className="mt-3 rounded-xl border border-brand-blue/20 bg-brand-blue-soft px-3 py-2 text-xs font-bold text-brand-blue">
+                  One thing left: add a headline below. It is the short line other students read on your CIRCLE profile.
+                </p>
+              )}
 
               <div className="mt-5 grid gap-4">
                 <div>
@@ -519,7 +538,8 @@ export default function DashboardPage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="field-label" htmlFor="dash-headline">
-                      Headline <span className="font-medium normal-case text-ink-500">(optional)</span>
+                      Headline{" "}
+                      <span aria-hidden="true" className="text-brand-red-ink">*</span>
                     </label>
                     <span
                       className={`text-[11px] font-semibold ${
@@ -532,16 +552,28 @@ export default function DashboardPage() {
                   <textarea
                     id="dash-headline"
                     rows={2}
+                    required
+                    aria-required="true"
+                    aria-invalid={headlineError ? true : undefined}
+                    aria-describedby="dash-headline-help"
                     maxLength={MAX_HEADLINE_CHARS}
                     disabled={saving}
                     value={form.headline}
-                    onChange={(e) => setForm({ ...form, headline: e.target.value })}
+                    onChange={(e) => {
+                      setForm({ ...form, headline: e.target.value });
+                      if (headlineError) setHeadlineError(null);
+                    }}
                     className="field-input min-h-[64px] resize-y disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="A short line shown on your public profile, e.g. BSc Physics student | ML enthusiast"
                   />
-                  <p className="mt-1 text-[11px] font-semibold text-ink-500">
-                    Up to 60 words. Appears on your public profile where it is visible to others.
+                  <p id="dash-headline-help" className="mt-1 text-[11px] font-semibold text-ink-500">
+                    Required. A short introduction shown on your public profile — up to 60 words.
                   </p>
+                  {headlineError && (
+                    <p role="alert" className="mt-1 text-[11px] font-bold text-brand-red-ink">
+                      {headlineError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -664,10 +696,22 @@ export default function DashboardPage() {
                   <dt className="field-label">Gender</dt>
                   <dd className="mt-1 text-sm font-semibold text-ink-900">{profile.gender}</dd>
                 </div>
-                {profile.headline && (
+                {profile.headline ? (
                   <div className="sm:col-span-2">
                     <dt className="field-label">Headline</dt>
                     <dd className="mt-1 text-sm font-semibold text-ink-900">{profile.headline}</dd>
+                  </div>
+                ) : (
+                  <div className="sm:col-span-2">
+                    <dt className="field-label">Headline</dt>
+                    <dd className="mt-1 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-blue/20 bg-brand-blue-soft px-3 py-2">
+                      <span className="text-xs font-semibold text-brand-blue">
+                        Your profile needs a headline — it is the one line others see on CIRCLE.
+                      </span>
+                      <button type="button" onClick={startEdit} className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline">
+                        Add headline
+                      </button>
+                    </dd>
                   </div>
                 )}
                 <div>

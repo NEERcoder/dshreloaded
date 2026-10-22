@@ -2166,6 +2166,12 @@ export async function updateProfile(input: ProfileInput): Promise<DataResult<Pro
       const headlineError = validateHeadline(input.headline);
       if (headlineError) return failure(null, new Error(headlineError));
     }
+    // A completed/edited profile must carry a headline. This guard lives on the
+    // update path, not on createProfile: sign-up shares createProfile and must
+    // never be blocked by a profile detail.
+    if (!normalizeHeadline(input.headline)) {
+      return failure(null, new Error("Add a headline before saving — it is shown on your public profile."));
+    }
 
     // user_id is intentionally omitted from the payload — it can never be changed.
     const payload = {
@@ -3563,38 +3569,6 @@ export async function getDiscoverableCompetitionTeams(
       recruiting: Boolean(row.recruiting),
     }))
   );
-}
-
-export type PublicTeamName = { id: string; name: string; competitionId: string };
-
-/**
- * The most recently created active teams, for the CREW ticker on the homepage.
- *
- * Team names are already publicly readable by policy 002 ("Teams are publicly
- * readable"), so this reads only the three public columns — never members,
- * invite codes or captain ids. A failed or unconfigured backend yields an empty
- * list, which the ticker renders as nothing rather than an error.
- */
-export async function getPublicTeamNames(limit = 10): Promise<DataResult<PublicTeamName[]>> {
-  if (!supabase) return remoteSuccess([]);
-  try {
-    const { data, error } = await supabase
-      .from("competition_teams")
-      .select("id, name, competition_id")
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (error) return failure([], error);
-    return remoteSuccess(
-      ((data ?? []) as Record<string, unknown>[]).map((row) => ({
-        id: String(row.id),
-        name: String(row.name ?? ""),
-        competitionId: String(row.competition_id ?? ""),
-      }))
-    );
-  } catch (err) {
-    return failure([], err);
-  }
 }
 
 /**

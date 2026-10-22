@@ -1,39 +1,23 @@
 import CategoryCard from "./CategoryCard";
-import { JAVLIN_CATEGORIES } from "../../lib/categories";
+import { LAUNCHER_CATEGORIES } from "../../lib/categories";
 
 /**
- * Primary homepage discovery: the six JAVLIN areas as 3D icon cards. These
- * replace the six section links that used to sit in the top navigation. The
- * panel is deliberately short — the headline it used to carry pushed Trending
- * and its posters below the first viewport.
+ * Primary homepage discovery: four JAVLIN areas as cards. CREW and MARK live in
+ * the rail and drawer, not here.
+ *
+ * The panel carries no wordmark of its own — the site header already owns the
+ * brand, and the space it used belongs to the cards and the section below them.
+ *
+ * Phones use a two-column bento: AIM and FIELD fill the first row as the primary
+ * cards, CIRCLE and PULSE sit under them as compact supporting cards with live
+ * previews. The grid switches to one row of four only when the cards have room.
  */
 export default function CategorySelector() {
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="glass-panel launcher-panel animate-fade-up rounded-2xl p-3 shadow-soft sm:rounded-3xl sm:p-4 lg:p-5">
-        {/* The wordmark is branding, not navigation — on phones it only pushed
-            the launcher's six tiles down, so below 640px the header keeps the
-            JAVLIN identity and the launcher drops straight into the grid. */}
-        <div className="hidden items-center justify-center gap-2.5 sm:flex">
-          {/* The approved wordmark carries the same navy as the canvas as its
-              own ground, so `lighten` lets the surface behind it show through
-              untouched instead of framing it in a box. */}
-          <img
-            src="/brand/javlin-logo-transparent.png"
-            alt="JAVLIN"
-            width={2172}
-            height={724}
-            className="h-6 w-auto object-contain sm:h-7"
-          />
-        </div>
-
-        {/* Mobile: all six areas in one 3x2 grid so the launcher and Trending share
-            the first viewport. Desktop keeps the single six-across row. Every row
-            shares one height (`auto-rows-fr`) because AIM carries two CTAs: without
-            it the first row would sit taller than the second and the six tiles
-            would stop reading as one system. */}
-        <div className="grid auto-rows-fr grid-cols-3 gap-2 sm:mt-4 sm:gap-2.5 lg:grid-cols-6 lg:gap-3">
-          {JAVLIN_CATEGORIES.map((category, index) => (
+      <div className="glass-panel launcher-panel animate-fade-up rounded-2xl p-2.5 shadow-soft sm:rounded-3xl sm:p-3 lg:p-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+          {LAUNCHER_CATEGORIES.map((category, index) => (
             <CategoryCard key={category.id} category={category} index={index} />
           ))}
         </div>
