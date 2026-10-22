@@ -47,6 +47,7 @@ import {
   type VideoRecord,
   type TeamMemberRecord,
   type TeamRoleRecord,
+  opportunitiesStreamAvailable,
 } from "../lib/dataAccess";
 import { supabase } from "../lib/supabase";
 import { sanitizeYouTubeUrl, getYouTubeThumbnailUrl } from "../lib/urlSafety";
@@ -59,6 +60,7 @@ const blankOpportunity: OpportunityInput = {
   description: "",
   eligibility: "",
   field: "",
+  stream: "",
   eligibleCourses: [],
   location: "",
   mode: "",
@@ -470,6 +472,20 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
   // ISO instant in `form` is derived from it on submit.
   const [deadlineIst, setDeadlineIst] = useState("");
   const [startIst, setStartIst] = useState("");
+  // The Stream select is offered only once migration 016 is applied. Writing a
+  // column that does not exist would make the save succeed while silently
+  // discarding the choice, which is worse than not offering it.
+  const [streamAvailable, setStreamAvailable] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void opportunitiesStreamAvailable().then((available) => {
+      if (!cancelled) setStreamAvailable(available);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handlePosterUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -498,6 +514,7 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
       description: item.description,
       eligibility: item.eligibility || "",
       field: item.field || "",
+      stream: item.stream || "",
       eligibleCourses: item.eligibleCourses,
       location: item.location || "",
       mode: item.mode || "",
@@ -602,6 +619,25 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
             <label className="field-label">Field / Domain</label>
             <input value={form.field || ""} onChange={(e) => setForm({ ...form, field: e.target.value })} className="field-input" placeholder="e.g. Physics / Data Science" />
           </div>
+          {streamAvailable && (
+            <div>
+              <label className="field-label">Stream</label>
+              <select
+                value={form.stream || ""}
+                onChange={(e) => setForm({ ...form, stream: e.target.value })}
+                className="field-input"
+              >
+                <option value="">Not specified</option>
+                <option value="Science">Science</option>
+                <option value="Commerce">Commerce</option>
+                <option value="Arts">Arts</option>
+                <option value="Analytics">Analytics</option>
+              </select>
+              <p className="mt-1 text-xs text-ink-500">
+                Single-select. Drives the Stream filter on Internships, Competitions and Certifications.
+              </p>
+            </div>
+          )}
           <div>
             <label className="field-label">Location</label>
             <input value={form.location || ""} onChange={(e) => setForm({ ...form, location: e.target.value })} className="field-input" placeholder="e.g. Delhi / Remote" />

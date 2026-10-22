@@ -105,19 +105,16 @@ export function LevelBadge({ competitions, className = "" }: { competitions: num
   );
 }
 
-/** The owner made their profile public. Separate from the level badge on purpose. */
-export function VerifiedMark({ className = "" }: { className?: string }) {
+/**
+ * The owner opted into public view. This says exactly that — it is not a claim
+ * that JAVLIN knows who they are or has checked anything about them, so it never
+ * says "verified" and never borrows the brand mark.
+ */
+export function PublicProfileMark({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-ink-500 ${className}`}>
-      <img
-        src="/brand/javlin-favicon.png"
-        alt=""
-        width={14}
-        height={14}
-        draggable={false}
-        className="h-3.5 w-3.5 rounded-full object-cover"
-      />
-      Verified
+      <Icon name="users" className="h-3.5 w-3.5" />
+      Public profile
     </span>
   );
 }
@@ -178,13 +175,21 @@ export default function StudentCard({ student, isSelf, connectionState, competit
       {(hasLevel || student.isPublic) && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
           <LevelBadge competitions={competitions} />
-          {student.isPublic && <VerifiedMark />}
+          {student.isPublic && <PublicProfileMark />}
         </div>
       )}
 
-      <p className="mt-4 line-clamp-2 text-xs font-semibold text-ink-600">
-        {student.collegeName || "College not listed yet"}
-      </p>
+      {student.headline?.trim() ? (
+        <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-ink-600">{student.headline}</p>
+      ) : (
+        <p className="mt-4 line-clamp-2 text-xs font-semibold text-ink-600">
+          {student.collegeName || "College not listed yet"}
+        </p>
+      )}
+
+      {student.headline?.trim() && student.collegeName && (
+        <p className="mt-2 truncate text-[11px] font-semibold text-ink-500">{student.collegeName}</p>
+      )}
 
       <div className="mt-auto flex items-center justify-between gap-2 pt-4">
         {student.graduationYear ? (

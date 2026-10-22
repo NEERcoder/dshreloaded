@@ -12,8 +12,9 @@ import { CATEGORY_BADGE } from "./OpportunityCard";
 import DeadlinePill from "./DeadlinePill";
 import ShareOpportunity from "./ShareOpportunity";
 import CompetitionRegistration from "./CompetitionRegistration";
-import { opportunityCategoryIcon } from "../../data/opportunityCategories";
-import { prizeLabel, teamSizeLabel } from "../../lib/prize";
+import { CategoryGlyph } from "../FeatureIcon";
+import { formatPrizeAmount, teamSizeLabel } from "../../lib/prize";
+import { listingFacts } from "../../lib/opportunityFacts";
 
 /**
  * The route body behind /opportunities/:id.
@@ -82,17 +83,28 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
   const organizerEmail = sanitizeMailto(opp.organizerEmail);
   const organizerWhatsapp = sanitizeWhatsAppUrl(opp.organizerWhatsapp);
   const organizerWebsite = sanitizeExternalUrl(opp.organizerWebsite);
-  const prize = prizeLabel(opp);
+  // Money and merchandise are different promises, so they are never joined into
+  // one line: a cash prize only exists when the record holds a number, and a
+  // certificate or medal only exists in the organiser's own rewards text.
+  const prizeAmount = opp.prizeAmount !== null && opp.prizeAmount !== undefined ? formatPrizeAmount(opp.prizeAmount) : null;
+  const rewards = opp.rewards?.trim() || null;
   const teamSize = teamSizeLabel(opp);
   const rounds = opp.rounds ?? [];
   const categoryParam = opportunityCategoryParam(opp.category);
   const isCompetition = opp.category === "competition";
 
-  const facts: { icon: string; label: string; value: string }[] = [];
-  // Mode is already a pill above, so repeating it in the grid is noise.
-  if (opp.location) facts.push({ icon: "map-pin", label: "Location", value: opp.location });
-  if (opp.duration) facts.push({ icon: "clock", label: "Duration", value: opp.duration });
-  if (opp.field) facts.push({ icon: "target", label: "Field", value: opp.field });
+  // Mode, prize, rewards, team size, rounds and courses each get their own,
+  // richer block below — the grid carries what is left, from the same builder
+  // the feed card uses.
+  const facts = listingFacts(opp).filter(
+    (fact) =>
+      fact.key !== "mode" &&
+      fact.key !== "prize" &&
+      fact.key !== "rewards" &&
+      fact.key !== "team" &&
+      fact.key !== "rounds" &&
+      fact.key !== "courses"
+  );
 
   const categoryBadgeClass = CATEGORY_BADGE[opp.category] ?? "bg-surface-soft text-ink-600";
 
@@ -112,12 +124,12 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
             href={`/opportunities/${categoryParam}`}
             className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider transition-opacity hover:opacity-80 ${categoryBadgeClass}`}
           >
-            <Icon name={opportunityCategoryIcon(opp.category)} className="h-3.5 w-3.5" />
+            <CategoryGlyph category={opp.category} className="h-3.5 w-3.5" />
             {opp.category}
           </Link>
         ) : (
           <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${categoryBadgeClass}`}>
-            <Icon name={opportunityCategoryIcon(opp.category)} className="h-3.5 w-3.5" />
+            <CategoryGlyph category={opp.category} className="h-3.5 w-3.5" />
             {opp.category}
           </span>
         )}
@@ -128,13 +140,20 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
         </h1>
         <p className="mt-1 text-base font-semibold text-ink-600">{opp.organization}</p>
 
-        {/* 4–6. Mode, prize, deadline — the three things that decide interest */}
+        {/* 4–6. Deadline, prize, rewards and mode — the things that decide interest,
+            each stated separately so a cash prize never reads as merchandise. */}
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <DeadlinePill opportunity={opp} />
-          {prize && (
+          {prizeAmount && (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700">
               <Icon name="trophy" className="h-3.5 w-3.5" />
-              {prize}
+              {prizeAmount}
+            </span>
+          )}
+          {rewards && (
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-surface-border bg-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-700">
+              <Icon name="award" className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0">{rewards}</span>
             </span>
           )}
           {opp.mode && (
@@ -148,7 +167,7 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
         {facts.length > 0 && (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {facts.map((fact) => (
-              <div key={fact.label} className="rounded-xl bg-surface-soft p-3">
+              <div key={fact.key} className="rounded-xl bg-surface-soft p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-500">
                   <Icon name={fact.icon} className="h-3.5 w-3.5" /> {fact.label}
                 </p>

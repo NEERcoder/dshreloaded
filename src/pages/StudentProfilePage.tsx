@@ -4,9 +4,9 @@ import Icon from "../components/Icon";
 import ConnectControl from "../components/circle/ConnectControl";
 import {
   LevelBadge,
+  PublicProfileMark,
   StudentAvatar,
   StudentRecordList,
-  VerifiedMark,
   yearLabel,
 } from "../components/circle/StudentCard";
 import { Link } from "../lib/router";
@@ -246,7 +246,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <LevelBadge competitions={competitions} />
-                {student.isPublic && <VerifiedMark />}
+                {student.isPublic && <PublicProfileMark />}
                 {isSelf && (
                   <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[11px] font-bold text-brand-red-ink">
                     This is you

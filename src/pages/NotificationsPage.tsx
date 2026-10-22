@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
+import FeatureIcon from "../components/FeatureIcon";
 import { announceNotificationsChanged } from "../components/NotificationBell";
 import { initialsOf } from "../components/circle/StudentCard";
 import { actorLabel, unreadCountOf } from "../lib/notifications";
@@ -90,7 +91,7 @@ export default function NotificationsPage() {
         <div className="container-px py-16">
           <div className="mx-auto max-w-xl card border-dashed p-8 sm:p-10 text-center bg-white">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue-soft text-brand-blue">
-              <Icon name="bell" className="h-6 w-6" />
+              <FeatureIcon name="notification" className="h-6 w-6" />
             </div>
             <h1 className="mt-4 text-lg font-extrabold text-ink-900">Notifications are for signed-in students</h1>
             <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-500">
@@ -157,7 +158,7 @@ export default function NotificationsPage() {
         {notifications.length === 0 ? (
           <div className="w-full rounded-2xl border-2 border-dashed border-surface-border bg-white/80 px-6 py-10 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue-soft text-brand-blue">
-              <Icon name="bell" className="h-6 w-6" />
+              <FeatureIcon name="notification" className="h-6 w-6" />
             </div>
             <h2 className="mt-4 text-base font-extrabold text-ink-900">You're all caught up.</h2>
             <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-ink-500">

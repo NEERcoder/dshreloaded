@@ -1022,7 +1022,7 @@
   }
 
   .filter-select {
-    @apply w-full rounded-xl border border-surface-border bg-white px-3.5 py-3 text-sm font-semibold text-ink-700 transition-colors focus:border-brand-blue focus:outline-none;
+    @apply w-full min-h-[44px] rounded-xl border border-surface-border bg-white px-3.5 py-3 text-sm font-semibold text-ink-700 transition-colors focus:border-brand-blue focus:outline-none;
   }
 
   /* ------------------------------------------------------------

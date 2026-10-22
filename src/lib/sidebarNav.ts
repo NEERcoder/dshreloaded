@@ -1,13 +1,21 @@
+import type { FeatureIconName } from "../components/FeatureIcon";
+
 /**
  * Single source of truth for the homepage rail and the mobile drawer, so the
  * two never drift. Destinations reuse only routes that already exist in
- * App.tsx. `disabled` items render visibly but are non-interactive — the
- * certificate-management system is a separate future project.
+ * App.tsx. `feature` names supplied artwork that the rail and drawer render
+ * instead of the stroke glyph in `icon`, which stays as the fallback.
+ *
+ * The Certifications item links to the existing filtered opportunity view at
+ * `/opportunities/certifications`. The separate personal "My Certificates"
+ * feature is still a future project and remains disabled where it appears.
  */
 export type SidebarNavItem = {
   label: string;
   href?: string;
   icon: string;
+  /** Supplied full-colour artwork; wins over `icon` when present. */
+  feature?: FeatureIconName;
   disabled?: boolean;
   /** Match the exact path (for "/") instead of the whole subtree. */
   exact?: boolean;
@@ -15,9 +23,9 @@ export type SidebarNavItem = {
 
 export const SIDEBAR_NAV: SidebarNavItem[] = [
   { label: "Home", href: "/", icon: "home", exact: true },
-  { label: "Internships", href: "/opportunities/internships", icon: "target" },
-  { label: "Certificates", icon: "star", disabled: true },
-  { label: "Competitions", href: "/opportunities/competitions", icon: "trophy" },
+  { label: "Internships", href: "/opportunities/internships", icon: "briefcase", feature: "internship" },
+  { label: "Certifications", href: "/opportunities/certifications", icon: "award", feature: "certification" },
+  { label: "Competitions", href: "/opportunities/competitions", icon: "trophy", feature: "competition" },
   { label: "Circle", href: "/circle", icon: "users" },
   { label: "MARK — Your Achievements", href: "/mark", icon: "award" },
 ];
@@ -27,6 +35,7 @@ export const SIDEBAR_DASHBOARD: SidebarNavItem = {
   label: "Dashboard",
   href: "/dashboard",
   icon: "grid",
+  feature: "dashboard",
 };
 
 /**

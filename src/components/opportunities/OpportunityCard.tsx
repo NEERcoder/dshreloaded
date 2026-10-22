@@ -5,8 +5,8 @@ import PosterFrame from "./PosterFrame";
 import { Link } from "../../lib/router";
 import { sanitizeExternalUrl } from "../../lib/urlSafety";
 import { opportunityHref } from "../../lib/opportunityRoute";
-import { opportunityCategoryIcon } from "../../data/opportunityCategories";
-import { prizeLabel } from "../../lib/prize";
+import { CategoryGlyph } from "../FeatureIcon";
+import { listingFacts } from "../../lib/opportunityFacts";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
 export const CATEGORY_BADGE: Record<string, string> = {
@@ -19,11 +19,18 @@ export const CATEGORY_BADGE: Record<string, string> = {
   scholarship: "bg-brand-red-soft text-brand-red-ink",
 };
 
+/**
+ * The scanning unit of every opportunity feed. It shows what a listing *is* —
+ * title, organiser, and the five facts most likely to decide whether to open it —
+ * and leaves the description, eligibility and application detail to
+ * `OpportunityDetail`. Which five, and what each is called, comes from
+ * `lib/opportunityFacts`, so a card and its detail page cannot disagree.
+ */
 export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
   const safeUrl = sanitizeExternalUrl(item.applicationUrl);
   const isTeamCompetition = item.category === "competition" && item.teamFormationEnabled;
   const href = opportunityHref(item.id);
-  const prize = prizeLabel(item);
+  const facts = listingFacts(item).slice(0, 5);
 
   return (
     <TiltCard className="h-full">
@@ -42,7 +49,7 @@ export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
           <div>
             <div className="flex items-center justify-between gap-2">
               <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${CATEGORY_BADGE[item.category] ?? "bg-surface-soft text-ink-600"}`}>
-                <Icon name={opportunityCategoryIcon(item.category)} className="h-3.5 w-3.5" />
+                <CategoryGlyph category={item.category} className="h-3.5 w-3.5" />
                 {item.category}
               </span>
               <div className="flex items-center gap-1.5">
@@ -60,34 +67,34 @@ export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
                 )}
               </div>
             </div>
+            {/* The title is the primary target, so it keeps a 44px box at every
+                width — a one-line title on desktop used to collapse to ~28px. */}
             <Link
               href={href}
-              className="card-title mt-1 flex min-h-[44px] items-center text-left text-ink-900 hover:text-brand-blue transition-colors w-full sm:mt-4 sm:block sm:min-h-0 sm:text-lg"
+              className="card-title mt-1 flex min-h-[44px] items-center text-left text-ink-900 hover:text-brand-blue transition-colors w-full line-clamp-2 sm:mt-2 sm:text-lg"
             >
               {item.title}
             </Link>
-            <p className="mt-1 text-sm font-semibold text-ink-600">{item.organization}</p>
-            <p className="mt-2.5 text-[13px] leading-relaxed text-ink-500 line-clamp-3 sm:mt-3 sm:text-sm">{item.description}</p>
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-500">
-              {item.mode && (
-                <span className="inline-flex items-center gap-1 font-semibold text-ink-600">
-                  <Icon name="monitor" className="h-3.5 w-3.5" />
-                  {item.mode}
-                </span>
-              )}
-              {item.field && (
-                <span className="inline-flex items-center gap-1">
-                  <Icon name="target" className="h-3.5 w-3.5" />
-                  {item.field}
-                </span>
-              )}
-              {prize && (
-                <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
-                  <Icon name="trophy" className="h-3.5 w-3.5" />
-                  {prize}
-                </span>
-              )}
-            </div>
+            <p className="mt-1 truncate text-sm font-semibold text-ink-600">{item.organization}</p>
+
+            {/* What a student scans for. The description, eligibility and everything
+                else live on the detail view — a feed of prose cards is not skimmable,
+                and this mirrors the homepage's compact card. Values are the record's
+                own text, never a guess, and each token is read by its icon (the same
+                icon set the detail page already uses for these fields). */}
+            {facts.length > 0 && (
+              <ul className="mt-2.5 flex flex-wrap gap-1.5">
+                {facts.map((fact) => (
+                  <li
+                    key={fact.key}
+                    className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-surface-soft px-2 py-1 text-[11px] font-bold text-ink-700"
+                  >
+                    <Icon name={fact.icon} className="h-3.5 w-3.5 shrink-0 text-ink-500" />
+                    <span className="min-w-0 truncate">{fact.value}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="mt-4 pt-4 border-t border-surface-border sm:mt-6">

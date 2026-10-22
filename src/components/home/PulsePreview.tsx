@@ -79,7 +79,7 @@ function PulsePostCard({ post }: { post: PulsePostRecord }) {
 
   return (
     <Link
-      href="/pulse"
+      href={`/pulse?post=${post.id}`}
       data-cursor="view"
       className={`glass-card card-editorial card-interactive group flex snap-start flex-col overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue min-w-[78%] sm:min-w-0 ${
         post.imageUrl ? "" : "p-4 sm:p-5"

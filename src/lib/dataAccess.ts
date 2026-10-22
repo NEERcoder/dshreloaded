@@ -361,6 +361,8 @@ const mapOpportunity = (row: Record<string, unknown>): OpportunityRecord => ({
   organizerEmail: row.organizer_email ? String(row.organizer_email) : null,
   organizerWhatsapp: row.organizer_whatsapp ? String(row.organizer_whatsapp) : null,
   organizerWebsite: row.organizer_website ? String(row.organizer_website) : null,
+  // Migration 016. Read defensively, exactly like the 013 columns above.
+  stream: row.stream ? String(row.stream) : null,
 });
 
 const mapProfile = (row: Record<string, unknown>): ProfileRecord => ({
@@ -993,6 +995,8 @@ export async function saveOpportunity(input: OpportunityInput, id?: string): Pro
       organizer_email: input.organizerEmail?.trim() || null,
       organizer_whatsapp: input.organizerWhatsapp?.trim() || null,
       organizer_website: input.organizerWebsite?.trim() || null,
+      // Migration 016.
+      stream: input.stream?.trim() || null,
     };
 
     // Migration 013 has to actually be applied for those columns to exist, and
@@ -1010,6 +1014,9 @@ export async function saveOpportunity(input: OpportunityInput, id?: string): Pro
       "organizer_email",
       "organizer_whatsapp",
       "organizer_website",
+      // Migration 016. Same retry contract: an unapplied migration must never
+      // break opportunity creation.
+      "stream",
     ];
     const corePayload = Object.fromEntries(
       Object.entries(payload).filter(([key]) => !extendedKeys.includes(key))
@@ -3603,4 +3610,148 @@ export async function getCompetitionRegistrationRecords(
   } catch (err) {
     return failure([], err);
   }
+}
+
+// ==========================================
+// USER PREFERENCES (migration 015)
+// ==========================================
+
+/**
+ * Owner-scoped filter and sort preferences.
+ *
+ * One row per user in `public.user_preferences`, readable and writable only by
+ * that user (RLS in migration 015). The value is an opaque object the caller
+ * validates — see `lib/opportunityFilters.sanitizeFilters` — so a stale or
+ * hand-edited blob can never reach the feed unfiltered.
+ *
+ * Nothing here is a security boundary: preferences only shape what the owner
+ * already sees, and every listing read is still gated by the opportunities
+ * policies.
+ */
+
+export type StoredPreferenceObject = Record<string, unknown>;
+
+const PREFERENCES_TABLE = "user_preferences";
+
+/**
+ * Whether this project has applied migration 015.
+ *
+ * A missing table is the expected state until the owner applies it, and the
+ * answer is cached for the session in memory (not storage) so applying the
+ * migration takes effect on the next visit rather than never. A failure to
+ * read or write is not an error the student needs to see — preferences just
+ * stay in this browser.
+ */
+let preferencesTablePresent: boolean | null = null;
+
+function preferenceWriteRejected(error: { message?: string } | null | undefined): boolean {
+  const message = String(error?.message ?? "");
+  return /user_preferences|relation .* does not exist|does not exist|incomplete|schema cache/i.test(message);
+}
+
+/**
+ * The three outcomes that matter to the caller, kept explicit rather than
+ * folded into `DataResult`: "unavailable" means there is no account store to
+ * talk to (no backend, or migration 015 not applied), which is a different
+ * instruction than "available, this student has saved nothing yet".
+ */
+export type UserPreferencesRead =
+  | { status: "ok"; filters: StoredPreferenceObject | null }
+  | { status: "unavailable"; error: string }
+  | { status: "error"; error: string };
+
+export type UserPreferencesWrite =
+  | { status: "ok" }
+  | { status: "unavailable"; error: string }
+  | { status: "error"; error: string };
+
+function describeError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null && "message" in err) return String((err as { message: unknown }).message);
+  return String(err);
+}
+
+export async function getUserPreferences(userId: string): Promise<UserPreferencesRead> {
+  if (!supabase || !isSupabaseConfigured) return { status: "unavailable", error: "No backend configured" };
+  if (preferencesTablePresent === false) return { status: "unavailable", error: "Preferences table unavailable" };
+  try {
+    const result = await supabase.from(PREFERENCES_TABLE).select("filters").eq("user_id", userId).maybeSingle();
+    if (result.error) {
+      if (preferenceWriteRejected(result.error)) preferencesTablePresent = false;
+      return { status: "unavailable", error: describeError(result.error) };
+    }
+    preferencesTablePresent = true;
+    const filters = result.data?.filters;
+    if (typeof filters !== "object" || filters === null) return { status: "ok", filters: null };
+    return { status: "ok", filters: filters as StoredPreferenceObject };
+  } catch (err) {
+    return { status: "error", error: describeError(err) };
+  }
+}
+
+export async function saveUserPreferences(
+  userId: string,
+  filters: StoredPreferenceObject
+): Promise<UserPreferencesWrite> {
+  if (!supabase || !isSupabaseConfigured) return { status: "unavailable", error: "No backend configured" };
+  if (preferencesTablePresent === false) return { status: "unavailable", error: "Preferences table unavailable" };
+  try {
+    const result = await supabase
+      .from(PREFERENCES_TABLE)
+      .upsert({ user_id: userId, filters, updated_at: new Date().toISOString() }, { onConflict: "user_id" })
+      .select("user_id")
+      .maybeSingle();
+    if (result.error) {
+      if (preferenceWriteRejected(result.error)) preferencesTablePresent = false;
+      return { status: "unavailable", error: describeError(result.error) };
+    }
+    preferencesTablePresent = true;
+    return { status: "ok" };
+  } catch (err) {
+    return { status: "error", error: describeError(err) };
+  }
+}
+
+// ==========================================
+// MIGRATION CAPABILITY PROBES
+// ==========================================
+
+/**
+ * Whether `opportunities.stream` (migration 016) exists on this project.
+ *
+ * The Stream filter is only offered when the answer is yes. Without the
+ * column, a Stream control would either be a lie (filtering free text by a
+ * taxonomy it does not store) or silently empty the feed — so the filter
+ * stays hidden until the migration is applied. Mirrors the
+ * `deadlineColumnAvailable` contract: one probe per tab, sessionStorage so a
+ * cached "no" expires on its own.
+ */
+const STREAM_COLUMN_KEY = "javlin.opportunity-stream.available";
+let streamColumnProbe: Promise<boolean> | null = null;
+
+export async function opportunitiesStreamAvailable(): Promise<boolean> {
+  if (!supabase || !isSupabaseConfigured) return false;
+  try {
+    const stored = window.sessionStorage.getItem(STREAM_COLUMN_KEY);
+    if (stored === "1") return true;
+    if (stored === "0") return false;
+  } catch {
+    /* private mode: fall through to probing */
+  }
+  if (!streamColumnProbe) {
+    streamColumnProbe = Promise.resolve(
+      supabase.from("opportunities").select("stream").limit(1)
+    )
+      .then((result) => {
+        const available = !result.error || !/stream/i.test(result.error.message ?? "");
+        try {
+          window.sessionStorage.setItem(STREAM_COLUMN_KEY, available ? "1" : "0");
+        } catch {
+          /* the in-memory answer still stands for this page */
+        }
+        return available;
+      })
+      .catch(() => false);
+  }
+  return streamColumnProbe;
 }

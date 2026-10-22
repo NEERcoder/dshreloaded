@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Icon from "./Icon";
+import FeatureIcon from "./FeatureIcon";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { getUnreadNotificationCount } from "../lib/dataAccess";
@@ -68,7 +68,7 @@ export default function NotificationBell({ className = "" }: { className?: strin
           : "text-ink-900 hover:text-brand-blue hover:bg-brand-blue-soft/60"
       } ${className}`}
     >
-      <Icon name="bell" className="h-6 w-6" />
+      <FeatureIcon name="notification" className="h-6 w-6" />
       {unread > 0 && (
         <span
           className="absolute -top-0.5 right-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-red px-1 text-[11px] font-black leading-none text-brand-navy"

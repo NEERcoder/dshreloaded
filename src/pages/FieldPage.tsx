@@ -24,8 +24,6 @@ export default function FieldPage() {
       <section className="container-px py-6 sm:py-8">
         <OpportunityBrowser
           categories={["competition"]}
-          showCompensation
-          showCourse
           searchPlaceholder="Search competitions, organisers or domains…"
           emptyTitle="No competitions on the field right now"
           emptyDescription="New competitions are listed here as soon as they open. Check back soon."

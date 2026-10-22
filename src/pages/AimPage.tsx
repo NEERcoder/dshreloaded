@@ -33,8 +33,6 @@ export default function AimPage() {
         <OpportunityBrowser
           categories={[...AIM_CATEGORIES]}
           chips={AIM_CHIPS}
-          showCompensation
-          showCourse
           searchPlaceholder="Search by role, company, skills or field…"
           emptyTitle="No AIM openings listed yet"
           emptyDescription="Internships, jobs and certifications appear here as soon as they are verified and published."

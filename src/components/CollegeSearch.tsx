@@ -8,6 +8,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import Icon from "./Icon";
+import FeatureIcon from "./FeatureIcon";
 import { searchColleges, type CollegeSearchResult } from "../lib/dataAccess";
 import { buildCollegeSearchIndex, searchColleges as scoreLocalColleges } from "../lib/collegeSearch";
 import type { CollegeRecord } from "../lib/localProvider";
@@ -354,7 +355,8 @@ export default function CollegeSearch({
                 })}
               </ul>
             ) : (
-              <p className="px-4 py-4 text-[13px] font-semibold text-ink-500">
+              <p className="flex items-center gap-2 px-4 py-4 text-[13px] font-semibold text-ink-500">
+                <FeatureIcon name="college" className="h-5 w-5" />
                 No colleges match that search.
               </p>
             )}
@@ -481,7 +483,8 @@ export default function CollegeSearch({
               })}
             </ul>
           ) : (
-            <p className="px-4 py-4 text-[13px] font-semibold text-ink-500">
+            <p className="flex items-center gap-2 px-4 py-4 text-[13px] font-semibold text-ink-500">
+              <FeatureIcon name="college" className="h-5 w-5" />
               No colleges match that search.
             </p>
           )}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import Icon from "./Icon";
+import FeatureIcon from "./FeatureIcon";
 import { StudentAvatar } from "./circle/StudentCard";
 import { resolveTier } from "../lib/markTier";
 import {
@@ -116,7 +117,7 @@ export default function AccountMenu({ className = "" }: { className?: string }) 
               <div className="my-1 h-px bg-surface-border" />
 
               <Link href={profileHref} role="menuitem" onClick={() => setOpen(false)} className={`${itemClass} text-ink-900 hover:bg-brand-blue-soft hover:text-brand-blue`}>
-                <Icon name="user" className="h-4 w-4 shrink-0" />
+                <FeatureIcon name="profile" className="h-4 w-4 shrink-0" />
                 View Profile
               </Link>
               <span

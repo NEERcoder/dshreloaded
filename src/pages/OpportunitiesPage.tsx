@@ -1,6 +1,7 @@
 import Icon from "../components/Icon";
 import PageShell from "../components/PageShell";
 import OpportunityBrowser from "../components/opportunities/OpportunityBrowser";
+import FeatureIcon, { type FeatureIconName } from "../components/FeatureIcon";
 import { Link } from "../lib/router";
 import { type OpportunityCategoryParam } from "../lib/opportunityRoute";
 import type { OpportunityRecord } from "../lib/dataAccess";
@@ -10,6 +11,8 @@ type CategoryFilter = {
   label: string;
   category: OpportunityRecord["category"];
   icon: string;
+  /** Supplied artwork; wins over `icon` when present. */
+  feature?: FeatureIconName;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -21,6 +24,7 @@ const CATEGORY_FILTERS: CategoryFilter[] = [
     label: "Internships",
     category: "internship",
     icon: "briefcase",
+    feature: "internship",
     eyebrow: "INTERNSHIPS",
     title: "Find experience worth applying for.",
     subtitle: "Verified industry and startup roles for students across India.",
@@ -30,6 +34,7 @@ const CATEGORY_FILTERS: CategoryFilter[] = [
     label: "Competitions",
     category: "competition",
     icon: "trophy",
+    feature: "competition",
     eyebrow: "COMPETITIONS",
     title: "Put your skills to work.",
     subtitle: "National contests, hackathons, and challenges worth winning.",
@@ -48,6 +53,7 @@ const CATEGORY_FILTERS: CategoryFilter[] = [
     label: "Certifications",
     category: "certification",
     icon: "award",
+    feature: "certification",
     eyebrow: "CERTIFICATIONS",
     title: "Build skills that strengthen your next application.",
     subtitle: "Verified credentials recognized across academia and industry.",
@@ -80,20 +86,22 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
       description="Find verified internships, hackathons, research fellowships and certifications for students across India."
       backgroundPreset="opportunities"
     >
-      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-8 pb-8 sm:pt-12 sm:pb-10">
+      {/* The listing is the point of this page, so the band above it keeps the
+          phone rhythm as tight as the design system allows. */}
+      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-6 pb-6 sm:pt-12 sm:pb-10">
         <div className="container-px max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="eyebrow">{voice.eyebrow}</p>
-            <h1 className="page-title font-display mt-3">
+            <h1 className="page-title font-display mt-2 sm:mt-3">
               {voice.title}
             </h1>
-            <p className="mt-4 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium">
+            <p className="mt-3 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium sm:mt-4">
               {voice.subtitle}
             </p>
           </div>
 
           {/* CATEGORY FILTERS — each is a canonical /opportunities/:categoryId route */}
-          <nav aria-label="Opportunity categories" className="mt-7 -mx-4 overflow-x-auto no-scrollbar px-4 sm:mx-0 sm:px-0">
+          <nav aria-label="Opportunity categories" className="mt-5 -mx-4 overflow-x-auto no-scrollbar px-4 sm:mx-0 sm:mt-7 sm:px-0">
             <div className="flex w-max sm:flex-wrap sm:w-auto gap-2">
               <CategoryChip label="All listings" icon="grid" active={!activeFilter} href="/opportunities" />
               {CATEGORY_FILTERS.map((filter) => (
@@ -101,6 +109,7 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
                   key={filter.param}
                   label={filter.label}
                   icon={filter.icon}
+                  feature={filter.feature}
                   active={activeFilter?.param === filter.param}
                   href={`/opportunities/${filter.param}`}
                 />
@@ -110,12 +119,10 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
         </div>
       </section>
 
-      <section id="radar-feed" className="py-10 sm:py-14">
+      <section id="radar-feed" className="py-6 sm:py-14">
         <div className="container-px max-w-7xl mx-auto">
           <OpportunityBrowser
             categories={activeFilter ? [activeFilter.category] : ALL_CATEGORIES}
-            showCompensation
-            showCourse
             searchPlaceholder="Search by role, company, skills, or department…"
             emptyTitle="No listings on the radar yet"
             emptyDescription="Verified openings show up here as soon as they are published."
@@ -131,11 +138,13 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
 function CategoryChip({
   label,
   icon,
+  feature,
   href,
   active,
 }: {
   label: string;
   icon: string;
+  feature?: FeatureIconName;
   href: string;
   active: boolean;
 }) {
@@ -149,7 +158,7 @@ function CategoryChip({
           : "bg-white text-ink-600 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
       }`}
     >
-      <Icon name={icon} className="h-3.5 w-3.5" />
+      {feature ? <FeatureIcon name={feature} className="h-3.5 w-3.5" /> : <Icon name={icon} className="h-3.5 w-3.5" />}
       {label}
     </Link>
   );

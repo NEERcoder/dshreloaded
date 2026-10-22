@@ -2,8 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import Icon from "../Icon";
 import { SkeletonOpportunityGrid } from "../Skeleton";
 import OpportunityCard from "./OpportunityCard";
-import { getOpportunities, type OpportunityRecord } from "../../lib/dataAccess";
-import { opportunityCategoryIcon } from "../../data/opportunityCategories";
+import FilterControls from "./FilterControls";
+import { getOpportunities, opportunitiesStreamAvailable, type OpportunityRecord } from "../../lib/dataAccess";
+import {
+  activeFilterChips,
+  applyOpportunityFilters,
+  deriveFilterOptions,
+  filtersWithoutChip,
+  isDefaultFilters,
+} from "../../lib/opportunityFilters";
+import { useOpportunityFilters } from "../../hooks/useOpportunityFilters";
+import { CategoryGlyph } from "../FeatureIcon";
 
 export type CategoryChip = {
   id: string;
@@ -11,15 +20,9 @@ export type CategoryChip = {
   category: OpportunityRecord["category"] | null;
 };
 
-type SortKey = "featured" | "deadline" | "newest";
-
 type OpportunityBrowserProps = {
   categories: OpportunityRecord["category"][];
   chips?: CategoryChip[];
-  showCompensation?: boolean;
-  showMode?: boolean;
-  showField?: boolean;
-  showCourse?: boolean;
   searchPlaceholder?: string;
   emptyTitle: string;
   emptyDescription: string;
@@ -27,43 +30,28 @@ type OpportunityBrowserProps = {
   noResultsDescription?: string;
 };
 
-function distinct(values: string[]): string[] {
-  return Array.from(new Set(values.map((v) => v.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
-}
-
-function deadlineTime(value: string | null): number | null {
-  if (!value) return null;
-  const time = new Date(value).getTime();
-  return Number.isNaN(time) ? null : time;
-}
-
-function isPaidOpportunity(item: OpportunityRecord): boolean {
-  return Boolean(item.stipend && !/unpaid|voluntary|stipend\s*:\s*no/i.test(item.stipend));
-}
-
+/**
+ * The shared opportunity feed. Fetching, the category chips and the search box
+ * stay here; every filter, sort and persistence decision comes from
+ * `lib/opportunityFilters` and `FilterControls`, so Internships, Competitions
+ * and Certifications cannot drift apart.
+ */
 export default function OpportunityBrowser({
   categories,
   chips,
-  showCompensation = false,
-  showMode = true,
-  showField = true,
-  showCourse = false,
   searchPlaceholder = "Search by title, organisation, field or location…",
   emptyTitle,
   emptyDescription,
   noResultsTitle = "No matches for those filters",
-  noResultsDescription = "Try a broader search or clear the filters.",
+  noResultsDescription = "Try a broader search or reset the filters.",
 }: OpportunityBrowserProps) {
   const [items, setItems] = useState<OpportunityRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chip, setChip] = useState(chips ? chips[0].id : "");
+  // Search is never persisted — it is a question, not a preference.
   const [search, setSearch] = useState("");
-  const [mode, setMode] = useState("");
-  const [field, setField] = useState("");
-  const [course, setCourse] = useState("");
-  const [compensation, setCompensation] = useState("");
-  const [sort, setSort] = useState<SortKey>("featured");
+  const [streamEnabled, setStreamEnabled] = useState(false);
 
   const categoriesKey = categories.join("|");
 
@@ -93,140 +81,68 @@ export default function OpportunityBrowser({
     };
   }, [categoriesKey]);
 
-  // Filter options are derived from the live rows only — never a hardcoded taxonomy.
-  const modeOptions = useMemo(() => distinct(items.map((i) => i.mode ?? "")), [items]);
-  const fieldOptions = useMemo(() => distinct(items.map((i) => i.field ?? "")), [items]);
-  const courseOptions = useMemo(() => distinct(items.flatMap((i) => i.eligibleCourses)), [items]);
+  useEffect(() => {
+    let cancelled = false;
+    void opportunitiesStreamAvailable().then((available) => {
+      if (!cancelled) setStreamEnabled(available);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Facet choices come only from the rows on hand, so a filter is never offered
+  // for a value nothing in the feed carries.
+  const options = useMemo(() => deriveFilterOptions(items), [items]);
+  const { filters, setFilters, resetFilters, restored, droppedNotice, dismissDroppedNotice } =
+    useOpportunityFilters(options, !loading && items.length > 0, streamEnabled);
 
   const activeChip = chips?.find((c) => c.id === chip) ?? chips?.[0];
   const scoped = activeChip?.category
     ? items.filter((item) => item.category === activeChip.category)
     : items;
 
-  const filtered = useMemo(() => {
-    const query = search.toLowerCase().trim();
-    return scoped
-      .filter((item) => {
-        if (query) {
-          const searchable = [
-            item.title,
-            item.organization,
-            item.field,
-            item.location,
-            item.description,
-            ...item.eligibleCourses,
-          ]
-            .join(" ")
-            .toLowerCase();
-          if (!searchable.includes(query)) return false;
-        }
-        if (mode && item.mode !== mode) return false;
-        if (field && item.field !== field) return false;
-        if (course && !item.eligibleCourses.includes(course)) return false;
-        if (compensation && isPaidOpportunity(item) !== (compensation === "paid")) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        if (sort === "deadline") {
-          const aTime = deadlineTime(a.deadline);
-          const bTime = deadlineTime(b.deadline);
-          if (aTime === null && bTime === null) return 0;
-          if (aTime === null) return 1;
-          if (bTime === null) return -1;
-          return aTime - bTime;
-        }
-        if (sort === "newest") return b.createdAt.localeCompare(a.createdAt);
-        return Number(b.featured) - Number(a.featured);
-      });
-  }, [scoped, search, mode, field, course, compensation, sort]);
+  const { items: visible, openTotal } = useMemo(
+    () => applyOpportunityFilters(scoped, filters, search, streamEnabled),
+    [scoped, filters, search, streamEnabled]
+  );
 
-  const filtersActive = Boolean(search || mode || field || course || compensation);
-  const showModeFilter = showMode && modeOptions.length > 1;
-  const showFieldFilter = showField && fieldOptions.length > 1;
-  const showCourseFilter = showCourse && courseOptions.length > 1;
+  const filtersActive = !isDefaultFilters(filters);
+  const showReset = filtersActive || search.length > 0;
+  // Every filter that is narrowing the feed, as a removable token. Derived from
+  // the same state the controls write, so the chip row and the sheet can never
+  // disagree about what is on.
+  const activeChips = activeFilterChips(filters);
 
-  function clearFilters() {
+  function handleReset() {
     setSearch("");
-    setMode("");
-    setField("");
-    setCourse("");
-    setCompensation("");
+    resetFilters();
   }
 
-  const controls = [
-    showModeFilter && (
-      <label key="mode" className="block">
-        <span className="sr-only">Work mode</span>
-        <select value={mode} onChange={(e) => setMode(e.target.value)} className="filter-select text-xs">
-          <option value="">All Modes</option>
-          {modeOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </label>
-    ),
-    showFieldFilter && (
-      <label key="field" className="block">
-        <span className="sr-only">Field</span>
-        <select value={field} onChange={(e) => setField(e.target.value)} className="filter-select text-xs">
-          <option value="">All Fields</option>
-          {fieldOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </label>
-    ),
-    showCourseFilter && (
-      <label key="course" className="block">
-        <span className="sr-only">Eligible course</span>
-        <select value={course} onChange={(e) => setCourse(e.target.value)} className="filter-select text-xs">
-          <option value="">All Courses</option>
-          {courseOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </label>
-    ),
-    showCompensation && (
-      <label key="compensation" className="block">
-        <span className="sr-only">Compensation</span>
-        <select value={compensation} onChange={(e) => setCompensation(e.target.value)} className="filter-select text-xs">
-          <option value="">Any Pay</option>
-          <option value="paid">Paid only</option>
-          <option value="unpaid">Unpaid / Voluntary</option>
-        </select>
-      </label>
-    ),
-    (
-      <label key="sort" className="block">
-        <span className="sr-only">Sort</span>
-        <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="filter-select text-xs">
-          <option value="featured">Sort: Featured first</option>
-          <option value="deadline">Sort: Closing soonest</option>
-          <option value="newest">Sort: Newest added</option>
-        </select>
-      </label>
-    ),
-  ].filter(Boolean);
+  function countLabel() {
+    if (loading) return null;
+    if (showReset) return `${visible.length} of ${openTotal} open listings`;
+    return `${openTotal} open listing${openTotal === 1 ? "" : "s"}`;
+  }
 
   return (
     <div className="mt-6">
       {chips && chips.length > 1 && (
         <div className="-mx-4 overflow-x-auto no-scrollbar px-4 sm:mx-0 sm:px-0">
           <div className="flex w-max sm:flex-wrap sm:w-auto gap-2">
-            {chips.map((c) => (
+            {chips.map((entry) => (
               <button
-                key={c.id}
-                onClick={() => setChip(c.id)}
-                aria-pressed={chip === c.id}
+                key={entry.id}
+                onClick={() => setChip(entry.id)}
+                aria-pressed={chip === entry.id}
                 className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[44px] ${
-                  chip === c.id
+                  chip === entry.id
                     ? "bg-brand-blue text-white shadow-soft"
                     : "bg-white text-ink-600 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
                 }`}
               >
-                {c.category && <Icon name={opportunityCategoryIcon(c.category)} className="h-3.5 w-3.5" />}
-                {c.label}
+                {entry.category && <CategoryGlyph category={entry.category} className="h-3.5 w-3.5" />}
+                {entry.label}
               </button>
             ))}
           </div>
@@ -235,37 +151,81 @@ export default function OpportunityBrowser({
 
       <div className="filter-bar mt-4 card p-3 sm:p-3.5">
         <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
-          <Icon name="search" className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
+          <Icon
+            name="search"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400"
+          />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder={searchPlaceholder}
             className="field-input filter-search pl-11"
             aria-label="Search opportunities"
           />
         </div>
-        {controls}
+
+        <FilterControls
+          value={filters}
+          onChange={setFilters}
+          onReset={resetFilters}
+          options={options}
+          streamEnabled={streamEnabled}
+        />
+
         <div className="flex w-full flex-wrap items-center justify-between gap-2 pt-1">
-          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500" aria-live="polite">
+          <p
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500"
+            aria-live="polite"
+          >
             {loading ? (
               <>
                 <Icon name="loader" className="h-3.5 w-3.5 animate-spin" />
                 Loading…
               </>
             ) : (
-              `${filtered.length} listing${filtered.length === 1 ? "" : "s"}`
+              countLabel()
             )}
           </p>
-          {filtersActive && (
+          {showReset && (
             <button
-              onClick={clearFilters}
+              onClick={handleReset}
               className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[44px]"
             >
               <Icon name="close" className="h-3.5 w-3.5" />
-              Clear filters
+              Reset
             </button>
           )}
         </div>
+
+        {activeChips.length > 0 && (
+          <div className="flex w-full flex-wrap items-center gap-1.5 pt-1" role="group" aria-label="Active filters">
+            {activeChips.map((chip) => (
+              <button
+                key={`${chip.key}:${chip.value ?? ""}`}
+                type="button"
+                onClick={() => setFilters(filtersWithoutChip(filters, chip))}
+                aria-label={`Remove filter ${chip.label}`}
+                className="inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-xl border border-brand-blue/25 bg-brand-blue-soft px-3 text-xs font-bold text-brand-blue transition-colors hover:border-brand-blue/50 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+              >
+                <span className="min-w-0 truncate">{chip.label}</span>
+                <Icon name="close" className="h-3.5 w-3.5 shrink-0" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {droppedNotice && restored && (
+          <p className="flex w-full flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-ink-500">
+            <span>Some saved filters aren’t available in this section, so they aren’t applied here.</span>
+            <button
+              type="button"
+              onClick={dismissDroppedNotice}
+              className="flex min-h-[44px] items-center rounded-lg px-2 text-brand-blue hover:underline"
+            >
+              Dismiss
+            </button>
+          </p>
+        )}
       </div>
 
       <div className="mt-8">
@@ -283,9 +243,12 @@ export default function OpportunityBrowser({
             <p className="mt-3 text-base font-bold text-ink-900">{emptyTitle}</p>
             <p className="mt-1 text-sm text-ink-500">{emptyDescription}</p>
           </div>
-        ) : filtered.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-            {filtered.map((item) => (
+        ) : visible.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
+            {/* Two columns from `sm`, three only from `xl`: inside the desktop section
+                shell the rail takes 224px, so three columns at `lg` squeezed every card
+                to ~208px and made it taller than the screen. */}
+            {visible.map((item) => (
               <OpportunityCard key={item.id} item={item} />
             ))}
           </div>

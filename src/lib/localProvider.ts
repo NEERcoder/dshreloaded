@@ -148,6 +148,12 @@ export type OpportunityRecord = {
   organizerEmail?: string | null;
   organizerWhatsapp?: string | null;
   organizerWebsite?: string | null;
+  /**
+   * Migration 016. Optional so every existing construction — the local
+   * development seeds included — keeps compiling, and a project that has not
+   * applied the migration reads it back as "not set" rather than an error.
+   */
+  stream?: string | null;
 };
 
 export type OpportunityInput = Omit<OpportunityRecord, "id" | "createdAt" | "updatedAt">;

@@ -57,11 +57,9 @@ function ProfileCard({
 
         <span className="relative mt-2.5 block w-full">
           {student.isPublic && (
-            <span className="absolute -top-5 right-0 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-emerald-700">
-              <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-600 text-white">
-                <Icon name="check" className="h-2.5 w-2.5" />
-              </span>
-              Verified
+            <span className="absolute -top-5 right-0 inline-flex items-center gap-1 rounded-full bg-surface-soft px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-ink-500">
+              <Icon name="users" className="h-3 w-3" />
+              Public profile
             </span>
           )}
           <span className="card-title block text-center text-ink-900 transition-colors group-hover:text-brand-blue">

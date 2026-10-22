@@ -9,6 +9,11 @@ import {
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { isCurrentUserAdmin } from "../lib/dataAccess";
+import {
+  mergeGuestPreferencesIntoAccount,
+  resetPreferenceSession,
+  setActivePreferenceUser,
+} from "../lib/filterPreferences";
 
 interface AuthContextType {
   user: User | null;
@@ -71,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setIsAdmin(false);
     setLoading(false);
+    // Forget whose preferences are in memory so the next reader of this browser
+    // starts from guest storage, never from the previous account.
+    resetPreferenceSession();
   }, []);
 
   useEffect(() => {
@@ -89,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: userRes, error: userErr } = await supabase!.auth.getUser();
         if (userErr || !userRes?.user) {
+          setActivePreferenceUser(null);
           if (isMounted) {
             setUser(null);
             setSession(null);
@@ -101,6 +110,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = userRes.user;
         const { data: sessionRes } = await supabase!.auth.getSession();
         const adminStatus = await checkAdmin(currentUser);
+        // Declare the identity before anything reads or writes preferences, so
+        // the store can reject work that belongs to a previous viewer.
+        setActivePreferenceUser(currentUser.id);
+        // A restored session never fires SIGNED_IN in every client version, so
+        // the merge is attempted here too. It is guarded per user id, so the
+        // duplicate attempt is a no-op rather than a second write.
+        void mergeGuestPreferencesIntoAccount(currentUser.id);
 
         if (isMounted) {
           setUser(currentUser);
@@ -121,19 +137,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     // Subscribe to auth state changes (login, logout, token refresh)
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
       if (!isMounted) return;
 
       if (!nextSession?.user) {
+        setActivePreferenceUser(null);
         setUser(null);
         setSession(null);
         setIsAdmin(false);
         setLoading(false);
+        if (event === "SIGNED_OUT") resetPreferenceSession();
         return;
       }
 
       setSession(nextSession);
       setUser(nextSession.user);
+      setActivePreferenceUser(nextSession.user.id);
+      // Sign-in and token refresh both land here. The merge runs once per user
+      // id, so a refresh can never overwrite the account row again.
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        void mergeGuestPreferencesIntoAccount(nextSession.user.id);
+      }
       const adminStatus = await checkAdmin(nextSession.user);
       if (isMounted) {
         setIsAdmin(adminStatus);

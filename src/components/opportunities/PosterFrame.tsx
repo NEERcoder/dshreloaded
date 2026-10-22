@@ -1,7 +1,6 @@
-import Icon from "../Icon";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 import { posterCropStyle } from "../../lib/posterCrop";
-import { opportunityCategoryIcon } from "../../data/opportunityCategories";
+import { CategoryGlyph } from "../FeatureIcon";
 
 /**
  * The 676:451 card poster.
@@ -30,7 +29,7 @@ export default function PosterFrame({
         />
       ) : (
         <span aria-hidden="true" className="poster-empty flex h-full w-full flex-col items-center justify-center gap-1.5">
-          <Icon name={opportunityCategoryIcon(item.category)} className="h-9 w-9" />
+          <CategoryGlyph category={item.category} size="large" className="h-9 w-9" />
           <span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">{item.category}</span>
         </span>
       )}

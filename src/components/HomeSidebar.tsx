@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import FeatureIcon from "./FeatureIcon";
 import { Link, useLocation } from "../lib/router";
 import { SIDEBAR_NAV, SIDEBAR_DASHBOARD, type SidebarNavItem } from "../lib/sidebarNav";
 import { getPulsePosts, type PulsePostRecord } from "../lib/dataAccess";
@@ -41,12 +42,11 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           setPulseState("error");
           return;
         }
-        const sorted = [...(result.data ?? [])].sort(
-          (a, b) =>
-            new Date(b.publishedAt ?? b.createdAt).getTime() -
-            new Date(a.publishedAt ?? a.createdAt).getTime(),
-        );
-        setPosts(sorted);
+        // The data layer returns rows ordered by published_at DESC (nulls last),
+        // which is the canonical PULSE order the /pulse page shows. Re-sorting
+        // here with a `publishedAt ?? createdAt` fallback would diverge from it:
+        // a row with a null published_at would jump to its created_at position.
+        setPosts(result.data ?? []);
         setPulseState("ready");
       })
       .catch(() => {
@@ -62,11 +62,30 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     (item.exact ? path === item.href : path === item.href || path.startsWith(item.href + "/"));
 
   const itemClass = (item: SidebarNavItem) =>
-    `flex min-h-[40px] items-center gap-3 rounded-xl px-3 py-1.5 text-[13px] font-bold leading-snug transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
+    `relative flex min-h-[40px] items-center gap-3 rounded-xl px-3 py-1.5 text-[13px] leading-snug transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${
       isActive(item)
-        ? "bg-brand-blue text-white"
-        : "text-brand-navy hover:bg-brand-blue-soft hover:text-brand-blue"
+        ? "bg-brand-blue-soft font-extrabold text-brand-navy"
+        : "font-bold text-ink-700 hover:bg-brand-blue-soft/60 hover:text-brand-navy"
     }`;
+
+  /**
+   * The rail glyph. Supplied artwork is full-colour raster, so it keeps its own
+   * colours in both states and the active cue comes from the background, the
+   * left bar and the label weight — never from a `currentColor` change.
+   */
+  const itemGlyph = (item: SidebarNavItem) =>
+    item.feature ? (
+      <FeatureIcon name={item.feature} className="h-4 w-4 shrink-0" />
+    ) : (
+      <Icon name={item.icon} className="h-4 w-4 shrink-0" />
+    );
+
+  const activeBar = (
+    <span
+      aria-hidden="true"
+      className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-blue"
+    />
+  );
 
   return (
     <>
@@ -80,7 +99,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   title="Coming soon"
                   className="flex min-h-[40px] cursor-not-allowed select-none items-center gap-3 rounded-xl px-3 text-[13px] font-bold leading-none text-brand-navy/40"
                 >
-                  <Icon name={item.icon} className="h-4 w-4 shrink-0" />
+                  {itemGlyph(item)}
                   <span className="min-w-0">{item.label}</span>
                   <span className="ml-auto rounded-full bg-surface-soft px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-ink-500">
                     Soon
@@ -88,7 +107,8 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 </span>
               ) : (
                 <Link href={item.href!} onClick={onNavigate} className={itemClass(item)}>
-                  <Icon name={item.icon} className="h-4 w-4 shrink-0" />
+                  {isActive(item) && activeBar}
+                  {itemGlyph(item)}
                   <span className="min-w-0">{item.label}</span>
                 </Link>
               )}
@@ -194,7 +214,16 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           onClick={onNavigate}
           className="group flex min-h-[44px] items-center gap-3 rounded-xl bg-brand-blue px-3 py-2 text-[13px] font-extrabold leading-snug text-white shadow-soft transition-colors duration-200 hover:bg-brand-blue-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
         >
-          <Icon name={SIDEBAR_DASHBOARD.icon} className="h-4 w-4 shrink-0" />
+          {/* The Dashboard button keeps its solid-blue CTA surface, so the
+              blue-dominant artwork sits in a 16px white well — same box as every
+              other rail glyph, so nothing shifts, but the icon keeps contrast. */}
+          {SIDEBAR_DASHBOARD.feature ? (
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] bg-white">
+              <FeatureIcon name={SIDEBAR_DASHBOARD.feature} className="h-4 w-4" />
+            </span>
+          ) : (
+            <Icon name={SIDEBAR_DASHBOARD.icon} className="h-4 w-4 shrink-0" />
+          )}
           <span className="min-w-0 flex-1">{SIDEBAR_DASHBOARD.label}</span>
           <Icon
             name="arrow"
