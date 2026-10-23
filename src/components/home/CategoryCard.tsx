@@ -27,8 +27,8 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="cat-tile__identity">
-        <span className="cat-tile__label justify-center gap-1.5 text-center tracking-[0.12em]">
-          {preview && (
+        {preview ? (
+          <span className="cat-tile__label justify-center gap-1.5 text-center tracking-[0.12em]">
             <img
               src={category.iconSrc}
               alt=""
@@ -38,27 +38,31 @@ export default function CategoryCard({ category, index }: CategoryCardProps) {
               decoding="async"
               className="h-4 w-4 shrink-0 object-contain mix-blend-multiply sm:h-[18px] sm:w-[18px]"
             />
-          )}
-          <span className="truncate">{category.label}</span>
-        </span>
-        {!preview && (
-          <span className="cat-tile__well mt-1 w-full p-1 sm:mt-1.5 sm:p-1.5">
-            <img
-              src={category.iconSrc}
-              alt=""
-              width={668}
-              height={668}
-              loading="eager"
-              decoding="async"
-              className="cat-tile__art h-9 w-9 object-contain mix-blend-multiply sm:h-10 sm:w-10 lg:h-12 lg:w-12"
-            />
+            <span className="truncate">{category.label}</span>
           </span>
+        ) : (
+          <div className="cat-tile__identity-row">
+            <span className="cat-tile__well cat-tile__well--mark">
+              <img
+                src={category.iconSrc}
+                alt=""
+                width={668}
+                height={668}
+                loading="eager"
+                decoding="async"
+                className="cat-tile__art h-full w-full object-contain mix-blend-multiply"
+              />
+            </span>
+            <span className="cat-tile__label tracking-[0.12em]">
+              <span className="truncate">{category.label}</span>
+            </span>
+          </div>
         )}
       </div>
 
       {preview && <div className="cat-preview-slot">{preview}</div>}
 
-      <div className="mt-auto flex w-full min-w-0 flex-col gap-1.5 pt-3">
+      <div className="cat-tile__actions mt-auto flex w-full min-w-0 flex-col">
         {category.ctas.map((cta, ctaIndex) => (
           <Link
             key={`${category.id}:${cta.href}:${cta.label}`}

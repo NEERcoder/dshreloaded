@@ -6,20 +6,12 @@ import { useScrollReveal } from "../hooks/useScrollReveal";
 import OpportunityCarousel from "./home/OpportunityCarousel";
 import Icon from "./Icon";
 
-/**
- * The Trending section's one call to action. Below 640px the eyebrow row is
- * kept on a single line, so the pill sits to the side of the "Trending" heading
- * instead of dropping under the section: the heading holds its width and the
- * pill takes what is left, letting its label break onto two lines only on the
- * narrowest handsets. Its arrow tilts 45° there, the way the sidebar's
- * Dashboard button does. From 640px up nothing is overridden, so the desktop
- * header is exactly as it was.
- */
-function ViewAllLink({ className = "" }: { className?: string }) {
+/** The section's call to action, restored alongside the horizontal heading. */
+function ViewAllLink() {
   return (
     <Link
       href="/opportunities"
-      className={`link-pill group w-fit shrink-0 max-sm:min-w-0 max-sm:shrink max-sm:justify-end max-sm:gap-1 max-sm:px-2.5 max-sm:text-right max-sm:text-[11px] max-sm:leading-tight ${className}`}
+      className="link-pill group w-fit shrink-0 max-sm:min-w-0 max-sm:shrink max-sm:justify-end max-sm:gap-1 max-sm:px-2.5 max-sm:text-right max-sm:text-[11px] max-sm:leading-tight"
     >
       View all opportunities{" "}
       <Icon name="arrow" className="h-3.5 w-3.5 shrink-0 max-sm:h-3 max-sm:w-3 max-sm:-rotate-45" />
@@ -28,25 +20,9 @@ function ViewAllLink({ className = "" }: { className?: string }) {
 }
 
 /**
- * A single poster-card skeleton. Reuses the live `homepage-opportunity-card`
- * class so the loading row is measured exactly like the populated cards, and is
- * placed inside the same mobile-strip / desktop-window layout the loaded state
- * uses — otherwise the skeleton widths diverge from the real cards and the row
- * clips them.
+ * The Trending section. The orange heading and its live dot sit above the
+ * carousel; the arrows, track and loading state live in `OpportunityCarousel`.
  */
-function SkeletonCard() {
-  return (
-    <div className="card homepage-opportunity-card overflow-hidden shadow-soft">
-      <div className="h-48 skeleton-shimmer sm:h-56" />
-      <div className="space-y-2 p-4">
-        <div className="h-3 w-16 rounded skeleton-shimmer" />
-        <div className="h-4 w-full rounded skeleton-shimmer" />
-        <div className="h-3 w-32 rounded skeleton-shimmer" />
-      </div>
-    </div>
-  );
-}
-
 export default function FeaturedOpportunityTicker() {
   const [items, setItems] = useState<OpportunityRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,8 +55,6 @@ export default function FeaturedOpportunityTicker() {
     >
       <div className="container-px mb-3">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 max-sm:flex-nowrap max-sm:gap-x-2">
-          {/* "Trending" is the section's live indicator and the homepage's h1;
-              the large "Discover…" subheading was removed by request. */}
           <h1 className="eyebrow flex items-center gap-2 text-2xl max-sm:text-xl">
             <span className="live-dot" aria-hidden="true" />
             Trending
@@ -89,30 +63,9 @@ export default function FeaturedOpportunityTicker() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="container-px" aria-hidden="true">
-          {/* Mirror OpportunityCarousel's two layouts so the skeleton is measured
-              identically: a scroll strip below lg, a static window at lg+ (no
-              loop yet). The old single `flex overflow-hidden` row clipped the
-              78%-wide cards with no way to reach them. */}
-          <div className="h-scroll no-scrollbar flex gap-3 overflow-x-auto overflow-y-hidden pb-1 sm:gap-4 lg:hidden">
-            {[...Array(4)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-          <div className="homepage-carousel-window hidden lg:block">
-            <div className="homepage-carousel-track">
-              {[...Array(4)].map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="container-px">
-          <OpportunityCarousel items={items} />
-        </div>
-      )}
+      <div className="container-px">
+        <OpportunityCarousel items={items} trending={{ loading }} />
+      </div>
 
       <ul className="sr-only">
         {items.map((item) => (

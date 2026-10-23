@@ -1,20 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "../../Icon";
 import { Link } from "../../../lib/router";
+import { useAuth } from "../../../context/AuthContext";
 import { StudentAvatar } from "../../circle/StudentCard";
 import {
+  acceptConnectionRequest,
+  getConnectionStates,
   getPulsePosts,
   getStudentDirectory,
+  sendConnectionRequest,
+  type ConnectionRef,
   type PulsePostRecord,
   type StudentProfileRecord,
 } from "../../../lib/dataAccess";
 
 /**
- * The live preview that replaces the big artwork inside the two compact cards.
+ * The live previews inside the CIRCLE and PULSE launcher cards.
  *
  * Both carousels are decorative in motion only: the same text is present when
  * `prefers-reduced-motion` is set (advancing stops, the current slide stays), and
  * neither fetches again on each step — one read per mount, cancelled on unmount.
+ *
+ * Every slide is a real destination, built from the record's own id. The CIRCLE
+ * slide also carries a Connect action that reuses the existing connection
+ * actions; the slide link and that button are siblings, never nested.
  */
 
 const PREVIEW_INTERVAL_MS = 1800;
@@ -77,25 +86,211 @@ function activeProps(active: boolean) {
   return { "aria-hidden": active ? undefined : true } as const;
 }
 
+type ConnectAction = "send" | "accept";
+
+type PreviewConnectProps = {
+  person: StudentProfileRecord;
+  active: boolean;
+  authLoading: boolean;
+  signedIn: boolean;
+  connection: ConnectionRef | undefined;
+  statesReady: boolean;
+  busy: boolean;
+  disabled: boolean;
+  failed: boolean;
+  onAction: (person: StudentProfileRecord, action: ConnectAction) => void;
+};
+
+/**
+ * The compact top-right relationship control. The layout reserves its corner so
+ * it can never sit on the photo, name or headline. Logged-out visitors are sent
+ * to the existing sign-in flow with this profile as the return path.
+ */
+function PreviewConnect({
+  person,
+  active,
+  authLoading,
+  signedIn,
+  connection,
+  statesReady,
+  busy,
+  disabled,
+  failed,
+  onAction,
+}: PreviewConnectProps) {
+  if (authLoading || (signedIn && !statesReady)) {
+    return <span className="cat-preview__connect" aria-hidden="true">…</span>;
+  }
+
+  if (!signedIn) {
+    return (
+      <Link
+        href={`/login?next=${encodeURIComponent(`/circle/${person.userId}`)}`}
+        className="cat-preview__connect cat-preview__connect--action"
+        tabIndex={active ? 0 : -1}
+        aria-label={`Sign in to connect with ${person.fullName}`}
+      >
+        Connect
+      </Link>
+    );
+  }
+
+  const state = connection?.state ?? "none";
+
+  if (state === "accepted") {
+    return (
+      <span
+        className="cat-preview__connect cat-preview__connect--connected"
+        title={`You're connected with ${person.fullName}`}
+      >
+        Connected
+      </span>
+    );
+  }
+
+  if (state === "outgoing_pending") {
+    return (
+      <span
+        className="cat-preview__connect cat-preview__connect--pending"
+        title={`Connection request sent to ${person.fullName}`}
+      >
+        Requested
+      </span>
+    );
+  }
+
+  const action: ConnectAction = state === "incoming_pending" ? "accept" : "send";
+  const label = busy ? "…" : failed ? "Retry" : action === "accept" ? "Accept" : "Connect";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onAction(person, action)}
+      disabled={disabled}
+      tabIndex={active ? 0 : -1}
+      title={
+        failed
+          ? "That connection request failed. Try again."
+          : action === "accept"
+            ? `Accept ${person.fullName}'s connection request`
+            : `Connect with ${person.fullName}`
+      }
+      aria-label={
+        busy
+          ? "Sending connection request"
+          : failed
+            ? `Retry connecting with ${person.fullName}`
+            : action === "accept"
+              ? `Accept connection request from ${person.fullName}`
+              : `Connect with ${person.fullName}`
+      }
+      className={`cat-preview__connect cat-preview__connect--action ${
+        failed ? "cat-preview__connect--error" : ""
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function CirclePreviewCarousel() {
+  const { user, loading: authLoading } = useAuth();
   const [people, setPeople] = useState<StudentProfileRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [connections, setConnections] = useState<Record<string, ConnectionRef>>({});
+  const [statesReady, setStatesReady] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [failedId, setFailedId] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
+    if (authLoading) return;
     let cancelled = false;
+    const currentUserId = user?.id;
+    setLoading(true);
     getStudentDirectory(24).then((result) => {
       if (cancelled) return;
-      // Public profiles only, and only ones a visitor could open.
-      const eligible = (result.data ?? []).filter((person) => person.isPublic && person.fullName.trim());
+      // Public profiles only, and never the viewer's own record.
+      const eligible = (result.data ?? []).filter(
+        (person) => person.isPublic && person.fullName.trim() && person.userId !== currentUserId
+      );
       setPeople(shuffleOnce(eligible).slice(0, 8));
       setLoading(false);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authLoading, user?.id]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setConnections({});
+      setStatesReady(true);
+      return;
+    }
+    let cancelled = false;
+    setStatesReady(false);
+    getConnectionStates().then((result) => {
+      if (cancelled) return;
+      setConnections(result.data ?? {});
+      setStatesReady(true);
+      if (result.error) {
+        setNotice("Couldn't load your connection status. Connect will still be checked by JAVLIN.");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user?.id]);
 
   const { index, pause, resume } = useCarousel(people.length, PREVIEW_INTERVAL_MS);
+
+  async function handleConnect(person: StudentProfileRecord, action: ConnectAction) {
+    if (!user) return;
+    setBusyId(person.userId);
+    setFailedId(null);
+
+    let failure: string | null = null;
+    let success = "";
+
+    if (action === "accept") {
+      const connectionId = connections[person.userId]?.connectionId;
+      if (!connectionId) {
+        failure = "That connection request is no longer available.";
+      } else {
+        const result = await acceptConnectionRequest(connectionId);
+        if (result.error) failure = result.error;
+        else success = `You're now connected with ${person.fullName}.`;
+      }
+    } else {
+      const result = await sendConnectionRequest(person.userId);
+      if (result.error) {
+        failure = result.error;
+      } else if (result.data?.status === "already_connected") {
+        success = `You're already connected with ${person.fullName}.`;
+      } else if (result.data?.status === "already_pending") {
+        success = `A request to ${person.fullName} is already pending.`;
+      } else if (result.data?.status === "incoming_request") {
+        success = `${person.fullName} has already asked to connect. You can accept from the preview.`;
+      } else {
+        success = `Connection request sent to ${person.fullName}.`;
+      }
+    }
+
+    if (failure) {
+      setFailedId(person.userId);
+      setNotice(`Couldn't connect with ${person.fullName}: ${failure}`);
+      setBusyId(null);
+      return;
+    }
+
+    // Re-read the relationship instead of guessing what the mutation returned.
+    const states = await getConnectionStates();
+    if (!states.error) setConnections(states.data ?? {});
+    setNotice(success);
+    setBusyId(null);
+  }
 
   if (loading) {
     return <div className="cat-preview cat-preview--skeleton" aria-hidden="true" />;
@@ -126,29 +321,52 @@ export function CirclePreviewCarousel() {
         className="cat-preview__track cat-preview__track--x"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
-        {people.map((person, i) => (
-          <figure key={person.userId} className="cat-preview__slide" {...activeProps(i === index)}>
-            <StudentAvatar
-              src={person.avatarUrl}
-              name={person.fullName}
-              className="cat-preview__photo"
-            />
-            <figcaption className="cat-preview__meta">
-              <span className="cat-preview__name">
-                <span className="cat-preview__name-text">{person.fullName}</span>
-                {/* Decorative blue tick: a visual mark only, hidden from assistive
-                    technology and never presented as an identity claim. */}
-                <span aria-hidden="true" className="cat-preview__tick">
-                  <Icon name="check" className="h-2 w-2" />
+        {people.map((person, i) => {
+          const active = i === index;
+          return (
+            <figure key={person.userId} className="cat-preview__slide" {...activeProps(active)}>
+              <Link
+                href={`/circle/${person.userId}`}
+                className="cat-preview__profile"
+                tabIndex={active ? 0 : -1}
+                aria-label={`Open ${person.fullName}'s profile`}
+              >
+                <span className="cat-preview__photo-row">
+                  <StudentAvatar src={person.avatarUrl} name={person.fullName} className="cat-preview__photo" />
                 </span>
-              </span>
-              {person.headline?.trim() ? (
-                <span className="cat-preview__headline">{person.headline}</span>
-              ) : null}
-            </figcaption>
-          </figure>
-        ))}
+                <span className="cat-preview__meta">
+                  <span className="cat-preview__name">
+                    <span className="cat-preview__name-text">{person.fullName}</span>
+                    {/* Decorative blue tick: a visual mark only, hidden from assistive
+                        technology and never presented as an identity claim. */}
+                    <span aria-hidden="true" className="cat-preview__tick">
+                      <Icon name="check" className="h-2 w-2" />
+                    </span>
+                  </span>
+                  {person.headline?.trim() ? (
+                    <span className="cat-preview__headline">{person.headline}</span>
+                  ) : null}
+                </span>
+              </Link>
+
+              <PreviewConnect
+                person={person}
+                active={active}
+                authLoading={authLoading}
+                signedIn={Boolean(user)}
+                connection={connections[person.userId]}
+                statesReady={statesReady}
+                busy={busyId === person.userId}
+                disabled={busyId !== null}
+                failed={failedId === person.userId}
+                onAction={handleConnect}
+              />
+            </figure>
+          );
+        })}
       </div>
+
+      <p className="sr-only" role="status" aria-live="polite">{notice}</p>
     </div>
   );
 }
@@ -201,18 +419,28 @@ export function PulsePreviewCarousel() {
         className="cat-preview__track cat-preview__track--y"
         style={{ transform: `translateY(-${index * 100}%)` }}
       >
-        {posts.map((post, i) => (
-          <article key={post.id} className="cat-preview__slide cat-preview__slide--news" {...activeProps(i === index)}>
-            {post.imageUrl ? (
-              <img src={post.imageUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="cat-preview__thumb" />
-            ) : (
-              <span aria-hidden="true" className="cat-preview__thumb cat-preview__thumb--empty">
-                <Icon name="newspaper" className="h-3.5 w-3.5" />
-              </span>
-            )}
-            <span className="cat-preview__headline cat-preview__headline--news">{post.title}</span>
-          </article>
-        ))}
+        {posts.map((post, i) => {
+          const active = i === index;
+          return (
+            <Link
+              key={post.id}
+              href={`/pulse?post=${encodeURIComponent(post.id)}`}
+              className="cat-preview__slide cat-preview__slide--news cat-preview__news-link"
+              tabIndex={active ? 0 : -1}
+              aria-label={`Read ${post.title}`}
+              {...activeProps(active)}
+            >
+              {post.imageUrl ? (
+                <img src={post.imageUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="cat-preview__thumb" />
+              ) : (
+                <span aria-hidden="true" className="cat-preview__thumb cat-preview__thumb--empty">
+                  <Icon name="newspaper" className="h-3.5 w-3.5" />
+                </span>
+              )}
+              <span className="cat-preview__headline cat-preview__headline--news">{post.title}</span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

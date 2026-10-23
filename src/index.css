@@ -402,6 +402,47 @@
     box-shadow: inset 0 -1px 0 rgba(7, 26, 51, 0.07);
   }
 
+  /* AIM and FIELD carry the supplied artwork in a compact identity row: the
+     artwork no longer stacks above the label, which is what kept these two
+     cards far taller than the preview cards. */
+  .cat-tile__identity-row {
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .cat-tile__well--mark {
+    width: 28px;
+    height: 28px;
+    flex: none;
+    padding: 2px;
+    border-radius: 8px;
+  }
+  .cat-tile__actions {
+    gap: 0.375rem;
+    padding-top: 0.75rem;
+  }
+
+  @media (max-width: 639px) {
+    /* AIM and FIELD only: the preview cards keep their current mobile size. */
+    .cat-tile__identity-row {
+      min-height: 24px;
+      gap: 6px;
+    }
+    .cat-tile__well--mark {
+      width: 24px;
+      height: 24px;
+      padding: 1px;
+      border-radius: 7px;
+    }
+    .cat-tile.pillar-aim .cat-tile__actions,
+    .cat-tile.pillar-field .cat-tile__actions {
+      gap: 2px;
+      padding-top: 2px;
+    }
+  }
+
   @media (min-width: 640px) {
     .cat-tile {
       padding: 0.5rem;
@@ -412,10 +453,20 @@
   }
   @media (min-width: 1024px) {
     .cat-tile {
-      padding: 0.625rem;
+      padding: 0.375rem;
     }
     .cat-tile__label {
       font-size: 0.75rem;
+    }
+    .cat-tile__identity {
+      display: flex;
+      min-height: 28px;
+      align-items: center;
+      justify-content: center;
+    }
+    .cat-tile__actions {
+      gap: 0.25rem;
+      padding-top: 0.25rem;
     }
   }
 
@@ -453,6 +504,7 @@
   .cat-preview__track--x { flex-direction: row; }
   .cat-preview__track--y { flex-direction: column; }
   .cat-preview__slide {
+    position: relative;
     display: flex;
     flex: 0 0 100%;
     width: 100%;
@@ -538,6 +590,139 @@
     font-weight: 700;
     color: var(--javlin-navy);
   }
+  /* The profile slide is a real destination; the compact relationship control
+     is its sibling in the top-right corner, so the two actions never nest and
+     the photo row reserves that corner before it is painted. */
+  .cat-preview__profile {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: 8px;
+  }
+  .cat-preview__profile:focus-visible,
+  .cat-preview__news-link:focus-visible {
+    outline: 2px solid var(--javlin-blue);
+    outline-offset: -2px;
+  }
+  .cat-preview__name-text,
+  .cat-preview__headline--news {
+    transition: color 0.2s ease;
+  }
+  @media (hover: hover) {
+    .cat-preview__profile:hover .cat-preview__name-text,
+    .cat-preview__news-link:hover .cat-preview__headline--news {
+      color: var(--javlin-blue);
+    }
+  }
+  .cat-preview__photo-row {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
+  .cat-preview__connect {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 2;
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    border-radius: 9999px;
+    border: 1px solid #1457e0;
+    background: var(--javlin-blue);
+    color: #ffffff;
+    font-size: 9.5px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 0 4px 10px -6px rgba(7, 26, 51, 0.45);
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  }
+  @media (hover: hover) {
+    .cat-preview__connect--action:hover {
+      background: #1457e0;
+      border-color: #1049c4;
+    }
+  }
+  .cat-preview__connect--action:active {
+    transform: scale(0.97);
+  }
+  .cat-preview__connect:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+  .cat-preview__connect--pending {
+    border-color: #c9d8ff;
+    background: var(--javlin-blue-soft, #e6eeff);
+    color: var(--javlin-blue-dark, #0f53d6);
+    box-shadow: none;
+  }
+  .cat-preview__connect--connected {
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+    color: #047857;
+    box-shadow: none;
+  }
+  .cat-preview__connect--error {
+    border-color: #dc2626;
+    background: #ffffff;
+    color: #b91c1c;
+  }
+  .cat-preview__connect:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: -4px;
+  }
+  .cat-preview__news-link {
+    border-radius: 8px;
+  }
+  @media (max-width: 639px) {
+    .cat-preview__connect {
+      top: 3px;
+      right: 3px;
+      min-height: 32px;
+      padding: 0 5px;
+    }
+    /* Mobile Connect is the orange action; the navy label is the readable
+       contrast on #FF7A30, unlike white. Status pills keep their own colours. */
+    .cat-preview__connect--action {
+      border-color: var(--javlin-orange-deep, #e5671a);
+      background: var(--javlin-orange, #ff7a30);
+      color: var(--javlin-navy, #071a33);
+    }
+    .cat-preview__connect--error {
+      border-color: #dc2626;
+      background: #ffffff;
+      color: #b91c1c;
+    }
+    /* Status pills are read-only, so they can be shorter and tighter than the
+       actions while still clearing the photo on the narrowest handsets. */
+    .cat-preview__connect--pending,
+    .cat-preview__connect--connected {
+      min-height: 26px;
+      padding: 0 3px;
+      font-size: 8.5px;
+    }
+    .cat-preview__photo-row {
+      padding-right: 12px;
+    }
+  }
+  @media (max-width: 359px) {
+    /* At 320px the corner control and a centred 32px photo would overlap; shift
+       only the photo, leaving the name and headline centred. */
+    .cat-preview__photo-row {
+      padding-right: 38px;
+    }
+  }
+
+
   .cat-preview__empty {
     display: flex;
     width: 100%;
@@ -566,12 +751,24 @@
     .cat-preview__photo { width: 36px; height: 36px; }
   }
   @media (min-width: 1024px) {
-    .cat-preview-slot { flex: 1 1 auto; height: auto; min-height: 96px; }
-    .cat-preview__photo { width: 56px; height: 56px; }
-    .cat-preview__name { font-size: 11px; }
-    .cat-preview__headline { -webkit-line-clamp: 2; font-size: 10px; }
-    .cat-preview__thumb { width: 40px; height: 40px; }
-    .cat-preview__headline--news { font-size: 10px; }
+    .cat-preview-slot { flex: 1 1 0; height: auto; min-height: 78px; }
+    .cat-preview__photo { width: 40px; height: 40px; }
+    .cat-preview__name { font-size: 10px; }
+    .cat-preview__headline { -webkit-line-clamp: 2; font-size: 9.5px; }
+    .cat-preview__thumb { width: 34px; height: 34px; }
+    .cat-preview__headline--news { font-size: 9.5px; }
+  }
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    /* The four-column grid is at its narrowest here; leave room for the corner
+       control and keep the status pills compact so nothing touches the photo. */
+    .cat-preview__photo-row {
+      padding-right: 44px;
+    }
+    .cat-preview__connect--pending,
+    .cat-preview__connect--connected {
+      padding: 0 4px;
+      font-size: 9px;
+    }
   }
 
   /* The card actions. One system: a light surface with a strong blue label, and
@@ -592,6 +789,18 @@
   @media (min-width: 1024px) {
     .cat-tile__cta {
       @apply text-xs;
+    }
+  }
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    /* At the narrowest four-column width the long CIRCLE label was wrapping to
+       four lines and setting the whole row's height. Tighter gutters and the
+       same 11px floor used on mobile keep it to three while leaving every
+       button at its 44px target. */
+    .cat-tile__cta {
+      gap: 0.375rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      font-size: 11px;
     }
   }
   @media (hover: hover) {
@@ -1696,6 +1905,44 @@
 .homepage-carousel-window:hover .homepage-carousel-animate,
 .homepage-carousel-window:focus-within .homepage-carousel-animate {
   animation-duration: 120s;
+}
+
+/* The Trending row is stepped, not looped on a keyframe: the track slides one
+   card per action (or per timer tick) and snaps silently after its duplicate, so
+   the previous/next controls always move exactly one card. */
+.trending-carousel-track {
+  transition: translate 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.trending-carousel-track--instant {
+  transition: none;
+}
+
+/* Previous/next controls: navy glass with a white chevron on the dark band,
+   electric blue on hover — distinct from the white poster cards they flank. */
+.trending-arrow {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(7, 26, 51, 0.55);
+  color: #ffffff;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+@media (hover: hover) {
+  .trending-arrow:hover:not(:disabled) {
+    background: var(--javlin-blue);
+    border-color: var(--javlin-blue);
+  }
+}
+.trending-arrow:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.trending-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .homepage-opportunity-card {
