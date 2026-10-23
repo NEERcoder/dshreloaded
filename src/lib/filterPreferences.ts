@@ -127,6 +127,11 @@ export function toStoredFilters(filters: OpportunityFilters): StoredFilters {
   if (filters.courses.length) stored.courses = filters.courses;
   if (filters.locations.length) stored.locations = filters.locations;
   if (filters.compensation) stored.compensation = filters.compensation;
+  // Only the "on" position is storable: `false` is the default, and writing it
+  // would keep a key alive in a shared payload that another section then has to
+  // carry through every write for no reason.
+  if (filters.remoteOnly) stored.remoteOnly = true;
+  if (filters.featuredOnly) stored.featuredOnly = true;
   if (filters.sort && filters.sort !== DEFAULT_FILTERS.sort) stored.sort = filters.sort;
   return stored;
 }

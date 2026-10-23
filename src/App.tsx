@@ -4,10 +4,11 @@ import { CursorProvider } from "./context/CursorContext";
 import { AuthProvider } from "./context/AuthContext";
 import PageTransition from "./components/PageTransition";
 import { SectionShellContext } from "./components/PageShell";
-import { isSectionPath } from "./lib/sidebarNav";
+import { isSectionPath, isSectionTabPath } from "./lib/sidebarNav";
 import { useIsDesktop } from "./hooks/useIsDesktop";
 import Navbar from "./components/Navbar";
 import HomeSidebar from "./components/HomeSidebar";
+import SectionTabs from "./components/SectionTabs";
 import Hero from "./components/Hero";
 import FeaturedOpportunityTicker from "./components/FeaturedOpportunityTicker";
 import Footer from "./components/Footer";
@@ -36,6 +37,8 @@ import StudentProfilePage from "./pages/StudentProfilePage";
 import MarkPage from "./pages/MarkPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import PulsePage from "./pages/PulsePage";
+import OpportunitySectionPage from "./pages/OpportunitySectionPage";
+import EventsPage from "./pages/EventsPage";
 import CollegeReviewsPage from "./pages/CollegeReviewsPage";
 import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
@@ -92,6 +95,12 @@ function RouteContent({ path }: { path: string }) {
   else if (path === "/mark") page = <MarkPage />;
   else if (path === "/notifications") page = <NotificationsPage />;
   else if (path === "/pulse") page = <PulsePage />;
+  // Dedicated destinations for the two areas the redesign adds. The nested form
+  // is matched too so a future `/events/<id>` link can only ever land here — the
+  // tab above marks itself active for the same prefix (see `activeSectionTab`).
+  else if (path === "/events" || path.startsWith("/events/")) page = <EventsPage />;
+  else if (path === "/hackathons" || path.startsWith("/hackathons/"))
+    page = <OpportunitySectionPage section="hackathons" />;
   else if (path === "/college-reviews") page = <CollegeReviewsPage />;
   else if (path === "/explore") page = <ExplorePage />;
   else if (path.startsWith("/explore/")) page = <CollegePage slug={path.replace("/explore/", "").replace(/\/$/, "")} />;
@@ -104,7 +113,7 @@ function RouteContent({ path }: { path: string }) {
     // category route intact while making a pasted detail link refreshable.
     const param = path.replace("/opportunities/", "").replace(/\/$/, "");
     page = isOpportunityCategoryParam(param) ? (
-      <OpportunitiesPage categoryId={param} />
+      <OpportunitySectionPage section={param} />
     ) : (
       <OpportunityDetailPage opportunityId={param} />
     );
@@ -142,15 +151,23 @@ function SectionShell({ path }: { path: string }) {
   // state only ever affects lg+.
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isHome = path === "/";
+  const hasTabs = isSectionTabPath(path);
 
   return (
     <div
-      className={`${isHome ? "homepage-canvas" : "page-canvas"} relative flex min-h-screen flex-col`}
+      className={`${isHome ? "homepage-canvas" : "page-canvas"} relative flex min-h-screen flex-col ${
+        hasTabs ? "shell-section-tabs" : ""
+      }`}
     >
       {/* The dot field is one CSS radial-gradient on this wrapper. The canvas
           particle grid is deliberately not mounted here: it costs an animation
           frame on every scroll for decoration a background paint gives free. */}
       <Navbar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
+      {/* The eight section tabs, above the rail-and-content row so the shell
+          reads taskbar → tabs → sidebar + page. `PageShell` renders the same row
+          for a section page that is standing alone (phones, nested profile
+          routes), and both ask `isSectionTabPath`, so exactly one appears. */}
+      {hasTabs ? <SectionTabs /> : null}
       <div
         className={`relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 gap-6 lg:px-6 ${
           sidebarOpen ? "lg:pl-64" : ""

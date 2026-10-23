@@ -2,14 +2,25 @@ import { useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import StudentCard, { StudentCardSkeleton, yearLabel } from "../components/circle/StudentCard";
+import CircleYourProfile from "../components/circle/CircleYourProfile";
+import CircleSuggestedProfiles from "../components/circle/CircleSuggestedProfiles";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
   getConnectionStates,
+  getConnectionSummary,
+  getColleges,
+  getCurrentUserProfile,
   getStudentDirectory,
+  getStudentLevel,
   getStudentLevels,
+  getStudentRecords,
+  setProfileVisibility,
   type ConnectionRef,
+  type ProfileRecord,
   type StudentProfileRecord,
+  type StudentRecord,
+  type StudentRecordCategory,
 } from "../lib/dataAccess";
 
 function distinct(values: Array<string | number>): string[] {
@@ -88,6 +99,77 @@ export default function CirclePage() {
     setCollege(collegeFromUrl);
   }, [collegeFromUrl]);
 
+  // The signed-in reader's own presence. Read separately from the directory so
+  // a slow profile round trip cannot hold up the list of people, and so a
+  // visitor who is not signed in never fires these four queries at all.
+  const [myProfile, setMyProfile] = useState<ProfileRecord | null>(null);
+  const [myCollegeName, setMyCollegeName] = useState<string | null>(null);
+  const [myConnections, setMyConnections] = useState(0);
+  const [myCompetitions, setMyCompetitions] = useState(0);
+  const [myRecords, setMyRecords] = useState<StudentRecord[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      setMyProfile(null);
+      setMyCollegeName(null);
+      setMyConnections(0);
+      setMyCompetitions(0);
+      setMyRecords([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const profile = (await getCurrentUserProfile()).data;
+      if (cancelled) return;
+      setMyProfile(profile);
+      const [records, summary, level, colleges] = await Promise.all([
+        getStudentRecords(user.id),
+        getConnectionSummary(),
+        getStudentLevel(user.id),
+        profile?.collegeId ? getColleges() : Promise.resolve(null),
+      ]);
+      if (cancelled) return;
+      setMyRecords(records.data ?? []);
+      setMyConnections(summary.data?.connections ?? 0);
+      setMyCompetitions(level.data ?? 0);
+      if (colleges && profile?.collegeId) {
+        setMyCollegeName(colleges.data.find((entry) => entry.id === profile.collegeId)?.name ?? null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const markSummary = useMemo(() => {
+    const counts = new Map<StudentRecordCategory, number>();
+    for (const record of myRecords) counts.set(record.category, (counts.get(record.category) ?? 0) + 1);
+    return {
+      competitions: myCompetitions,
+      records: [...counts.entries()].map(([category, count]) => ({ category, count })),
+    };
+  }, [myRecords, myCompetitions]);
+
+  const suggestions = useMemo(
+    () => students.filter((student) => student.userId !== user?.id),
+    [students, user?.id]
+  );
+
+  async function changeVisibility(next: boolean) {
+    const result = await setProfileVisibility(next);
+    if (result.error) throw new Error(result.error);
+    setMyProfile((current) => (current ? { ...current, isPublic: next } : current));
+  }
+
+  // A connection action changes two reads at once — the per-student state map
+  // the cards show and the summary the presence card counts — so both are
+  // re-read from RLS rather than guessed at locally.
+  async function reloadConnections() {
+    const [states, summary] = await Promise.all([getConnectionStates(), getConnectionSummary()]);
+    setConnectionStates(states.data);
+    setMyConnections(summary.data?.connections ?? 0);
+  }
+
   // The linked college may not appear in the list until its students load, so
   // keep the active value selectable.
   const collegeOptions = useMemo(() => {
@@ -165,6 +247,30 @@ export default function CirclePage() {
           )}
         </div>
       </section>
+
+      {/* The reader's own two zones — presence and suggestions — sit above the
+          directory rather than on a separate page, so CIRCLE reads as one place
+          to see where you stand and who is next to you. */}
+      {!authLoading && user && myProfile && (
+        <div className="container-px pt-6">
+          <CircleYourProfile
+            profile={myProfile}
+            collegeName={myCollegeName}
+            connections={myConnections}
+            mark={markSummary}
+            onVisibilityChange={changeVisibility}
+          />
+          {!loading && suggestions.length > 0 && (
+            <div className="mt-4">
+              <CircleSuggestedProfiles
+                people={suggestions}
+                connections={connectionStates}
+                onChanged={() => void reloadConnections()}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <section className="container-px py-6 sm:py-8">
         {authLoading || loading ? (

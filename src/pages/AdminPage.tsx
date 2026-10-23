@@ -6,6 +6,8 @@ import PulseAdmin from "../components/admin/PulseAdmin";
 import PosterCropStudio from "../components/admin/PosterCropStudio";
 import RoundsEditor from "../components/admin/RoundsEditor";
 import CompetitionRegistrationsPanel from "../components/admin/CompetitionRegistrationsPanel";
+import { CircleAdminSection, EventManager } from "../components/admin/SectionAdminPanels";
+import { isHackathonListing } from "../lib/opportunityKind";
 import {
   deleteOpportunity,
   deleteReview,
@@ -289,10 +291,70 @@ function NotAuthorized({ email, onSignOut }: { email?: string; onSignOut: () => 
   );
 }
 
-type TabType = "opportunities" | "registrations" | "reviews" | "mentors" | "videos" | "pulse" | "team_roles" | "team_members" | "colleges" | "animations";
+/**
+ * The eight redesigned destinations, then the content types that already had a
+ * panel. Every one of them manages rows in the tables the site already has —
+ * the destination sections are views onto the same `opportunities` table, not
+ * eight parallel ones.
+ */
+type TabType =
+  | "internships"
+  | "certifications"
+  | "research"
+  | "competitions"
+  | "events"
+  | "hackathons"
+  | "circle"
+  | "pulse"
+  | "opportunities"
+  | "registrations"
+  | "reviews"
+  | "mentors"
+  | "videos"
+  | "team_roles"
+  | "team_members"
+  | "colleges"
+  | "animations";
+
+/** One labelled group of section buttons in the admin rail. */
+function AdminNavGroup({
+  active,
+  onPick,
+  items,
+}: {
+  active: TabType;
+  onPick: (next: TabType) => void;
+  items: { key: TabType; label: string; count: number | null; alert?: boolean }[];
+}) {
+  return (
+    <>
+      {items.map(({ key, label, count, alert }) => (
+        <button
+          key={key}
+          onClick={() => onPick(key)}
+          aria-current={active === key ? "true" : undefined}
+          className={`flex w-full items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-left text-sm font-semibold transition-colors ${
+            active === key ? "bg-brand-blue-soft font-bold text-brand-blue" : "text-ink-700 hover:bg-surface-soft"
+          }`}
+        >
+          <span className="min-w-0 truncate">{label}</span>
+          {count !== null && count > 0 && (
+            <span
+              className={`flex-none rounded-full px-2 py-0.5 text-xs ${
+                alert ? "bg-brand-red-soft font-bold text-brand-red-ink" : "bg-surface-border text-ink-600"
+              }`}
+            >
+              {count}
+            </span>
+          )}
+        </button>
+      ))}
+    </>
+  );
+}
 
 function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => void }) {
-  const [tab, setTab] = useState<TabType>("opportunities");
+  const [tab, setTab] = useState<TabType>("internships");
   const [colleges, setColleges] = useState<CollegeRecord[]>([]);
   const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([]);
   const [reviews, setReviews] = useState<ReviewRecord[]>([]);
@@ -303,6 +365,14 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
   const [teamMembers, setTeamMembers] = useState<TeamMemberRecord[]>([]);
   const [animations, setAnimations] = useState<HomepageAnimationRecord[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+
+  // The destination sections are slices of the one `opportunities` table. The
+  // hackathon slice is the same reading the public page uses, so what an admin
+  // files here is exactly what appears there.
+  const competitions = opportunities.filter((item) => item.category === "competition");
+  const hackathons = competitions.filter((item) => isHackathonListing(item));
+  const countByCategory = (category: OpportunityRecord["category"]) =>
+    opportunities.filter((item) => item.category === category).length;
 
   async function refresh() {
     const [colRes, oppRes, revRes, menRes, vidRes, pulseRes, rolRes, memRes, animRes] = await Promise.all([
@@ -353,35 +423,47 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">
-          <aside className="card h-fit p-3 space-y-1">
-            <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-ink-500">Content Management</p>
-            {[
-              { key: "opportunities" as TabType, label: "Opportunities", count: opportunities.length },
-              { key: "registrations" as TabType, label: "Competition Registrations", count: opportunities.filter((item) => item.category === "competition").length },
-              { key: "reviews" as TabType, label: "Reviews (Moderation)", count: reviews.filter((r) => r.status === "pending").length },
-              { key: "mentors" as TabType, label: "Mentors", count: mentors.length },
-              { key: "videos" as TabType, label: "Videos (Campus Unfiltered)", count: videos.length },
-              { key: "pulse" as TabType, label: "PULSE Posts", count: pulsePosts.length },
-              { key: "team_roles" as TabType, label: "Team Roles", count: teamRoles.length },
-              { key: "team_members" as TabType, label: "Team Members", count: teamMembers.length },
-              { key: "colleges" as TabType, label: "College Images", count: colleges.length },
-              { key: "animations" as TabType, label: "Homepage Animation", count: animations.filter((a) => a.enabled).length },
-            ].map(({ key, label, count }) => (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-sm font-semibold transition-colors ${
-                  tab === key ? "bg-brand-blue-soft text-brand-blue font-bold" : "text-ink-700 hover:bg-surface-soft"
-                }`}
-              >
-                <span>{label}</span>
-                {count > 0 && (
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${key === "reviews" && count > 0 ? "bg-brand-red-soft text-brand-red-ink font-bold" : "bg-surface-border text-ink-600"}`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            ))}
+          <aside className="card h-fit space-y-1 p-3">
+            <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-ink-500">
+              Destinations
+            </p>
+            <AdminNavGroup
+              active={tab}
+              onPick={setTab}
+              items={[
+                { key: "internships", label: "Internships", count: countByCategory("internship") },
+                { key: "certifications", label: "Certifications", count: countByCategory("certification") },
+                { key: "research", label: "Research", count: countByCategory("research") },
+                { key: "competitions", label: "Competitions", count: competitions.length },
+                { key: "events", label: "Events", count: null },
+                { key: "hackathons", label: "Hackathons", count: hackathons.length },
+                { key: "circle", label: "Circle", count: null },
+                { key: "pulse", label: "Pulse", count: pulsePosts.length },
+              ]}
+            />
+            <p className="px-3 pb-2 pt-4 text-xs font-bold uppercase tracking-wider text-ink-500">
+              Other content
+            </p>
+            <AdminNavGroup
+              active={tab}
+              onPick={setTab}
+              items={[
+                { key: "opportunities", label: "All listings", count: opportunities.length },
+                { key: "registrations", label: "Competition Registrations", count: competitions.length },
+                {
+                  key: "reviews",
+                  label: "Reviews (Moderation)",
+                  count: reviews.filter((r) => r.status === "pending").length,
+                  alert: true,
+                },
+                { key: "mentors", label: "Mentors", count: mentors.length },
+                { key: "videos", label: "Videos (Campus Unfiltered)", count: videos.length },
+                { key: "team_roles", label: "Team Roles", count: teamRoles.length },
+                { key: "team_members", label: "Team Members", count: teamMembers.length },
+                { key: "colleges", label: "College Images", count: colleges.length },
+                { key: "animations", label: "Homepage Animation", count: animations.filter((a) => a.enabled).length },
+              ]}
+            />
           </aside>
 
           <div>
@@ -392,6 +474,53 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
               </div>
             )}
 
+            {tab === "internships" && (
+              <OpportunityManager
+                items={opportunities.filter((item) => item.category === "internship")}
+                lockCategory="internship"
+                sectionTitle="Internships"
+                sectionNote="Every row here is what /opportunities/internships lists. Jobs, fellowships and scholarships are filed under All listings."
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "certifications" && (
+              <OpportunityManager
+                items={opportunities.filter((item) => item.category === "certification")}
+                lockCategory="certification"
+                sectionTitle="Certifications"
+                sectionNote="Filed as category “certification”. The role rail on the public page reads the Field column, so fill that in."
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "research" && (
+              <OpportunityManager
+                items={opportunities.filter((item) => item.category === "research")}
+                lockCategory="research"
+                sectionTitle="Research"
+                sectionNote="The public card shows the organisation, the field and the rewards or stipend text. Supervisor and department have no column yet."
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "competitions" && (
+              <OpportunityManager
+                items={competitions.filter((item) => !isHackathonListing(item))}
+                lockCategory="competition"
+                sectionTitle="Competitions"
+                sectionNote="Competitions that do not call themselves a hackathon. Rounds, prize, rewards, contacts and the entry shape are on the form below."
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "hackathons" && (
+              <OpportunityManager
+                items={hackathons}
+                lockCategory="competition"
+                sectionTitle="Hackathons"
+                sectionNote="A hackathon is stored as a competition and recognised only when its own title or field says “hackathon”. Migration 018 proposes a kind column that would replace that reading."
+                onSaved={(msg) => { setMessage(msg); refresh(); }}
+              />
+            )}
+            {tab === "events" && <EventManager onSaved={setMessage} />}
+            {tab === "circle" && <CircleAdminSection />}
             {tab === "opportunities" && (
               <OpportunityManager
                 items={opportunities}
@@ -462,8 +591,33 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
 }
 
 // 1. OPPORTUNITY MANAGER
-function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; onSaved: (msg: string) => void }) {
-  const [form, setForm] = useState<OpportunityInput>(blankOpportunity);
+/**
+ * The listings manager.
+ *
+ * Unlocked it is the old all-in-one Opportunities panel. The four destination
+ * sections pass `lockCategory`, which filters the list to that category and
+ * pins the form's category — an admin editing "Internships" cannot accidentally
+ * file a row as a competition, and the list they see is the list the public page
+ * will show.
+ */
+function OpportunityManager({
+  items,
+  onSaved,
+  lockCategory,
+  sectionTitle,
+  sectionNote,
+}: {
+  items: OpportunityRecord[];
+  onSaved: (msg: string) => void;
+  lockCategory?: OpportunityRecord["category"];
+  sectionTitle?: string;
+  sectionNote?: string;
+}) {
+  const blankSection: OpportunityInput = {
+    ...blankOpportunity,
+    category: lockCategory ?? blankOpportunity.category,
+  };
+  const [form, setForm] = useState<OpportunityInput>(blankSection);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [coursesText, setCoursesText] = useState("");
   const [posterUploading, setPosterUploading] = useState(false);
@@ -557,6 +711,7 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
     }
     const payload: OpportunityInput = {
       ...form,
+      category: lockCategory ?? form.category,
       eligibleCourses: coursesText.split(",").map((s) => s.trim()).filter(Boolean),
       deadlineAt: deadlineIso,
       startAt: startIso,
@@ -568,7 +723,7 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
       onSaved(result.error);
     } else {
       onSaved(editingId ? "Opportunity updated successfully." : "Opportunity created successfully.");
-      setForm(blankOpportunity);
+      setForm(blankSection);
       setCoursesText("");
       setDeadlineIst("");
       setStartIst("");
@@ -587,7 +742,8 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="eyebrow">Content management</p>
-          <h2 className="mt-2 text-2xl font-extrabold text-ink-900">Opportunities</h2>
+          <h2 className="mt-2 text-2xl font-extrabold text-ink-900">{sectionTitle ?? "Opportunities"}</h2>
+          {sectionNote && <p className="mt-1 text-sm text-ink-500">{sectionNote}</p>}
         </div>
         <span className="text-sm text-ink-500">{items.length} total</span>
       </div>
@@ -604,16 +760,22 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
             <input required value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} className="field-input" placeholder="e.g. Science Forum" />
           </div>
           <div>
-            <label className="field-label">Category</label>
-            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as OpportunityRecord["category"] })} className="field-input">
-              <option value="internship">Internship</option>
-              <option value="competition">Competition</option>
-              <option value="research">Research</option>
-              <option value="certification">Certification</option>
-              <option value="job">Job</option>
-              <option value="fellowship">Fellowship</option>
-              <option value="scholarship">Scholarship</option>
-            </select>
+            <label className="field-label" htmlFor="opportunity-category">Category</label>
+            {lockCategory ? (
+              // The destination owns the category, so the control shows what it
+              // is rather than offering seven ways to mis-file the row.
+              <input id="opportunity-category" value={lockCategory} disabled className="field-input bg-surface-soft" />
+            ) : (
+              <select id="opportunity-category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as OpportunityRecord["category"] })} className="field-input">
+                <option value="internship">Internship</option>
+                <option value="competition">Competition</option>
+                <option value="research">Research</option>
+                <option value="certification">Certification</option>
+                <option value="job">Job</option>
+                <option value="fellowship">Fellowship</option>
+                <option value="scholarship">Scholarship</option>
+              </select>
+            )}
           </div>
           <div>
             <label className="field-label">Field / Domain</label>
@@ -869,7 +1031,7 @@ function OpportunityManager({ items, onSaved }: { items: OpportunityRecord[]; on
         <div className="mt-5 flex flex-wrap gap-2">
           <button className="btn-secondary">{editingId ? "Update Opportunity" : "Create Opportunity"}</button>
           {editingId && (
-            <button type="button" className="btn-ghost" onClick={() => { setEditingId(undefined); setForm(blankOpportunity); setCoursesText(""); setDeadlineIst(""); setStartIst(""); }}>
+            <button type="button" className="btn-ghost" onClick={() => { setEditingId(undefined); setForm(blankSection); setCoursesText(""); setDeadlineIst(""); setStartIst(""); }}>
               Cancel Edit
             </button>
           )}

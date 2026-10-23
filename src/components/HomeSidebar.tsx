@@ -9,12 +9,16 @@ import { getPulsePosts, type PulsePostRecord } from "../lib/dataAccess";
  * The account rail beside the homepage on large screens. Its width (w-56) and
  * fixed position are unchanged by design; the contents live in SidebarContent,
  * which the mobile drawer renders too, so desktop and mobile can never drift.
+ *
+ * `--rail-top` is the navbar's own height by default and is raised by the shell
+ * on a page that carries the section-tab row, so the rail always starts below
+ * whatever chrome is above it instead of sliding underneath it.
  */
 export default function HomeSidebar() {
   return (
     <aside
       aria-label="JAVLIN sections"
-      className="home-rail hidden w-56 shrink-0 lg:fixed lg:bottom-0 lg:left-0 lg:top-20 lg:z-30 lg:flex lg:flex-col lg:gap-2 lg:overflow-hidden lg:rounded-r-2xl lg:p-3"
+      className="home-rail hidden w-56 shrink-0 lg:fixed lg:bottom-0 lg:left-0 lg:top-[var(--rail-top,5rem)] lg:z-30 lg:flex lg:flex-col lg:gap-2 lg:overflow-hidden lg:rounded-r-2xl lg:p-3"
     >
       <SidebarContent />
     </aside>

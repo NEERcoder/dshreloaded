@@ -3,25 +3,27 @@ import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import EmptyState from "../components/home/EmptyState";
 import { SkeletonOpportunityGrid } from "../components/Skeleton";
-import OpportunityCard from "../components/opportunities/OpportunityCard";
 import { Link, useLocation } from "../lib/router";
-import {
-  getOpportunities,
-  getOpenTeamRoles,
-  getPulsePosts,
-  getVideos,
-  type OpportunityRecord,
-  type PulsePostRecord,
-  type VideoRecord,
-} from "../lib/dataAccess";
-import { opportunityHref } from "../lib/opportunityRoute";
-import { getYouTubeThumbnailUrl, sanitizeExternalUrl, sanitizeYouTubeUrl } from "../lib/urlSafety";
+import { getOpenTeamRoles, getPulsePosts, type PulsePostRecord } from "../lib/dataAccess";
+import { sanitizeExternalUrl } from "../lib/urlSafety";
 
-const CAMPUS_FILTER = "campus";
+/**
+ * PULSE — campus news, and only campus news.
+ *
+ * The page used to mix three sources: published `pulse_posts`, featured
+ * opportunities and campus videos. The two displaced ones still exist and are
+ * still reachable — opportunity discovery is the six section pages under the tab
+ * row (and the AIM/FIELD launchers on the homepage), campus videos are on
+ * /explore and on each college page. What is left here is the editorial
+ * hierarchy from the reference sheet: one lead story, a Top stories list beside
+ * it, then the rest as a grid.
+ *
+ * Nothing is invented to make the page look like a newspaper. A `pulse_post` has
+ * no author, byline or college column, so no card claims one: the tag on a story
+ * is the category an editor picked, and the time is the row's own `published_at`.
+ */
 
-function capitalise(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
+const NEWS_DESK_MAILTO = "mailto:hello@javlin.space?subject=Campus%20news%20for%20JAVLIN%20Pulse";
 
 /** "campus_story" -> "Campus Story". Labels derive from the stored slug. */
 function categoryLabel(value: string): string {
@@ -37,32 +39,38 @@ function postedLabel(createdAt: string): string {
   return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/** "2 h ago" inside a week, then the date — the reference's own rhythm. */
+function agoLabel(createdAt: string): string {
+  const time = new Date(createdAt).getTime();
+  if (Number.isNaN(time)) return "";
+  const minutes = Math.round((Date.now() - time) / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} h ago`;
+  const days = Math.round(hours / 24);
+  if (days <= 7) return `${days} d ago`;
+  return postedLabel(createdAt);
+}
+
 export default function PulsePage() {
   const [posts, setPosts] = useState<PulsePostRecord[]>([]);
-  const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([]);
-  const [videos, setVideos] = useState<VideoRecord[]>([]);
   const [openRoleCount, setOpenRoleCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("all");
+  const [topic, setTopic] = useState("all");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const { search } = useLocation();
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([getPulsePosts(24), getOpportunities(), getVideos(), getOpenTeamRoles()]).then(
-      ([postsResult, opportunitiesResult, videosResult, rolesResult]) => {
-        if (cancelled) return;
-        // Published rows only — RLS never returns a draft to this query.
-        setPosts(postsResult.data);
-        setOpportunities(
-          [...opportunitiesResult.data].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        );
-        setVideos(videosResult.data);
-        setOpenRoleCount(rolesResult.data.filter((role) => role.isOpen).length);
-        setLoading(false);
-      }
-    );
+    Promise.all([getPulsePosts(48), getOpenTeamRoles()]).then(([postsResult, rolesResult]) => {
+      if (cancelled) return;
+      // Published rows only — RLS never returns a draft to this query.
+      setPosts(postsResult.data);
+      setOpenRoleCount(rolesResult.data.filter((role) => role.isOpen).length);
+      setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
@@ -75,62 +83,142 @@ export default function PulsePage() {
     if (postId && posts.some((post) => post.id === postId)) setSelectedPostId(postId);
   }, [search, posts]);
 
-  // Filters only offer categories that actually have published content.
-  const categoryOptions = useMemo(() => {
-    const present = new Set(opportunities.map((item) => item.category));
-    return [...present].sort();
-  }, [opportunities]);
+  // Topics are the stored categories that actually have a published story, so a
+  // chip never offers a section nothing is filed under.
+  const topicOptions = useMemo(() => {
+    const present = new Set(posts.map((post) => post.category));
+    return [...present].sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b)));
+  }, [posts]);
 
-  const featured = useMemo(() => opportunities.filter((item) => item.featured).slice(0, 3), [opportunities]);
+  const filtered = useMemo(
+    () => (topic === "all" ? posts : posts.filter((post) => post.category === topic)),
+    [posts, topic]
+  );
 
-  const latest = useMemo(() => {
-    if (filter === CAMPUS_FILTER) return [];
-    const pool = filter === "all" ? opportunities : opportunities.filter((item) => item.category === filter);
-    const featuredIds = filter === "all" ? new Set(featured.map((item) => item.id)) : new Set<string>();
-    return pool.filter((item) => !featuredIds.has(item.id)).slice(0, 24);
-  }, [opportunities, featured, filter]);
-
-  const campusItems = useMemo(() => {
-    if (filter !== "all" && filter !== CAMPUS_FILTER) return [];
-    return videos.slice(0, filter === CAMPUS_FILTER ? 12 : 4);
-  }, [videos, filter]);
-
-  const isEmpty =
-    !loading && posts.length === 0 && opportunities.length === 0 && videos.length === 0;
+  const lead = filtered[0] ?? null;
+  const topStories = filtered.slice(1, 5);
+  const rest = filtered.slice(5);
 
   const selectedPost = useMemo(
     () => posts.find((post) => post.id === selectedPostId) ?? null,
     [posts, selectedPostId]
   );
 
-  // On the default view an empty "Latest" list isn't an empty page: Featured or Campus content
-  // is already shown, so the "Nothing here yet." block would sit above real cards.
-  const showLatestEmptyState =
-    latest.length === 0 && !(filter === "all" && (featured.length > 0 || campusItems.length > 0));
-
   return (
     <PageShell
-      title="PULSE — See What's Happening | JAVLIN"
-      description="Updates, stories and opportunities worth knowing about."
+      title="PULSE — Campus News | JAVLIN"
+      description="Campus news from colleges across India: announcements, stories, results, interviews and guides."
       backgroundPreset="explore"
     >
       <section className="page-hero pillar-pulse">
         <div className="container-px">
-          <p className="eyebrow">PULSE</p>
-          <h1 className="page-title font-display mt-2">
-            See what's happening.
-          </h1>
-          <p className="page-lede mt-3 max-w-2xl">
-            Updates, stories and opportunities worth knowing about.
-          </p>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0">
+              <p className="eyebrow">PULSE</p>
+              <h1 className="page-title font-display mt-2">Campus news, live from colleges.</h1>
+              <p className="page-lede mt-3 max-w-2xl">
+                Announcements, results, fests and the stories students actually talk about — written up by
+                the JAVLIN desk.
+              </p>
+            </div>
+            <a href={NEWS_DESK_MAILTO} className="btn-accent min-h-[44px]">
+              <Icon name="mail" className="h-4 w-4" />
+              Got campus news? Mail us
+            </a>
+          </div>
         </div>
       </section>
 
       <section className="container-px py-6 sm:py-8">
+        {topicOptions.length > 1 && (
+          <div className="mb-6 flex flex-wrap items-center gap-2" role="group" aria-label="News topics">
+            <FilterChip label="All news" active={topic === "all"} onClick={() => setTopic("all")} />
+            {topicOptions.map((category) => (
+              <FilterChip
+                key={category}
+                label={categoryLabel(category)}
+                active={topic === category}
+                onClick={() => setTopic(category)}
+              />
+            ))}
+          </div>
+        )}
+
+        {loading ? (
+          <SkeletonOpportunityGrid count={6} />
+        ) : posts.length === 0 ? (
+          <EmptyState
+            icon="newspaper"
+            title="No stories published yet."
+            description="The desk publishes here as soon as there is something worth reading. Live listings are on the opportunity pages."
+            ctaLabel="Browse internships"
+            ctaHref="/opportunities/internships"
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon="filter"
+            title="Nothing filed under that topic yet."
+            description="Choose All news to see everything the desk has published."
+            ctaLabel="Show all news"
+            ctaHref="/pulse"
+          />
+        ) : (
+          <>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+              <LeadStory post={lead} onSelect={setSelectedPostId} />
+              {topStories.length > 0 && <TopStories posts={topStories} onSelect={setSelectedPostId} />}
+            </div>
+
+            {rest.length > 0 && (
+              <div className="mt-10">
+                <div className="flex items-end justify-between gap-3">
+                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
+                    Latest news
+                  </h2>
+                  <p className="text-xs font-bold text-ink-500">
+                    {rest.length} more {rest.length === 1 ? "story" : "stories"}
+                  </p>
+                </div>
+                <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {rest.map((post) => (
+                    <PulsePostCard key={post.id} post={post} onSelect={setSelectedPostId} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Where the two displaced feeds went, so nothing on this page is a dead
+            end and nothing here pretends to be news. */}
+        {!loading && posts.length > 0 && (
+          <div className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-surface-border pt-5 text-xs font-semibold text-ink-500">
+            <span>Looking for something else?</span>
+            <Link
+              href="/opportunities/internships"
+              className="inline-flex items-center gap-1 font-extrabold text-brand-blue hover:underline"
+            >
+              Open internships <Icon name="arrow" className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/opportunities/competitions"
+              className="inline-flex items-center gap-1 font-extrabold text-brand-blue hover:underline"
+            >
+              Competitions <Icon name="arrow" className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/explore"
+              className="inline-flex items-center gap-1 font-extrabold text-brand-blue hover:underline"
+            >
+              Campus videos <Icon name="arrow" className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        )}
+
         {openRoleCount !== null && openRoleCount > 0 && (
           <Link
             href="/join"
-            className="card mb-8 flex items-center justify-between gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
+            className="card mt-6 flex items-center justify-between gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
           >
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-red-soft text-brand-red-ink">
@@ -147,136 +235,99 @@ export default function PulsePage() {
           </Link>
         )}
 
-        {loading ? (
-          <SkeletonOpportunityGrid count={6} />
-        ) : isEmpty ? (
-          <EmptyState
-            icon="play"
-            title="Nothing here yet."
-            description="Keep exploring — updates, stories and opportunities land here as they happen."
-            ctaLabel="Explore FIELD"
-            ctaHref="/field"
-          />
-        ) : (
-          <>
-            {filter === "all" && posts.length > 0 && (
-              <div className="mb-10">
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <p className="eyebrow">The feed</p>
-                    <h2 className="font-display mt-1 text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
-                      News &amp; stories
-                    </h2>
-                  </div>
-                  <p className="text-xs font-bold text-ink-500">
-                    {posts.length} post{posts.length === 1 ? "" : "s"}
-                  </p>
-                </div>
-                <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {posts.map((post) => (
-                    <PulsePostCard key={post.id} post={post} onSelect={setSelectedPostId} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {opportunities.length > 0 && categoryOptions.length > 1 && (
-              <div className="mb-8 flex flex-wrap items-center gap-2">
-                <span className="sr-only" id="pulse-filter-label">
-                  Filter PULSE content
-                </span>
-                <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
-                {categoryOptions.map((category) => (
-                  <FilterChip
-                    key={category}
-                    label={capitalise(category)}
-                    active={filter === category}
-                    onClick={() => setFilter(category)}
-                  />
-                ))}
-                {videos.length > 0 && (
-                  <FilterChip
-                    label="Campus stories"
-                    active={filter === CAMPUS_FILTER}
-                    onClick={() => setFilter(CAMPUS_FILTER)}
-                  />
-                )}
-              </div>
-            )}
-
-            {filter === "all" && featured.length > 0 && (
-              <div className="mb-10">
-                <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
-                  Featured
-                </h2>
-                <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                  {featured.map((item) => (
-                    <FeaturedCard key={item.id} item={item} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {filter !== CAMPUS_FILTER && (latest.length > 0 || showLatestEmptyState) && (
-              <div>
-                <div className="flex items-end justify-between gap-3">
-                  <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
-                    {filter === "all" ? "Latest" : capitalise(filter)}
-                  </h2>
-                  {latest.length > 0 && (
-                    <p className="text-xs font-bold text-ink-500">{latest.length} live</p>
-                  )}
-                </div>
-
-                {latest.length > 0 ? (
-                  <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {latest.map((item) => (
-                      <OpportunityCard key={item.id} item={item} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-4">
-                    <EmptyState
-                      icon="play"
-                      title="Nothing here yet."
-                      description="Keep exploring — new updates land here first."
-                      ctaLabel="Explore FIELD"
-                      ctaHref="/field"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {campusItems.length > 0 && (
-              <div className="mt-10">
-                <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
-                  From campus
-                </h2>
-                <p className="mt-1 text-sm text-ink-500">
-                  Student stories, tours and interviews published by the JAVLIN campus crew.
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {campusItems.map((video) => (
-                    <CampusCard key={video.id} video={video} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        <div className="mt-6 rounded-2xl border border-surface-border bg-white px-5 py-4 text-center">
+          <p className="text-sm font-semibold text-ink-600">
+            Have news about your campus?{" "}
+            <a href={NEWS_DESK_MAILTO} className="font-extrabold text-brand-blue hover:underline">
+              Mail us
+            </a>
+            .
+          </p>
+        </div>
       </section>
 
-      {selectedPost && (
-        <PulsePostDetail post={selectedPost} onClose={() => setSelectedPostId(null)} />
-      )}
+      {selectedPost && <PulsePostDetail post={selectedPost} onClose={() => setSelectedPostId(null)} />}
     </PageShell>
+  );
+}
+
+/** The lead slot: the newest published story, set apart from everything below. */
+function LeadStory({ post, onSelect }: { post: PulsePostRecord | null; onSelect: (id: string) => void }) {
+  if (!post) return null;
+  const externalUrl = sanitizeExternalUrl(post.externalUrl);
+
+  return (
+    <article className="card flex h-full min-w-0 flex-col overflow-hidden">
+      {post.imageUrl ? (
+        <button
+          type="button"
+          onClick={() => onSelect(post.id)}
+          className="block h-48 w-full cursor-pointer bg-surface-soft sm:h-64"
+        >
+          <img
+            src={post.imageUrl}
+            alt={`${post.title} cover`}
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        </button>
+      ) : null}
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+          <span className="rounded-md bg-brand-blue-soft px-2 py-0.5 text-brand-blue">
+            {categoryLabel(post.category)}
+          </span>
+          {externalUrl && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-brand-red-soft px-2 py-0.5 text-brand-red-ink">
+              <Icon name="external" className="h-3 w-3" /> External source
+            </span>
+          )}
+          <span className="font-bold text-ink-500">{agoLabel(post.publishedAt ?? post.createdAt)}</span>
+        </div>
+        <h2 className="font-display mt-3 text-2xl font-extrabold leading-tight tracking-tight text-ink-900 sm:text-3xl">
+          {post.title}
+        </h2>
+        {post.summary && (
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-600 sm:text-base">{post.summary}</p>
+        )}
+        <button
+          type="button"
+          onClick={() => onSelect(post.id)}
+          className="btn-primary mt-4 min-h-[44px] self-start px-4 text-sm"
+        >
+          Read the story <Icon name="arrow" className="h-4 w-4" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function TopStories({ posts, onSelect }: { posts: PulsePostRecord[]; onSelect: (id: string) => void }) {
+  return (
+    <div className="min-w-0">
+      <h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">Top stories</h2>
+      <ul className="mt-3 space-y-2.5">
+        {posts.map((post) => (
+          <li key={post.id}>
+            <button
+              type="button"
+              onClick={() => onSelect(post.id)}
+              className="w-full rounded-xl border border-surface-border bg-white p-3 text-left transition-colors hover:border-brand-blue/40 hover:bg-brand-blue-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+            >
+              <p className="line-clamp-2 text-sm font-extrabold leading-snug text-ink-900">{post.title}</p>
+              <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-ink-500">
+                {categoryLabel(post.category)} · {agoLabel(post.publishedAt ?? post.createdAt)}
+              </p>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
 function PulsePostCard({ post, onSelect }: { post: PulsePostRecord; onSelect: (id: string) => void }) {
   const externalUrl = sanitizeExternalUrl(post.externalUrl);
-  const posted = postedLabel(post.publishedAt ?? post.createdAt);
 
   return (
     <article className="card flex h-full min-w-0 flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
@@ -305,7 +356,7 @@ function PulsePostCard({ post, onSelect }: { post: PulsePostRecord; onSelect: (i
               <Icon name="external" className="h-3 w-3" /> External source
             </span>
           )}
-          {posted && <span className="font-bold text-ink-500">{posted}</span>}
+          <span className="font-bold text-ink-500">{agoLabel(post.publishedAt ?? post.createdAt)}</span>
         </div>
         <h3 className="font-display mt-3 text-lg font-extrabold leading-snug tracking-tight text-ink-900">
           {post.title}
@@ -357,9 +408,7 @@ function PulsePostDetail({ post, onClose }: { post: PulsePostRecord; onClose: ()
               <h2 className="font-display mt-3 text-2xl font-extrabold tracking-tight text-ink-900">
                 {post.title}
               </h2>
-              {post.summary && (
-                <p className="mt-1 text-base font-semibold text-ink-600">{post.summary}</p>
-              )}
+              {post.summary && <p className="mt-1 text-base font-semibold text-ink-600">{post.summary}</p>}
             </div>
             <button
               onClick={onClose}
@@ -371,9 +420,7 @@ function PulsePostDetail({ post, onClose }: { post: PulsePostRecord; onClose: ()
           </div>
 
           {post.content && (
-            <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-ink-600">
-              {post.content}
-            </p>
+            <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-ink-600">{post.content}</p>
           )}
 
           {externalUrl && (
@@ -406,93 +453,5 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
     >
       {label}
     </button>
-  );
-}
-
-function FeaturedCard({ item }: { item: OpportunityRecord }) {
-  const cover = item.imageUrl;
-  const posted = postedLabel(item.createdAt);
-  const href = opportunityHref(item.id);
-
-  return (
-    <article className="card flex h-full min-w-0 flex-col overflow-hidden">
-      {cover ? (
-        <Link href={href} className="block h-36 w-full bg-surface-soft">
-          <img
-            src={cover}
-            alt={`${item.title} cover`}
-            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-          />
-        </Link>
-      ) : null}
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-widest">
-          <span className="rounded-md bg-brand-red-soft px-2 py-0.5 text-brand-red-ink">Featured</span>
-          <span className="rounded-md bg-brand-blue-soft px-2 py-0.5 text-brand-blue">{capitalise(item.category)}</span>
-          {posted && <span className="font-bold text-ink-500">{posted}</span>}
-        </div>
-        <h3 className="font-display mt-3 text-lg font-extrabold leading-snug tracking-tight text-ink-900">
-          {item.title}
-        </h3>
-        <p className="mt-1 text-xs font-bold text-ink-600">{item.organization}</p>
-        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-500">{item.description}</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={href} className="btn-primary min-h-[44px] px-4 text-sm">
-            Read More <Icon name="arrow" className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function CampusCard({ video }: { video: VideoRecord }) {
-  const safeLink = sanitizeYouTubeUrl(video.youtubeUrl) || sanitizeExternalUrl(video.youtubeUrl);
-  const thumb = getYouTubeThumbnailUrl(video.youtubeUrl, video.thumbnail);
-  const posted = video.publishedAt ? postedLabel(video.publishedAt) : "";
-
-  const body = (
-    <>
-      <div className="relative h-28 w-full overflow-hidden bg-brand-navy">
-        {thumb ? (
-          <img src={thumb} alt={`${video.title} thumbnail`} className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-brand-blue-soft">
-            <Icon name="play" className="h-6 w-6" />
-          </div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-widest text-brand-blue">
-          <span>{capitalise(video.category.replace(/_/g, " "))}</span>
-          {posted && <span className="font-bold text-ink-500">{posted}</span>}
-        </div>
-        <h3 className="mt-2 line-clamp-2 text-sm font-extrabold leading-snug text-ink-900">{video.title}</h3>
-        <p className="mt-1 line-clamp-1 text-xs font-semibold text-ink-500">{video.college || "JAVLIN campus crew"}</p>
-        {video.description && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-ink-500">{video.description}</p>}
-        <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-brand-blue">
-          Read More <Icon name="arrow" className="h-3.5 w-3.5" />
-        </span>
-      </div>
-    </>
-  );
-
-  if (!safeLink) {
-    return (
-      <article className="card flex h-full min-w-0 flex-col overflow-hidden">
-        {body}
-      </article>
-    );
-  }
-
-  return (
-    <a
-      href={safeLink}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="card flex h-full min-w-0 flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
-    >
-      {body}
-    </a>
   );
 }

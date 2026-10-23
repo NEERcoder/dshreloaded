@@ -6,58 +6,24 @@ import { Link } from "../lib/router";
 import { type OpportunityCategoryParam } from "../lib/opportunityRoute";
 import type { OpportunityRecord } from "../lib/dataAccess";
 
-type CategoryFilter = {
+type CategoryLink = {
   param: OpportunityCategoryParam;
   label: string;
-  category: OpportunityRecord["category"];
   icon: string;
   /** Supplied artwork; wins over `icon` when present. */
   feature?: FeatureIconName;
-  eyebrow: string;
-  title: string;
-  subtitle: string;
 };
 
-const CATEGORY_FILTERS: CategoryFilter[] = [
-  {
-    param: "internships",
-    label: "Internships",
-    category: "internship",
-    icon: "briefcase",
-    feature: "internship",
-    eyebrow: "INTERNSHIPS",
-    title: "Find experience worth applying for.",
-    subtitle: "Verified industry and startup roles for students across India.",
-  },
-  {
-    param: "competitions",
-    label: "Competitions",
-    category: "competition",
-    icon: "trophy",
-    feature: "competition",
-    eyebrow: "COMPETITIONS",
-    title: "Put your skills to work.",
-    subtitle: "National contests, hackathons, and challenges worth winning.",
-  },
-  {
-    param: "research",
-    label: "Research",
-    category: "research",
-    icon: "flask",
-    eyebrow: "RESEARCH",
-    title: "Find opportunities to learn and contribute.",
-    subtitle: "Faculty laboratory attachments, funded fellowships, and academic projects.",
-  },
-  {
-    param: "certifications",
-    label: "Certifications",
-    category: "certification",
-    icon: "award",
-    feature: "certification",
-    eyebrow: "CERTIFICATIONS",
-    title: "Build skills that strengthen your next application.",
-    subtitle: "Verified credentials recognized across academia and industry.",
-  },
+/**
+ * The four category destinations. Each is a page of its own now — heading, rail
+ * and card layout to its own wireframe — so this index only has to say what the
+ * whole feed holds and hand the reader to the right one.
+ */
+const CATEGORY_LINKS: CategoryLink[] = [
+  { param: "internships", label: "Internships", icon: "briefcase", feature: "internship" },
+  { param: "competitions", label: "Competitions", icon: "trophy", feature: "competition" },
+  { param: "research", label: "Research", icon: "flask" },
+  { param: "certifications", label: "Certifications", icon: "award", feature: "certification" },
 ];
 
 const ALL_CATEGORIES: OpportunityRecord["category"][] = [
@@ -70,19 +36,10 @@ const ALL_CATEGORIES: OpportunityRecord["category"][] = [
   "scholarship",
 ];
 
-const DEFAULT_VOICE = {
-  eyebrow: "OPPORTUNITY RADAR",
-  title: "Find Things Worth Applying For.",
-  subtitle: "Verified internships, hackathons, research fellowships, and credentials for students.",
-};
-
-export default function OpportunitiesPage({ categoryId }: { categoryId?: string }) {
-  const activeFilter = CATEGORY_FILTERS.find((filter) => filter.param === categoryId);
-  const voice = activeFilter ?? DEFAULT_VOICE;
-
+export default function OpportunitiesPage() {
   return (
     <PageShell
-      title={activeFilter ? `${activeFilter.label} | Opportunity Radar | JAVLIN` : "Find Opportunities | JAVLIN"}
+      title="Find Opportunities | JAVLIN"
       description="Find verified internships, hackathons, research fellowships and certifications for students across India."
       backgroundPreset="opportunities"
     >
@@ -91,26 +48,24 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
       <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-6 pb-6 sm:pt-12 sm:pb-10">
         <div className="container-px max-w-7xl mx-auto">
           <div className="max-w-3xl">
-            <p className="eyebrow">{voice.eyebrow}</p>
+            <p className="eyebrow">OPPORTUNITY RADAR</p>
             <h1 className="page-title font-display mt-2 sm:mt-3">
-              {voice.title}
+              Find Things Worth Applying For.
             </h1>
             <p className="mt-3 text-[15px] sm:text-lg leading-relaxed text-ink-600 font-medium sm:mt-4">
-              {voice.subtitle}
+              Verified internships, hackathons, research fellowships, and credentials for students.
             </p>
           </div>
 
-          {/* CATEGORY FILTERS — each is a canonical /opportunities/:categoryId route */}
+          {/* CATEGORY LINKS — each is a canonical /opportunities/:categoryId route */}
           <nav aria-label="Opportunity categories" className="mt-5 -mx-4 overflow-x-auto no-scrollbar px-4 sm:mx-0 sm:mt-7 sm:px-0">
             <div className="flex w-max sm:flex-wrap sm:w-auto gap-2">
-              <CategoryChip label="All listings" icon="grid" active={!activeFilter} href="/opportunities" />
-              {CATEGORY_FILTERS.map((filter) => (
+              {CATEGORY_LINKS.map((filter) => (
                 <CategoryChip
                   key={filter.param}
                   label={filter.label}
                   icon={filter.icon}
                   feature={filter.feature}
-                  active={activeFilter?.param === filter.param}
                   href={`/opportunities/${filter.param}`}
                 />
               ))}
@@ -122,7 +77,7 @@ export default function OpportunitiesPage({ categoryId }: { categoryId?: string 
       <section id="radar-feed" className="py-6 sm:py-14">
         <div className="container-px max-w-7xl mx-auto">
           <OpportunityBrowser
-            categories={activeFilter ? [activeFilter.category] : ALL_CATEGORIES}
+            categories={ALL_CATEGORIES}
             searchPlaceholder="Search by role, company, skills, or department…"
             emptyTitle="No listings on the radar yet"
             emptyDescription="Verified openings show up here as soon as they are published."
@@ -140,23 +95,16 @@ function CategoryChip({
   icon,
   feature,
   href,
-  active,
 }: {
   label: string;
   icon: string;
   feature?: FeatureIconName;
   href: string;
-  active: boolean;
 }) {
   return (
     <Link
       href={href}
-      aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[44px] ${
-        active
-          ? "bg-brand-blue text-white shadow-soft"
-          : "bg-white text-ink-600 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
-      }`}
+      className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 min-h-[44px] bg-white text-ink-600 border border-surface-border hover:text-brand-blue hover:border-brand-blue/40"
     >
       {feature ? <FeatureIcon name={feature} className="h-3.5 w-3.5" /> : <Icon name={icon} className="h-3.5 w-3.5" />}
       {label}

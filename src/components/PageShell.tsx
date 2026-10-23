@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 import Footer from "./Footer";
+import SectionTabs from "./SectionTabs";
 import type { BackgroundPreset } from "./InteractiveDotGrid";
 import Navbar from "./Navbar";
+import { useLocation } from "../lib/router";
+import { isSectionTabPath } from "../lib/sidebarNav";
 
 type PageShellProps = {
   children: ReactNode;
@@ -40,6 +43,11 @@ function updateMeta(name: string, content: string, attribute = "name") {
 
 export default function PageShell({ children, title, description }: PageShellProps) {
   const inShell = useInSectionShell();
+  const { path } = useLocation();
+  // The eight section pages carry the tab row. Whichever layout is drawing the
+  // page also draws the row, and the row takes the fixed-navbar clearance with
+  // it — so a page never stacks two clearances and never loses the one it needs.
+  const showsTabs = isSectionTabPath(path);
 
   useEffect(() => {
     document.title = title;
@@ -67,15 +75,17 @@ export default function PageShell({ children, title, description }: PageShellPro
   if (inShell) {
     // The shell already supplies the canvas, the navbar and the footer, and it
     // owns the single <main>. Only the fixed-navbar clearance stays here so the
-    // page never sits underneath the top bar.
-    return <div className="pt-16 sm:pt-20">{children}</div>;
+    // page never sits underneath the top bar — and when the shell drew the tab
+    // row above this content, that row already carries the clearance.
+    return <div className={showsTabs ? "" : "pt-16 sm:pt-20"}>{children}</div>;
   }
 
   return (
     <div className="page-canvas relative min-h-screen isolate">
       <div className="relative z-10">
         <Navbar />
-        <main className="pt-16 sm:pt-20">{children}</main>
+        {showsTabs ? <SectionTabs /> : null}
+        <main className={showsTabs ? "" : "pt-16 sm:pt-20"}>{children}</main>
         <Footer />
       </div>
     </div>

@@ -28,6 +28,13 @@ export type OpportunityFilters = {
   locations: string[];
   /** Single-select. Derived from the free-text `stipend`, so it is a heuristic. */
   compensation: CompensationChoice;
+  /**
+   * Only offered when at least one listing here reads as remote — see
+   * `isRemoteListing`, which is a reading of free text, not a stored fact.
+   */
+  remoteOnly: boolean;
+  /** Reads the real `featured` column, so it is a fact rather than a heuristic. */
+  featuredOnly: boolean;
   sort: OpportunitySortKey;
 };
 
@@ -38,6 +45,8 @@ export const DEFAULT_FILTERS: OpportunityFilters = {
   courses: [],
   locations: [],
   compensation: "",
+  remoteOnly: false,
+  featuredOnly: false,
   sort: "featured",
 };
 
@@ -49,6 +58,8 @@ export const PERSISTED_FILTER_KEYS = [
   "courses",
   "locations",
   "compensation",
+  "remoteOnly",
+  "featuredOnly",
   "sort",
 ] as const;
 
@@ -58,6 +69,9 @@ export type FilterOptions = {
   fields: string[];
   courses: string[];
   locations: string[];
+  /** Capability flags: whether a section's own rows can back these two toggles. */
+  remote: boolean;
+  featured: boolean;
 };
 
 export const EMPTY_FILTER_OPTIONS: FilterOptions = {
@@ -66,6 +80,8 @@ export const EMPTY_FILTER_OPTIONS: FilterOptions = {
   fields: [],
   courses: [],
   locations: [],
+  remote: false,
+  featured: false,
 };
 
 /** Cap on a facet's stored values, so a corrupt blob cannot grow unbounded. */
@@ -90,6 +106,8 @@ export function deriveFilterOptions(items: OpportunityRecord[]): FilterOptions {
     fields: sortedUnique(items.map((item) => item.field)),
     courses: sortedUnique(items.flatMap((item) => item.eligibleCourses)),
     locations: sortedUnique(items.map((item) => item.location)),
+    remote: items.some((item) => isRemoteListing(item)),
+    featured: items.some((item) => item.featured),
   };
 }
 
@@ -136,6 +154,11 @@ export function sanitizeFilters(raw: unknown, options: FilterOptions): SanitizeR
       source.compensation,
       ["paid", "unpaid", "unstated"]
     ) || "") as CompensationChoice,
+    // Both toggles are only honoured when this section's own rows can back them,
+    // exactly like `stream` waits for its column. A stored `true` from Internships
+    // must not silently narrow a feed that cannot show the control.
+    remoteOnly: options.remote && source.remoteOnly === true,
+    featuredOnly: options.featured && source.featuredOnly === true,
     sort: sortValue || DEFAULT_FILTERS.sort,
   };
 
@@ -146,8 +169,11 @@ export function sanitizeFilters(raw: unknown, options: FilterOptions): SanitizeR
   const dropped = (["stream", "modes", "fields", "courses", "locations", "compensation"] as const).some(
     (key) => rawPresent(source[key]) && isEmptyValue(filters[key])
   );
+  const droppedToggle =
+    (source.remoteOnly === true && !filters.remoteOnly) ||
+    (source.featuredOnly === true && !filters.featuredOnly);
 
-  return { filters, dropped };
+  return { filters, dropped: dropped || droppedToggle };
 }
 
 function rawPresent(value: unknown): boolean {
@@ -197,6 +223,12 @@ export function validateStoredPayload(raw: unknown): Record<string, unknown> {
   const compensation = oneOf<CompensationChoice>(source.compensation, ["paid", "unpaid", "unstated"]);
   if (compensation) valid.compensation = compensation;
 
+  // Only `true` is storable — a `false` means "off", which is the same as absent
+  // and would otherwise keep a key alive that no section can read.
+  for (const toggle of ["remoteOnly", "featuredOnly"] as const) {
+    if (source[toggle] === true) valid[toggle] = true;
+  }
+
   const sort = oneOf<OpportunitySortKey>(
     source.sort,
     Object.keys(OPPORTUNITY_SORT_LABELS) as OpportunitySortKey[]
@@ -220,6 +252,8 @@ export function manageableKeys(options: FilterOptions, streamEnabled: boolean): 
   for (const facet of ["modes", "fields", "courses", "locations"] as const) {
     if (options[facet].length > 0) managed.push(facet);
   }
+  if (options.remote) managed.push("remoteOnly");
+  if (options.featured) managed.push("featuredOnly");
   return managed;
 }
 
@@ -249,7 +283,15 @@ const FACET_LABELS: Record<"modes" | "fields" | "courses" | "locations", string>
  * shown as a removable token. Sort is not a filter and is never listed.
  */
 export type ActiveFilterChip = {
-  key: "stream" | "modes" | "fields" | "courses" | "locations" | "compensation";
+  key:
+    | "stream"
+    | "modes"
+    | "fields"
+    | "courses"
+    | "locations"
+    | "compensation"
+    | "remoteOnly"
+    | "featuredOnly";
   /** The value inside a multi-select facet; null for the single-select ones. */
   value: string | null;
   label: string;
@@ -263,6 +305,10 @@ export function activeFilterChips(filters: OpportunityFilters): ActiveFilterChip
   }
   const pay = COMPENSATION_CHOICES.find((choice) => choice.value === filters.compensation);
   if (pay) chips.push({ key: "compensation", value: null, label: `Pay: ${pay.chipLabel}` });
+  // Both toggles get a chip even where the control is off-screen, so a stored
+  // choice can never narrow the feed invisibly.
+  if (filters.remoteOnly) chips.push({ key: "remoteOnly", value: null, label: "Remote only" });
+  if (filters.featuredOnly) chips.push({ key: "featuredOnly", value: null, label: "Featured only" });
   return chips;
 }
 
@@ -271,6 +317,8 @@ export function activeFilterChips(filters: OpportunityFilters): ActiveFilterChip
  * controls so removing a value is the same operation everywhere.
  */
 export function filtersWithoutChip(filters: OpportunityFilters, chip: ActiveFilterChip): OpportunityFilters {
+  if (chip.key === "remoteOnly") return { ...filters, remoteOnly: false };
+  if (chip.key === "featuredOnly") return { ...filters, featuredOnly: false };
   if (chip.value === null) {
     return chip.key === "stream"
       ? { ...filters, stream: "" }
@@ -293,7 +341,9 @@ export function countActiveFilters(filters: OpportunityFilters): number {
     filters.fields.length +
     filters.courses.length +
     filters.locations.length +
-    (filters.compensation ? 1 : 0)
+    (filters.compensation ? 1 : 0) +
+    (filters.remoteOnly ? 1 : 0) +
+    (filters.featuredOnly ? 1 : 0)
   );
 }
 
@@ -328,6 +378,25 @@ export function compensationState(stipend: string | null | undefined): Compensat
   if (UNPAID_PATTERN.test(text)) return "unpaid";
   if (PAID_PATTERN.test(text)) return "paid";
   return "unstated";
+}
+
+/**
+ * Read `mode` and `location` honestly as "remote" or not.
+ *
+ * There is no `is_remote` column, so this is a reading of what an admin typed.
+ * On-site wording wins: "Hybrid", "On-site" or "at the office" is not remote no
+ * matter what else the text says, because a listing that puts students in a room
+ * must never appear under a Remote-only filter. Only after that does explicit
+ * remote wording count. A blank says nothing, so it is not remote either.
+ */
+const ONSITE_PATTERN = /\bon-?site\b|\bin-?person\b|\bhybrid\b|\bface[- ]to[- ]face\b|\bat\s+(?:the\s+)?(?:office|campus|site)\b/i;
+const REMOTE_PATTERN = /\bremote\b|\bwork(?:ing)?\s+from\s+home\b|\bwfh\b|\bonline\b|\bvirtual\b/i;
+
+export function isRemoteListing(item: OpportunityRecord): boolean {
+  const text = `${item.mode ?? ""} ${item.location ?? ""}`.trim();
+  if (!text) return false;
+  if (ONSITE_PATTERN.test(text)) return false;
+  return REMOTE_PATTERN.test(text);
 }
 
 function deadlineTime(value: string | null): number | null {
@@ -394,6 +463,8 @@ export function applyOpportunityFilters(
       return false;
     if (filters.locations.length && !filters.locations.includes(item.location ?? "")) return false;
     if (filters.compensation && compensationState(item.stipend) !== filters.compensation) return false;
+    if (filters.remoteOnly && !isRemoteListing(item)) return false;
+    if (filters.featuredOnly && !item.featured) return false;
     return true;
   });
 

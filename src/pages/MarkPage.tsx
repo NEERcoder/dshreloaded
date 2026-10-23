@@ -9,6 +9,7 @@ import {
   yearLabel,
 } from "../components/circle/StudentCard";
 import { Link } from "../lib/router";
+import { profileCompletion } from "../lib/profileCompletion";
 import { useAuth } from "../context/AuthContext";
 import {
   STUDENT_RECORD_CATEGORIES,
@@ -140,17 +141,11 @@ export default function MarkPage() {
 
   const tier = useMemo(() => resolveTier(participations.length), [participations.length]);
 
-  // Completion only from columns public.profiles actually has.
-  const profileFieldCount = useMemo(() => {
-    if (!profile) return 0;
-    return [
-      Boolean(profile.fullName.trim()),
-      Boolean(college),
-      Boolean(profile.course.trim()),
-      profile.yearOfStudy > 0,
-      profile.graduationYear > 0,
-    ].filter(Boolean).length;
-  }, [profile, college]);
+  // Completion comes from `lib/profileCompletion` — the same rule CIRCLE's
+  // presence card reads, so the two pages can never disagree.
+  const completion = useMemo(() => profileCompletion(profile, Boolean(college)), [profile, college]);
+  const profileFieldCount = completion.filled;
+  const profileFieldsTotal = completion.total;
 
   const publicRecordCount = useMemo(
     () => records.filter((record) => record.isPublic).length,
@@ -372,11 +367,11 @@ export default function MarkPage() {
             <div className="mt-6 border-t border-surface-border pt-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">
-                  {profileFieldCount === 5 ? "Profile complete" : "Profile fields on file"}
+                  {profileFieldCount === profileFieldsTotal ? "Profile complete" : "Profile fields on file"}
                 </p>
-                {profileFieldCount < 5 && (
+                {profileFieldCount < profileFieldsTotal && (
                   <p className="text-[11px] font-bold text-brand-red-ink">
-                    {5 - profileFieldCount} of 5 still empty
+                    {profileFieldsTotal - profileFieldCount} of {profileFieldsTotal} still empty
                   </p>
                 )}
               </div>
@@ -390,7 +385,7 @@ export default function MarkPage() {
               >
                 <div
                   className="h-full rounded-full bg-brand-blue transition-all duration-300"
-                  style={{ width: `${(profileFieldCount / 5) * 100}%` }}
+                  style={{ width: `${(profileFieldCount / profileFieldsTotal) * 100}%` }}
                 />
               </div>
             </div>
@@ -774,7 +769,7 @@ export default function MarkPage() {
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <dt className="font-semibold text-ink-500">Profile fields</dt>
-                    <dd className="font-extrabold text-ink-900">{profile ? `${profileFieldCount} / 5` : "0 / 5"}</dd>
+                    <dd className="font-extrabold text-ink-900">{profile ? `${profileFieldCount} / ${profileFieldsTotal}` : `0 / ${profileFieldsTotal}`}</dd>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <dt className="font-semibold text-ink-500">Records you added</dt>

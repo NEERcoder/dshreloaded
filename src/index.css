@@ -91,6 +91,36 @@
   }
 
   /* ------------------------------------------------------------
+     SECTION TABS — the eight-page row under the top taskbar.
+
+     The bar is full-bleed so its hairline reads as the edge of the chrome;
+     only the inner container is inset. It tracks the shell's own content
+     width (1400px / 1.5rem gutters at lg) rather than the 1280px article
+     container, so the first tab lines up with the rail and page beneath it.
+     ------------------------------------------------------------ */
+  .section-tabs-bar {
+    background: rgba(255, 255, 255, 0.72);
+  }
+  /* The rail is fixed under the navbar, so on a page that also has the tab row
+     it has to start below it: navbar (5rem at lg) + the row's 3.5rem band + its
+     1px hairline. Declared as one value here so the rail and the row cannot
+     drift apart. */
+  .shell-section-tabs {
+    --rail-top: calc(5rem + 3.5rem + 1px);
+  }
+  .section-tabs {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1400px;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .section-tabs {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /* ------------------------------------------------------------
      BUTTONS — three visible ranks. Primary is a solid blue block
      with a glow, secondary a white body with a real border,
      tertiary a quiet text action that still reads as a control.
@@ -1583,6 +1613,405 @@
     .filter-bar > label {
       flex-basis: 100%;
     }
+  }
+
+  /* ------------------------------------------------------------
+     DISCOVERY FEED — the eight-tab section pages.
+
+     The wireframes put the count and the posting CTA on one line, a chip
+     row under them, and then a narrow left rail beside the listings. The
+     rail is a column only from `lg`: inside the desktop shell the fixed
+     sidebar already owns the left gutter, so below `lg` the rail drops
+     above the feed as a full-width panel instead of squeezing the cards.
+     ------------------------------------------------------------ */
+  .feed-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+  }
+  .feed-count {
+    font-family: "Playfair Display", ui-serif, Georgia, serif;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--javlin-navy, #071a33);
+  }
+  @media (min-width: 640px) {
+    .feed-count {
+      font-size: 1.875rem;
+    }
+  }
+
+  /* The posting CTA with its two tabs, per the reference header. */
+  .post-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    flex: none;
+  }
+  .post-cta__tab {
+    border: 1px solid var(--javlin-border);
+    border-radius: 0.5rem;
+    background: #fff;
+    padding: 0.1rem 0.6rem;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--javlin-text-secondary);
+  }
+  .post-cta__button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(23, 105, 255, 0.35);
+    background: var(--javlin-light-blue, #e6eeff);
+    padding: 0.5rem 1.1rem;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f53d6;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .post-cta__button:hover {
+    background: #d8e5ff;
+    border-color: rgba(23, 105, 255, 0.6);
+  }
+
+  .feed-layout {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .feed-layout {
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+    .feed-layout--wide {
+      grid-template-columns: 216px minmax(0, 1fr);
+    }
+  }
+
+  /* Quick chips: the reference's pill row above the feed. */
+  .chip-toggle {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 999px;
+    border: 1px solid var(--javlin-border);
+    background: #fff;
+    padding: 0.3rem 0.85rem;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--javlin-text-secondary);
+    white-space: nowrap;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+  .chip-toggle:hover {
+    border-color: rgba(23, 105, 255, 0.45);
+    color: #0f53d6;
+  }
+  .chip-toggle.is-on {
+    background: var(--javlin-light-blue, #e6eeff);
+    border-color: rgba(23, 105, 255, 0.55);
+    color: #0f53d6;
+  }
+
+  /* Left rail — Location, and the same shell for the Filters pane. */
+  .location-rail {
+    border: 1px solid var(--javlin-border);
+    border-radius: 1rem;
+    background: #fff;
+    padding: 0.85rem;
+  }
+  @media (min-width: 1024px) {
+    .location-rail {
+      position: sticky;
+      top: var(--rail-top, 5rem);
+      border: 0;
+      border-right: 1px solid var(--javlin-border);
+      border-radius: 0;
+      background: transparent;
+      padding: 0 1rem 0 0;
+    }
+  }
+  .rail-title {
+    font-family: "Playfair Display", ui-serif, Georgia, serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--javlin-navy, #071a33);
+  }
+  .rail-subtitle {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--javlin-text-secondary);
+  }
+  .rail-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--javlin-border);
+    background: #fff;
+    padding: 0.5rem 0.75rem;
+    font-size: 13px;
+    color: var(--javlin-text-primary);
+  }
+  .rail-input:focus {
+    outline: none;
+    border-color: var(--javlin-blue);
+    box-shadow: 0 0 0 3px rgba(23, 105, 255, 0.14);
+  }
+  .rail-switch {
+    display: flex;
+    min-height: 44px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--javlin-border);
+    background: #fff;
+    padding: 0.5rem 0.7rem;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--javlin-text-secondary);
+  }
+  .rail-switch.is-on {
+    border-color: rgba(23, 105, 255, 0.55);
+    background: var(--javlin-light-blue, #e6eeff);
+    color: #0f53d6;
+  }
+  .rail-switch__track {
+    display: inline-flex;
+    height: 20px;
+    width: 36px;
+    flex: none;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--javlin-border);
+    background: var(--javlin-hover-surface);
+    padding: 2px;
+    transition: background-color 0.18s ease, border-color 0.18s ease;
+  }
+  .rail-switch.is-on .rail-switch__track {
+    background: var(--javlin-blue);
+    border-color: var(--javlin-blue);
+  }
+  .rail-switch__knob {
+    height: 14px;
+    width: 14px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(7, 26, 51, 0.28);
+    transition: transform 0.18s ease;
+  }
+  .rail-switch.is-on .rail-switch__knob {
+    transform: translateX(16px);
+  }
+  .rail-city {
+    display: flex;
+    min-height: 40px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--javlin-border);
+    background: #fff;
+    padding: 0.35rem 0.8rem;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--javlin-text-secondary);
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+  .rail-city:hover {
+    border-color: rgba(23, 105, 255, 0.45);
+    color: #0f53d6;
+  }
+  .rail-city.is-on {
+    background: var(--javlin-light-blue, #e6eeff);
+    border-color: rgba(23, 105, 255, 0.55);
+    color: #0f53d6;
+  }
+  .rail-city__count {
+    flex: none;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--javlin-text-muted, #94a3b8);
+  }
+  .rail-city.is-on .rail-city__count {
+    color: #0f53d6;
+  }
+  .rail-more {
+    margin-top: 0.6rem;
+    min-height: 40px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #0f53d6;
+    text-align: left;
+  }
+  .rail-more:hover {
+    text-decoration: underline;
+  }
+
+  /* Keyword rail — the reference's auto-scrolling role / research-area strip. */
+  .kw-rail {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+  }
+  .kw-rail__label {
+    flex: none;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--javlin-text-secondary);
+  }
+  .kw-rail__body {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 260px;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .kw-rail__strip {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    gap: 0.375rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 2px 0;
+  }
+  .kw-rail__arrow {
+    display: inline-flex;
+    height: 32px;
+    width: 32px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--javlin-border);
+    background: #fff;
+    color: var(--javlin-text-secondary);
+  }
+  .kw-rail__arrow:hover:not(:disabled) {
+    border-color: rgba(23, 105, 255, 0.5);
+    color: #0f53d6;
+  }
+  .kw-rail__arrow:disabled {
+    opacity: 0.4;
+  }
+  .kw-chip {
+    flex: none;
+    border-radius: 999px;
+    border: 1px solid var(--javlin-border);
+    background: var(--javlin-hover-surface);
+    padding: 0.3rem 0.75rem;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--javlin-text-secondary);
+  }
+  .kw-chip.is-on {
+    background: var(--javlin-light-blue, #e6eeff);
+    border-color: rgba(23, 105, 255, 0.55);
+    color: #0f53d6;
+  }
+
+  /* The internship card: five columns of one listing, wrapping as the feed
+     narrows rather than shrinking every column to nothing. */
+  .listing-wide {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .listing-panel {
+    min-width: 0;
+    flex: 1 1 132px;
+    border: 1px dashed var(--javlin-border);
+    border-radius: 0.85rem;
+    padding: 0.5rem 0.6rem;
+  }
+  .listing-panel__title {
+    margin-bottom: 0.35rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--javlin-text-secondary);
+  }
+  .lw-identity {
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 1024px) {
+    .listing-panel {
+      flex-basis: 128px;
+    }
+  }
+  /* The reference card is five columns in one row. Inside the approved shell —
+     taskbar, tab row and the fixed rail — the feed column is ~700px at 1280, so
+     the panels only hold their chips once they are allowed to be narrower. Below
+     this width the card wraps to two rows rather than squeezing a column to
+     nothing; the wireframe's own proportions return at 1440. */
+  @media (min-width: 1280px) {
+    .listing-panel {
+      flex-basis: 112px;
+    }
+  }
+
+  /* ------------------------------------------------------------
+     CIRCLE — the signed-in presence band: your profile on the left,
+     your MARK column on the right, exactly the three zones the
+     reference sheet draws (profile, suggestions below it, mark beside).
+     ------------------------------------------------------------ */
+  .circle-you {
+    display: grid;
+    gap: 1rem;
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .circle-you {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    }
+  }
+  .mark-figure {
+    font-family: "Playfair Display", ui-serif, Georgia, serif;
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--javlin-navy);
+  }
+  .headline-well {
+    border-radius: 0.85rem;
+    border: 1px dashed var(--javlin-border);
+    background: var(--javlin-hover-surface);
+    padding: 0.6rem 0.75rem;
+  }
+  .suggested-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    border: 1px solid var(--javlin-border);
+    border-radius: 1rem;
+    padding: 0.6rem;
   }
 }
 
