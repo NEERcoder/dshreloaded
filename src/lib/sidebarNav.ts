@@ -94,6 +94,17 @@ export function isSectionTabRoot(path: string): boolean {
 }
 
 /**
+ * The section pages whose feed is the page's only scrolling region. CIRCLE is
+ * the deliberate exception: its directory is a browsing surface that reads best
+ * as one long page, so it keeps the whole-page scroll and the footer that sits
+ * at the bottom of it. Derived from the tab list rather than written out, so a
+ * ninth tab cannot quietly join or leave the locked set.
+ */
+export function isFeedScrollRoot(path: string): boolean {
+  return isSectionTabRoot(path) && path !== "/circle";
+}
+
+/**
  * The routes the desktop rail can render inside its own shell. Derived from the
  * nav list above plus the section tabs, so a destination added once appears in
  * both places; the tabs are included because the row under the taskbar has to

@@ -2909,6 +2909,184 @@ export async function deleteStudentRecord(recordId: string): Promise<DataResult<
 }
 
 // ==========================================
+// MARK — SKILLS AND EXPERIENCE (migration 019)
+// ==========================================
+// `student_records` is the evidence trail and carries a ten-value category
+// CHECK; a skill and a job are neither, so they live in the two tables 019
+// adds. Until that migration is applied these calls fail with a message naming
+// the missing relation rather than pretending the write worked.
+export type StudentSkill = {
+  id: string;
+  userId: string;
+  name: string;
+  source: "self" | "verified";
+  isPublic: boolean;
+  position: number;
+  createdAt: string;
+};
+
+export type StudentSkillInput = {
+  name: string;
+  isPublic: boolean;
+};
+
+const STUDENT_SKILL_COLUMNS = "id, user_id, name, source, is_public, position, created_at";
+
+const mapStudentSkill = (row: Record<string, unknown>): StudentSkill => ({
+  id: String(row.id),
+  userId: String(row.user_id),
+  name: String(row.name ?? ""),
+  source: row.source === "verified" ? "verified" : "self",
+  isPublic: Boolean(row.is_public),
+  position: Number(row.position ?? 0),
+  createdAt: String(row.created_at ?? ""),
+});
+
+export async function getStudentSkills(userId: string): Promise<DataResult<StudentSkill[]>> {
+  if (!supabase) return remoteSuccess([]);
+  const { data, error } = await supabase
+    .from("student_skills")
+    .select(STUDENT_SKILL_COLUMNS)
+    .eq("user_id", userId)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error) return failure([], error);
+  return remoteSuccess((data ?? []).map((row) => mapStudentSkill(row as Record<string, unknown>)));
+}
+
+export async function createStudentSkill(
+  input: StudentSkillInput
+): Promise<DataResult<StudentSkill | null>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(null, new Error("You must be signed in to add a skill."));
+  if (!supabase) return failure(null, new Error("Supabase is not configured."));
+
+  const name = input.name.trim().replace(/\s+/g, " ");
+  if (!name) return failure(null, new Error("Give the skill a name."));
+  if (name.length > 60) return failure(null, new Error("Keep the skill name to 60 characters."));
+
+  const { data, error } = await supabase
+    .from("student_skills")
+    .insert({ user_id: userId, name, is_public: input.isPublic })
+    .select(STUDENT_SKILL_COLUMNS)
+    .single();
+  // The unique index is on (user_id, lower(name)), so a second "Python" is a
+  // constraint violation and not something to show the student as a stack trace.
+  if (error) {
+    if ((error as { code?: string }).code === "23505") {
+      return failure(null, new Error(`You already list ${name}.`));
+    }
+    return failure(null, error);
+  }
+  return remoteSuccess(mapStudentSkill(data as Record<string, unknown>));
+}
+
+export async function deleteStudentSkill(skillId: string): Promise<DataResult<boolean>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(false, new Error("You must be signed in to remove a skill."));
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+
+  const { error } = await supabase.from("student_skills").delete().eq("id", skillId).eq("user_id", userId);
+  if (error) return failure(false, error);
+  return remoteSuccess(true);
+}
+
+export type StudentExperience = {
+  id: string;
+  userId: string;
+  role: string;
+  organization: string;
+  period: string;
+  location: string;
+  description: string;
+  isCurrent: boolean;
+  isPublic: boolean;
+  position: number;
+  createdAt: string;
+};
+
+export type StudentExperienceInput = {
+  role: string;
+  organization: string;
+  period: string;
+  /** Optional: the column is nullable and the CIRCLE form does not ask for it. */
+  location?: string;
+  isPublic: boolean;
+};
+
+const STUDENT_EXPERIENCE_COLUMNS =
+  "id, user_id, role, organization, period, location, description, is_current, is_public, position, created_at";
+
+const mapStudentExperience = (row: Record<string, unknown>): StudentExperience => ({
+  id: String(row.id),
+  userId: String(row.user_id),
+  role: String(row.role ?? ""),
+  organization: String(row.organization ?? ""),
+  period: String(row.period ?? ""),
+  location: String(row.location ?? ""),
+  description: String(row.description ?? ""),
+  isCurrent: Boolean(row.is_current),
+  isPublic: Boolean(row.is_public),
+  position: Number(row.position ?? 0),
+  createdAt: String(row.created_at ?? ""),
+});
+
+export async function getStudentExperience(userId: string): Promise<DataResult<StudentExperience[]>> {
+  if (!supabase) return remoteSuccess([]);
+  const { data, error } = await supabase
+    .from("student_experience")
+    .select(STUDENT_EXPERIENCE_COLUMNS)
+    .eq("user_id", userId)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error) return failure([], error);
+  return remoteSuccess((data ?? []).map((row) => mapStudentExperience(row as Record<string, unknown>)));
+}
+
+export async function createStudentExperience(
+  input: StudentExperienceInput
+): Promise<DataResult<StudentExperience | null>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(null, new Error("You must be signed in to add experience."));
+  if (!supabase) return failure(null, new Error("Supabase is not configured."));
+
+  const role = input.role.trim().replace(/\s+/g, " ");
+  if (!role) return failure(null, new Error("Say what the role was."));
+  if (role.length > 120) return failure(null, new Error("Keep the role to 120 characters."));
+  const organization = input.organization.trim();
+  if (organization.length > 160) return failure(null, new Error("Keep the organisation to 160 characters."));
+
+  const { data, error } = await supabase
+    .from("student_experience")
+    .insert({
+      user_id: userId,
+      role,
+      organization,
+      period: input.period.trim() || null,
+      location: (input.location ?? "").trim() || null,
+      is_public: input.isPublic,
+    })
+    .select(STUDENT_EXPERIENCE_COLUMNS)
+    .single();
+  if (error) return failure(null, error);
+  return remoteSuccess(mapStudentExperience(data as Record<string, unknown>));
+}
+
+export async function deleteStudentExperience(experienceId: string): Promise<DataResult<boolean>> {
+  const userId = await requireSessionUserId();
+  if (!userId) return failure(false, new Error("You must be signed in to remove experience."));
+  if (!supabase) return failure(false, new Error("Supabase is not configured."));
+
+  const { error } = await supabase
+    .from("student_experience")
+    .delete()
+    .eq("id", experienceId)
+    .eq("user_id", userId);
+  if (error) return failure(false, error);
+  return remoteSuccess(true);
+}
+
+// ==========================================
 // PULSE POSTS (migration 009)
 // ==========================================
 export const PULSE_POST_CATEGORIES = [

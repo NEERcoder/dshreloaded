@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Icon from "../Icon";
 import { Link } from "../../lib/router";
 import { StudentAvatar, RECORD_CATEGORY_LABELS } from "./StudentCard";
@@ -16,11 +16,10 @@ import type { ProfileRecord, StudentRecordCategory } from "../../lib/dataAccess"
  * competitions the student actually has.
  *
  * The reference sheet's Mark column also offers "Add skills" and "Add
- * experience". There is no column for either — `student_records` accepts ten
- * categories and skills and experience are not among them — so this card sends
- * those two to migration 020 instead of building a button that would have
- * nowhere to save. Everything the student *can* record is one click away on
- * /mark.
+ * experience", and both now exist: `adders` carries the three disclosure rows —
+ * skills, experience and achievements — that write through the page's handlers
+ * to `student_skills`, `student_experience` and `student_records`. Everything
+ * the student can record is also one click away on /mark.
  */
 
 export type MarkSummary = {
@@ -34,12 +33,16 @@ export default function CircleYourProfile({
   collegeName,
   connections,
   mark,
+  adders,
   onVisibilityChange,
 }: {
   profile: ProfileRecord;
   collegeName: string | null;
   connections: number;
   mark: MarkSummary;
+  /** The Mark column's add rows, built by the page so this card does not have
+      to thread six write handlers through itself. */
+  adders?: ReactNode;
   onVisibilityChange: (next: boolean) => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
@@ -71,8 +74,7 @@ export default function CircleYourProfile({
             aria-checked={profile.isPublic}
             disabled={busy}
             onClick={() => void toggle()}
-            className={`rail-switch ${profile.isPublic ? "is-on" : ""}`}
-            style={{ width: "auto", minWidth: 180 }}
+            className={`rail-switch rail-switch--sm ${profile.isPublic ? "is-on" : ""}`}
           >
             <span>{profile.isPublic ? "Public" : "Private"}</span>
             <span className="rail-switch__track" aria-hidden="true">
@@ -80,6 +82,14 @@ export default function CircleYourProfile({
             </span>
           </button>
         </div>
+        {/* Kept outside the completion block below: it reports a failed
+            visibility save, and a student with a finished profile has no
+            completion bar to hide it behind. */}
+        {failure && (
+          <p className="mt-1.5 text-right text-xs font-semibold text-brand-red-ink" role="status">
+            {failure}
+          </p>
+        )}
 
         <div className="mt-3 flex flex-wrap items-start gap-4">
           <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -90,57 +100,56 @@ export default function CircleYourProfile({
                 {collegeName ?? "College not listed"}
                 {profile.course ? ` · ${profile.course}` : ""}
               </p>
-              <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-ink-500">
-                {connections} {connections === 1 ? "connection" : "connections"}
+            </div>
+          </div>
+          <div className="flex flex-none items-start gap-5">
+            <div className="mark-tier text-center">
+              <p className="rail-subtitle">Tier</p>
+              <Icon name="trophy" className="mx-auto mt-1 h-6 w-6 text-brand-blue" />
+              <p className="mt-0.5 text-xs font-extrabold uppercase tracking-wider text-ink-700">
+                {tier.tierLabel ?? "Not ranked yet"}
+              </p>
+            </div>
+            {/* The count is the thing worth reading, so it takes the same figure
+                treatment the Mark column gives its numbers and the word goes
+                underneath in the small voice everything else uses. */}
+            <div className="text-center">
+              <p className="mark-figure">{connections}</p>
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-500">
+                {connections === 1 ? "connection" : "connections"}
               </p>
             </div>
           </div>
-          <div className="mark-tier flex-none text-center">
-            <p className="rail-subtitle">Tier</p>
-            <Icon name="trophy" className="mx-auto mt-1 h-6 w-6 text-brand-blue" />
-            <p className="mt-0.5 text-xs font-extrabold uppercase tracking-wider text-ink-700">
-              {tier.tierLabel ?? "Not ranked yet"}
-            </p>
-          </div>
         </div>
 
-        <div className="mt-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">
-              Profile completion
-            </p>
-            <p className="text-[11px] font-extrabold text-ink-700">
-              {completion.filled} of {completion.total} fields
+        {completion.missing.length > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-black uppercase tracking-widest text-ink-500">
+                Profile completion
+              </p>
+              <p className="text-[11px] font-extrabold text-ink-700">
+                {completion.filled} of {completion.total} fields
+              </p>
+            </div>
+            <div
+              className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-soft"
+              role="progressbar"
+              aria-valuenow={completion.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Profile completion"
+            >
+              <div className="h-full rounded-full bg-brand-blue" style={{ width: `${completion.percent}%` }} />
+            </div>
+            <p className="mt-1.5 text-xs text-ink-500">
+              Still missing: {completion.missing.join(", ")}.{" "}
+              <Link href="/dashboard" className="font-bold text-brand-blue hover:underline">
+                Complete your profile
+              </Link>
             </p>
           </div>
-          <div
-            className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-soft"
-            role="progressbar"
-            aria-valuenow={completion.percent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Profile completion"
-          >
-            <div className="h-full rounded-full bg-brand-blue" style={{ width: `${completion.percent}%` }} />
-          </div>
-          <p className="mt-1.5 text-xs text-ink-500">
-            {completion.missing.length === 0 ? (
-              <>Your profile is complete.</>
-            ) : (
-              <>
-                Still missing: {completion.missing.join(", ")}.{" "}
-                <Link href="/dashboard" className="font-bold text-brand-blue hover:underline">
-                  Complete your profile
-                </Link>
-              </>
-            )}
-          </p>
-          {failure && (
-            <p className="mt-1.5 text-xs font-semibold text-brand-red-ink" role="status">
-              {failure}
-            </p>
-          )}
-        </div>
+        )}
 
         <div className="headline-well mt-4">
           {headline ? (
@@ -194,12 +203,7 @@ export default function CircleYourProfile({
           </ul>
         )}
 
-        <p className="mt-3 border-t border-surface-border pt-3 text-[11px] leading-relaxed text-ink-500">
-          Skills and work history have no column to live in yet, so they cannot be added here. Migration{" "}
-          <code className="font-mono text-[10px]">019_student_skills_and_experience.sql</code> proposes the
-          two tables; until it is applied, record the same things on MARK as certifications, projects or
-          internships.
-        </p>
+        {adders}
       </div>
     </section>
   );

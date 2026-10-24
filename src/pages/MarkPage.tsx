@@ -30,11 +30,6 @@ import {
 } from "../lib/dataAccess";
 import { buildParticipations, resolveTier, type Participation } from "../lib/markTier";
 
-const FUTURE_SECTIONS = [
-  { icon: "briefcase", label: "Experience" },
-  { icon: "star", label: "Skills" },
-];
-
 const EMPTY_RECORD_COPY = "Nothing here yet. Add it as you build.";
 
 type RecordFormState = {
@@ -726,32 +721,6 @@ export default function MarkPage() {
                 Records are yours to write and yours to hide. JAVLIN doesn't verify them against an issuer, so a
                 record states what you said you did.
               </p>
-            </section>
-
-            <section className="mt-6">
-              <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-ink-900">
-                The rest of your record
-              </h2>
-              <p className="mt-1 text-sm text-ink-500">
-                {EMPTY_RECORD_COPY} Competitions are counted for you; everything else you add under My records.
-                These sections are the next record types JAVLIN will open.
-              </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {FUTURE_SECTIONS.map((section) => (
-                  <div
-                    key={section.label}
-                    className="min-w-0 rounded-2xl border border-dashed border-surface-border bg-white/70 p-4"
-                  >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blue-soft text-brand-blue">
-                      <Icon name={section.icon} className="h-4 w-4" />
-                    </span>
-                    <h3 className="mt-3 text-sm font-extrabold text-ink-900">{section.label}</h3>
-                    <p className="mt-1 text-[11px] font-medium leading-relaxed text-ink-500">
-                      Not open yet
-                    </p>
-                  </div>
-                ))}
-              </div>
             </section>
           </div>
 

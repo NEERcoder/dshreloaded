@@ -131,7 +131,7 @@ export default function OpportunitySectionPage({ section }: { section: Opportuni
 
   return (
     <PageShell title={spec.metaTitle} description={spec.metaDescription} backgroundPreset="opportunities">
-      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-3 pb-5 sm:pt-4 sm:pb-6">
+      <section className="feed-band bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-3 pb-5 sm:pt-4 sm:pb-6">
         <div className="container-px max-w-7xl mx-auto">
           <OpportunityBrowser
             chrome="section"

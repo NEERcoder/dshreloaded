@@ -377,7 +377,7 @@ export default function OpportunityBrowser({
     ) : null;
 
   return (
-    <div>
+    <div className="feed-root">
       {(countNoun || posting) && (
         <div className="feed-head">
           {countNoun ? (
@@ -451,6 +451,19 @@ export default function OpportunityBrowser({
         </div>
       )}
 
+      {/* The section pages carry no generic toolbar: the filters that survive are
+          the wireframe's own chips and rail. What is left is the state readout —
+          what is narrowing the feed, how many listings that leaves, and the one
+          button that puts them back. It sits above the feed layout rather than
+          inside the card column so a locked section page keeps it on screen. */}
+      {chrome === "section" && (showReset || activeChips.length > 0 || (droppedNotice && restored)) && (
+        <div className="feed-dock">
+          {chipStrip}
+          {countAndReset}
+          {notice}
+        </div>
+      )}
+
       <div className={`feed-layout ${sidebar === "none" ? "grid-cols-1 lg:grid-cols-1" : ""} mt-4`}>
         {sidebar === "location" && (
           <LocationRail
@@ -488,20 +501,8 @@ export default function OpportunityBrowser({
           </aside>
         )}
 
-        <div className="min-w-0">
-          {chrome === "section" ? (
-            /* The section pages carry no generic toolbar: the filters that
-               survive are the wireframe's own chips and rail, and what is left
-               here is the state readout — what is narrowing the feed, how many
-               listings that leaves, and the one button that puts them back. */
-            (showReset || activeChips.length > 0 || (droppedNotice && restored)) && (
-              <div className="feed-dock">
-                {chipStrip}
-                {countAndReset}
-                {notice}
-              </div>
-            )
-          ) : (
+        <div className="feed-scroll min-w-0">
+          {chrome !== "section" && (
             <div className="filter-bar card p-3 sm:p-3.5">
               {searchPlaceholder && (
                 <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">

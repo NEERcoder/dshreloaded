@@ -4,7 +4,7 @@ import SectionTabs from "./SectionTabs";
 import type { BackgroundPreset } from "./InteractiveDotGrid";
 import Navbar from "./Navbar";
 import { useLocation } from "../lib/router";
-import { isSectionTabPath, isSectionTabRoot } from "../lib/sidebarNav";
+import { isFeedScrollRoot, isSectionTabPath, isSectionTabRoot } from "../lib/sidebarNav";
 
 type PageShellProps = {
   children: ReactNode;
@@ -52,6 +52,9 @@ export default function PageShell({ children, title, description }: PageShellPro
   // routes nested under them — and on phones, where no shell exists, this is the
   // only place that knows which one is being rendered.
   const navySection = isSectionTabRoot(path);
+  // Below `lg` there is no shell, so this layout owns the locked feed scroll
+  // outright: the same classes the shell adds on desktop, applied here.
+  const feedLocked = isFeedScrollRoot(path);
 
   useEffect(() => {
     document.title = title;
@@ -81,18 +84,25 @@ export default function PageShell({ children, title, description }: PageShellPro
     // owns the single <main>. Only the fixed-navbar clearance stays here so the
     // page never sits underneath the top bar — and when the shell drew the tab
     // row above this content, that row already carries the clearance.
-    return <div className={showsTabs ? "" : "pt-16 sm:pt-20"}>{children}</div>;
+    //
+    // `feed-chain` is the link that lets a locked section page hand its height
+    // down from <main> to the card column. It is inert on every other page.
+    return <div className={`feed-chain${showsTabs ? "" : " pt-16 sm:pt-20"}`}>{children}</div>;
   }
 
   return (
-    <div className={`page-canvas relative min-h-screen isolate${navySection ? " navy-canvas" : ""}`}>
-      <div className="relative z-10">
+    <div
+      className={`page-canvas relative min-h-screen isolate${navySection ? " navy-canvas" : ""}${
+        feedLocked ? " shell-sections shell-locked feed-locked" : path === "/circle" ? " shell-sections circle-root" : ""
+      }`}
+    >
+      <div className={`shell-chain relative z-10${feedLocked ? " flex flex-col" : ""}`}>
         <Navbar />
         {showsTabs ? <SectionTabs /> : null}
-        <main className={`${showsTabs ? "" : "pt-16 sm:pt-20"}${navySection ? " section-navy" : ""}`}>
+        <main className={`feed-chain${showsTabs ? "" : " pt-16 sm:pt-20"}${navySection ? " section-navy" : ""}`}>
           {children}
         </main>
-        <Footer />
+        {feedLocked ? null : <Footer />}
       </div>
     </div>
   );

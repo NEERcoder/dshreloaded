@@ -110,9 +110,9 @@ export default function PulsePage() {
       description="Campus news from colleges across India: announcements, stories, results, interviews and guides."
       backgroundPreset="explore"
     >
-      <section className="container-px pb-8 pt-3 sm:pt-4">
+      <section className="feed-band container-px pb-8 pt-3 sm:pt-4">
         <h1 className="sr-only">Pulse — campus news</h1>
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-surface-border pb-3">
+        <div className="mb-5 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-surface-border pb-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2" role="group" aria-label="News topics">
             {topicOptions.length > 1 && (
               <>
@@ -134,6 +134,9 @@ export default function PulsePage() {
           </a>
         </div>
 
+        {/* Everything below the topic row is the feed, and on a locked section
+            page the feed is the only thing that scrolls. */}
+        <div className="feed-scroll min-w-0">
         {loading ? (
           <SkeletonOpportunityGrid count={6} />
         ) : posts.length === 0 ? (
@@ -233,6 +236,7 @@ export default function PulsePage() {
             </a>
             .
           </p>
+        </div>
         </div>
       </section>
 

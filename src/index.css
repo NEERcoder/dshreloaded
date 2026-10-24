@@ -103,13 +103,16 @@
   .section-tabs-bar {
     background: rgba(255, 255, 255, 0.72);
   }
-  /* The rail is fixed under the navbar, so on a page that also has the tab row
-     it has to start below it: navbar (5rem at lg) + the row's painted band +
-     its 1px hairline. `--tabs-h` is the band, and it is re-declared at the
-     breakpoint where the row wraps to two lines, so the rail top can never
-     disagree with what is actually painted. */
+  /* Two different "top" values, because two different things need them:
+     `--rail-top` is where the fixed account rail starts, and it stays exactly
+     where the homepage puts it — under the navbar — so switching pages never
+     nudges the rail. `--chrome-bottom` is where the tab band ends, and it is
+     what sticky content inside the page must clear; `--tabs-h` is the band's
+     painted height, re-declared at the breakpoint where the row wraps to two
+     lines, so the two can never disagree. */
   .shell-sections {
-    --rail-top: calc(5rem + var(--tabs-h, 3.5rem) + 1px);
+    --rail-top: 5rem;
+    --chrome-bottom: calc(5rem + var(--tabs-h, 3.5rem) + 1px);
   }
   .section-tabs {
     margin-inline: auto;
@@ -1740,7 +1743,9 @@
   @media (min-width: 1024px) {
     .location-rail {
       position: sticky;
-      top: var(--rail-top, 5rem);
+      /* The in-page rail sticks below the tab band, which is a different
+         measurement from where the shell's account rail starts. */
+      top: var(--chrome-bottom, var(--rail-top, 5rem));
       border: 0;
       border-right: 1px solid var(--javlin-border);
       border-radius: 0;
@@ -1821,6 +1826,28 @@
   }
   .rail-switch.is-on .rail-switch__knob {
     transform: translateX(16px);
+  }
+  /* The visibility switch on the CIRCLE profile card. It is one boolean, and at
+     full width with a 44px row it read as the loudest thing on the card — so
+     the compact form keeps the same switch semantics at the size of a label. */
+  .rail-switch--sm {
+    width: auto;
+    min-height: 32px;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.25rem 0.55rem;
+    font-size: 11px;
+  }
+  .rail-switch--sm .rail-switch__track {
+    height: 16px;
+    width: 28px;
+  }
+  .rail-switch--sm .rail-switch__knob {
+    height: 12px;
+    width: 12px;
+  }
+  .rail-switch--sm.is-on .rail-switch__knob {
+    transform: translateX(12px);
   }
   .rail-city {
     display: flex;
@@ -2007,14 +2034,6 @@
     border: 1px dashed var(--javlin-border);
     background: var(--javlin-hover-surface);
     padding: 0.6rem 0.75rem;
-  }
-  .suggested-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    border: 1px solid var(--javlin-border);
-    border-radius: 1rem;
-    padding: 0.6rem;
   }
 }
 
@@ -2753,7 +2772,8 @@
    screen keep the light values they have today.
    ============================================================ */
 
-/* Where the shell's chrome begins: the rail's own width plus the gutter. */
+/* Where the shell's chrome begins: the rail's own width plus the gutter, so the
+   feed keeps a visible gap beside the rail rather than meeting it edge to edge. */
 .shell-sections.rail-open {
   --shell-inset: calc(var(--rail-w) + var(--shell-gutter));
 }
@@ -2764,7 +2784,7 @@
 @media (min-width: 1024px) {
   /* The tab row and the content row are left-anchored to the same inset rather
      than each centring themselves — that centring is what put tab #1 inside the
-     rail column and left a dead gutter beside it. */
+     rail column. */
   .shell-sections .section-tabs,
   .shell-sections .shell-row {
     max-width: none;
@@ -2772,8 +2792,9 @@
     padding-inline: var(--shell-gutter);
     padding-inline-start: var(--shell-inset);
   }
-  /* Inside `main` only: the footer is a sibling in the same wrapper and keeps
-     its own reading width on every page. */
+  /* Uncapped and un-centred, but still carrying `container-px`'s own side
+     padding — that is the gutter the feed sits inside. Only inside `main`: the
+     footer is a sibling in the same wrapper and keeps its own reading width. */
   .shell-sections main .container-px {
     max-width: none;
     margin-inline: 0;
@@ -2781,6 +2802,87 @@
   .shell-sections .feed-layout {
     grid-template-columns: calc(var(--rail-w) - 1.5rem) minmax(0, 1fr);
   }
+}
+
+/* ---- the locked feed ----
+   Seven of the eight sections paint inside a shell that is exactly as tall as
+   the viewport, so the card column is the only thing that scrolls and the
+   count heading, the chips, the filter rail, the tabs and the taskbar all stay
+   where they were. Every link in the chain from `main` down to the cards has to
+   pass its height on and be allowed to shrink, which is what the block below
+   does; miss one and the column quietly falls back to page scroll. `dvh` rather
+   than `vh` because a phone's URL bar changes the visual height mid-session. */
+.shell-locked {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+/* The standalone layout wraps its column in one more div than the shell does. */
+.shell-locked > .shell-chain {
+  height: 100%;
+}
+.shell-locked .shell-row {
+  min-height: 0;
+}
+.feed-locked main,
+.feed-locked .page-transition,
+.feed-locked .feed-chain,
+.feed-locked .feed-band,
+.feed-locked .feed-band > .container-px,
+.feed-locked .feed-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* The constant region keeps its natural height; only the feed gives ground. */
+.feed-locked .feed-head,
+.feed-locked .chip-row,
+.feed-locked .feed-dock {
+  flex: 0 0 auto;
+}
+.feed-locked .feed-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  /* The base rule sets `align-items: start` so a short rail does not stretch to
+     the feed. In a locked page the row has a definite height and both columns
+     have to be clamped to it, or the card column grows to its content and the
+     scroll escapes back to the page. */
+  align-items: stretch;
+}
+.feed-locked .feed-scroll,
+.feed-locked .location-rail {
+  min-height: 0;
+  overflow-y: auto;
+  /* Without this, scrolling to the end of the feed chains the gesture out to
+     the page and the browser starts moving the shell behind the fixed chrome. */
+  overscroll-behavior: contain;
+}
+/* On a page whose feed is a grid this is a grid item and stretches; on a page
+   whose feed is a plain column it has to be the thing that grows. */
+.feed-locked .feed-scroll {
+  flex: 1 1 auto;
+}
+/* Sticky is meaningless in a cell that never scrolls, and its old offset would
+   push the rail down by the height of chrome that is no longer above it. */
+.feed-locked .location-rail {
+  position: static;
+  top: auto;
+  border-right: 0;
+}
+
+/* CIRCLE keeps the whole-page scroll, so its tabs pin rather than riding inside
+   a locked shell. `top: 0` is enough on its own: the bar carries the fixed
+   taskbar's clearance as its own padding, so the padding travels with it and
+   the row lands exactly under the taskbar whether or not it is stuck. The
+   z-index has to clear `.shell-row`, which is `z-10` and comes later in the
+   document order, or the feed paints over the tabs as it scrolls up. */
+.circle-root .section-tabs-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 /* ---- the navy page ---- */
@@ -3009,12 +3111,10 @@
   color: var(--ui-ink-4);
 }
 .section-navy .listing-panel,
-.section-navy .headline-well,
-.section-navy .suggested-card {
+.section-navy .headline-well {
   border-color: var(--ui-line);
 }
-.section-navy .headline-well,
-.section-navy .suggested-card {
+.section-navy .headline-well {
   background: var(--ui-surface-2);
 }
 .section-navy .rail-switch__track {
@@ -3059,9 +3159,6 @@
   box-shadow: 0 0 0 3px rgba(122, 168, 255, 0.28);
 }
 
-/* The account rail is part of the same navy family as the section canvas. */
-.shell-sections .home-rail.section-navy {
-  background: var(--ui-surface);
-  border-color: var(--ui-line);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-}
+/* The account rail is deliberately left out of the navy scope: it keeps the
+   homepage's white surface, border and shadow, so switching pages moves nothing
+   about it. `.section-navy` is applied to `main` only. */

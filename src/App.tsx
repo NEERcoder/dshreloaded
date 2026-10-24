@@ -4,7 +4,7 @@ import { CursorProvider } from "./context/CursorContext";
 import { AuthProvider } from "./context/AuthContext";
 import PageTransition from "./components/PageTransition";
 import { SectionShellContext } from "./components/PageShell";
-import { isSectionPath, isSectionTabPath } from "./lib/sidebarNav";
+import { isFeedScrollRoot, isSectionPath, isSectionTabPath } from "./lib/sidebarNav";
 import { useIsDesktop } from "./hooks/useIsDesktop";
 import Navbar from "./components/Navbar";
 import HomeSidebar from "./components/HomeSidebar";
@@ -152,12 +152,19 @@ function SectionShell({ path }: { path: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isHome = path === "/";
   const hasTabs = isSectionTabPath(path);
+  // Seven of the eight sections paint the feed inside a fixed-height shell so
+  // the card column is the only thing that scrolls. CIRCLE is excluded, and with
+  // it goes the footer suppression below — its directory still ends in the
+  // footer, which is why the footer is conditional rather than deleted.
+  const feedLocked = isFeedScrollRoot(path);
 
   return (
     <div
       className={`${isHome ? "homepage-canvas" : "page-canvas"} relative flex min-h-screen flex-col ${
         hasTabs ? "shell-sections navy-canvas" : ""
-      } ${sidebarOpen ? "rail-open" : "rail-closed"}`}
+      }${feedLocked ? " shell-locked feed-locked" : ""}${path === "/circle" ? " circle-root" : ""} ${
+        sidebarOpen ? "rail-open" : "rail-closed"
+      }`}
     >
       {/* The dot field is one CSS radial-gradient on this wrapper. The canvas
           particle grid is deliberately not mounted here: it costs an animation
@@ -173,7 +180,7 @@ function SectionShell({ path }: { path: string }) {
           sidebarOpen ? "lg:pl-64" : ""
         }${hasTabs ? " shell-row" : ""}`}
       >
-        {sidebarOpen && <HomeSidebar navy={hasTabs} />}
+        {sidebarOpen && <HomeSidebar />}
         <main className={`min-w-0 flex-1${hasTabs ? " section-navy" : ""}`}>
           <PageTransition variant="section">
             <SectionShellContext.Provider value={true}>
@@ -182,7 +189,7 @@ function SectionShell({ path }: { path: string }) {
           </PageTransition>
         </main>
       </div>
-      <Footer />
+      {feedLocked ? null : <Footer />}
     </div>
   );
 }

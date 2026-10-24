@@ -149,7 +149,7 @@ export default function EventsPage() {
       description="Fests, summits, workshops and cultural nights from colleges across India, with dates, venue and tickets."
       backgroundPreset="opportunities"
     >
-      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-3 pb-5 sm:pt-4 sm:pb-6">
+      <section className="feed-band bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-3 pb-5 sm:pt-4 sm:pb-6">
         <div className="container-px max-w-7xl mx-auto">
           <div className="feed-head">
             <div className="min-w-0">
@@ -245,7 +245,7 @@ export default function EventsPage() {
               )}
             </aside>
 
-            <div className="min-w-0">
+            <div className="feed-scroll min-w-0">
               {loading ? (
                 <SkeletonOpportunityGrid count={6} />
               ) : result?.status === "unavailable" ? (
