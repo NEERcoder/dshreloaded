@@ -4,7 +4,7 @@ import SectionTabs from "./SectionTabs";
 import type { BackgroundPreset } from "./InteractiveDotGrid";
 import Navbar from "./Navbar";
 import { useLocation } from "../lib/router";
-import { isSectionTabPath } from "../lib/sidebarNav";
+import { isSectionTabPath, isSectionTabRoot } from "../lib/sidebarNav";
 
 type PageShellProps = {
   children: ReactNode;
@@ -48,6 +48,10 @@ export default function PageShell({ children, title, description }: PageShellPro
   // page also draws the row, and the row takes the fixed-navbar clearance with
   // it — so a page never stacks two clearances and never loses the one it needs.
   const showsTabs = isSectionTabPath(path);
+  // The dark section canvas belongs to the eight pages themselves, not to the
+  // routes nested under them — and on phones, where no shell exists, this is the
+  // only place that knows which one is being rendered.
+  const navySection = isSectionTabRoot(path);
 
   useEffect(() => {
     document.title = title;
@@ -81,11 +85,13 @@ export default function PageShell({ children, title, description }: PageShellPro
   }
 
   return (
-    <div className="page-canvas relative min-h-screen isolate">
+    <div className={`page-canvas relative min-h-screen isolate${navySection ? " navy-canvas" : ""}`}>
       <div className="relative z-10">
         <Navbar />
         {showsTabs ? <SectionTabs /> : null}
-        <main className={showsTabs ? "" : "pt-16 sm:pt-20"}>{children}</main>
+        <main className={`${showsTabs ? "" : "pt-16 sm:pt-20"}${navySection ? " section-navy" : ""}`}>
+          {children}
+        </main>
         <Footer />
       </div>
     </div>

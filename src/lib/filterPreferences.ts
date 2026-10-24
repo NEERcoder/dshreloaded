@@ -1,8 +1,10 @@
 import {
+  ALL_FILTERS_OFFERED,
   DEFAULT_FILTERS,
   manageableKeys,
   sanitizeFilters,
   validateStoredPayload,
+  type FilterOffering,
   type FilterOptions,
   type OpportunityFilters,
   type PersistedFilterKey,
@@ -72,7 +74,16 @@ export type PreferenceSource = "account" | "guest" | "default";
  * keys this one is allowed to change. Without it, a section that happens not to
  * show a control would delete the preference behind it.
  */
-export type FilterSection = { options: FilterOptions; streamEnabled: boolean };
+export type FilterSection = {
+  options: FilterOptions;
+  streamEnabled: boolean;
+  /**
+   * The controls this section actually renders. A key it does not offer is
+   * neither applied nor written, which is what keeps a page that dropped its
+   * pay select from erasing the pay choice saved from another one.
+   */
+  offering?: FilterOffering;
+};
 
 export type LoadedPreferences = {
   filters: OpportunityFilters;
@@ -275,7 +286,11 @@ export function createPreferenceStore(client: PreferenceClient) {
      * Returns `null` when the identity changed mid-flight — the caller must
      * discard the result rather than apply it.
      */
-    async loadPreferences(userId: string | null, options: FilterOptions): Promise<LoadedPreferences | null> {
+    async loadPreferences(
+      userId: string | null,
+      options: FilterOptions,
+      offering: FilterOffering = ALL_FILTERS_OFFERED
+    ): Promise<LoadedPreferences | null> {
       const startedAt = generation;
       let stored: StoredFilters | null = null;
       let source: PreferenceSource = "default";
@@ -298,7 +313,7 @@ export function createPreferenceStore(client: PreferenceClient) {
       }
 
       if (!stored) return { filters: { ...DEFAULT_FILTERS }, dropped: false, source: "default" };
-      return { ...sanitizeFilters(stored, options), source };
+      return { ...sanitizeFilters(stored, options, offering), source };
     },
 
     /**
@@ -316,7 +331,11 @@ export function createPreferenceStore(client: PreferenceClient) {
       section: FilterSection
     ): Promise<PersistResult> {
       const incoming = toStoredFilters(filters);
-      const managed = manageableKeys(section.options, section.streamEnabled);
+      const managed = manageableKeys(
+        section.options,
+        section.streamEnabled,
+        section.offering ?? ALL_FILTERS_OFFERED
+      );
 
       if (!userId) {
         const merged = mergeManagedPayload(readGuestFilters(), incoming, managed);
@@ -446,9 +465,10 @@ export const preferences = createPreferenceStore(defaultClient);
 
 export function loadPreferences(
   userId: string | null,
-  options: FilterOptions
+  options: FilterOptions,
+  offering?: FilterOffering
 ): Promise<LoadedPreferences | null> {
-  return preferences.loadPreferences(userId, options);
+  return preferences.loadPreferences(userId, options, offering);
 }
 
 export function persistPreferences(

@@ -156,8 +156,8 @@ function SectionShell({ path }: { path: string }) {
   return (
     <div
       className={`${isHome ? "homepage-canvas" : "page-canvas"} relative flex min-h-screen flex-col ${
-        hasTabs ? "shell-section-tabs" : ""
-      }`}
+        hasTabs ? "shell-sections navy-canvas" : ""
+      } ${sidebarOpen ? "rail-open" : "rail-closed"}`}
     >
       {/* The dot field is one CSS radial-gradient on this wrapper. The canvas
           particle grid is deliberately not mounted here: it costs an animation
@@ -171,10 +171,10 @@ function SectionShell({ path }: { path: string }) {
       <div
         className={`relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 gap-6 lg:px-6 ${
           sidebarOpen ? "lg:pl-64" : ""
-        }`}
+        }${hasTabs ? " shell-row" : ""}`}
       >
-        {sidebarOpen && <HomeSidebar />}
-        <main className="min-w-0 flex-1">
+        {sidebarOpen && <HomeSidebar navy={hasTabs} />}
+        <main className={`min-w-0 flex-1${hasTabs ? " section-navy" : ""}`}>
           <PageTransition variant="section">
             <SectionShellContext.Provider value={true}>
               <RouteContent path={path} />

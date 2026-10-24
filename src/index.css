@@ -93,20 +93,23 @@
   /* ------------------------------------------------------------
      SECTION TABS — the eight-page row under the top taskbar.
 
-     The bar is full-bleed so its hairline reads as the edge of the chrome;
-     only the inner container is inset. It tracks the shell's own content
-     width (1400px / 1.5rem gutters at lg) rather than the 1280px article
-     container, so the first tab lines up with the rail and page beneath it.
+     The bar is full-bleed so its hairline reads as the edge of the chrome.
+     The inner container is inset past the fixed rail on the section pages
+     (see `.shell-sections` at the end of this file) so the first tab starts
+     where the rail ends and the row beneath it, instead of centring over
+     both. Below `lg` there is no rail — the drawer is the navigation — so
+     the strip keeps its plain gutters and scrolls.
      ------------------------------------------------------------ */
   .section-tabs-bar {
     background: rgba(255, 255, 255, 0.72);
   }
   /* The rail is fixed under the navbar, so on a page that also has the tab row
-     it has to start below it: navbar (5rem at lg) + the row's 3.5rem band + its
-     1px hairline. Declared as one value here so the rail and the row cannot
-     drift apart. */
-  .shell-section-tabs {
-    --rail-top: calc(5rem + 3.5rem + 1px);
+     it has to start below it: navbar (5rem at lg) + the row's painted band +
+     its 1px hairline. `--tabs-h` is the band, and it is re-declared at the
+     breakpoint where the row wraps to two lines, so the rail top can never
+     disagree with what is actually painted. */
+  .shell-sections {
+    --rail-top: calc(5rem + var(--tabs-h, 3.5rem) + 1px);
   }
   .section-tabs {
     margin-inline: auto;
@@ -1633,7 +1636,7 @@
   }
   .feed-count {
     font-family: "Playfair Display", ui-serif, Georgia, serif;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     line-height: 1.2;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -1641,7 +1644,7 @@
   }
   @media (min-width: 640px) {
     .feed-count {
-      font-size: 1.875rem;
+      font-size: 1.5rem;
     }
   }
 
@@ -2429,3 +2432,636 @@
   }
 }
 
+
+
+/* ------------------------------------------------------------
+   REDESIGN PASS — shared tokens, section tabs, chip rows, motion.
+   Unlayered on purpose: these class names are unique to this block, so
+   nothing here can be overridden by (or override) a Tailwind utility.
+   ------------------------------------------------------------ */
+:root {
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --tab-gradient: linear-gradient(135deg, #1769ff 0%, #0f53d6 58%, #071a33 140%);
+
+  /* One value for the rail's width, read by the rail itself, the navbar's left
+     segment, the tab row and the content row. They cannot drift apart. */
+  --rail-w: 14rem; /* == w-56 */
+  --shell-gutter: 0.5rem;
+  --shell-inset: 0.5rem;
+  /* The tab band's painted height, so `--rail-top` follows it at every
+     breakpoint instead of being re-typed per rule. */
+  --tabs-h: 3.5rem;
+
+  /* ------------------------------------------------------------
+     SURFACE RAMP — the same seven roles a component needs, in the
+     order a designer reads them. The defaults are today's exact
+     light hex values, so nothing changes until `.section-navy`
+     re-points them on its subtree (see the navy scope at the end of
+     this file). Components keep hard-coding light values; the scope
+     overrides them, which is why a page outside the eight sections
+     can never be pulled dark by accident.
+     ------------------------------------------------------------ */
+  --ui-page: #ffffff;
+  --ui-ink: #071a33;
+  --ui-ink-2: #33445c;
+  --ui-ink-3: #475569;
+  --ui-ink-4: #64748b;
+  --ui-ink-5: #94a3b8;
+  --ui-surface: #ffffff;
+  --ui-surface-2: #f8fafc;
+  --ui-line: #e2e8f0;
+  --ui-link: #1769ff;
+  --ui-link-ink: #0f53d6;
+  --ui-accent-soft: #e6eeff;
+  --ui-accent-soft-hover: #d8e5ff;
+  --ui-band: rgba(243, 247, 255, 0.6);
+  --ui-sk-1: #f1f5f9;
+  --ui-sk-2: #e2e8f0;
+  --ui-knob: #ffffff;
+  --ui-ring: #1769ff;
+  --ui-ring-offset: #ffffff;
+  --ui-card-shadow: 0 4px 16px rgba(7, 26, 51, 0.06);
+}
+@media (min-width: 1280px) {
+  :root {
+    --shell-gutter: 1rem;
+  }
+}
+@media (min-width: 1440px) {
+  :root {
+    --shell-gutter: 1.5rem;
+  }
+}
+
+.section-tabs-strip {
+  display: flex;
+  height: 3.5rem;
+  align-items: center;
+  gap: 0.375rem;
+  overflow-x: auto;
+  padding-block: 0.375rem;
+  margin: 0;
+  list-style: none;
+}
+.section-tabs-strip > li {
+  flex: 0 0 auto;
+}
+/* 1024–1249: eight equal columns do not fit legibly to the right of the rail
+   (~93px each, and "CERTIFICATIONS" needs ~101px at 11px), so the row wraps to
+   two rows of four. Equal widths are kept; nothing scrolls sideways. The band
+   grows, and `--tabs-h` carries that into `--rail-top` in one place. */
+@media (min-width: 1024px) and (max-width: 1249px) {
+  .shell-sections .section-tabs-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+    height: auto;
+    gap: 0.25rem 0.375rem;
+    overflow: visible;
+  }
+  .shell-sections {
+    --tabs-h: 6.5rem; /* 2×44 + 2×6 padding + 4 gap, rounded up to the half rem */
+  }
+}
+@media (min-width: 1280px) {
+  .section-tabs-strip {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .section-tabs-strip > li {
+    min-width: 0;
+  }
+}
+
+.section-tab {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  white-space: nowrap;
+  border-radius: 0.75rem;
+  border: 1px solid var(--javlin-border, #e2e8f0);
+  background: #fff;
+  padding-inline: 0.875rem;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #475569;
+  transition: color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+.section-tab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--tab-gradient);
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
+}
+.section-tab:hover {
+  border-color: rgba(23, 105, 255, 0.45);
+  color: #1769ff;
+}
+.section-tab:active {
+  transform: translateY(1px);
+}
+.section-tab:focus-visible {
+  outline: 2px solid #1769ff;
+  outline-offset: 2px;
+}
+.section-tab.is-active {
+  color: #fff;
+  border-color: #0f53d6;
+  box-shadow: 0 0 0 3px rgba(23, 105, 255, 0.14), 0 6px 16px rgba(23, 105, 255, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.section-tab.is-active::before {
+  opacity: 1;
+  transform: none;
+}
+/* 1280–1599: eight columns fit, but only just — tighten the label and drop the
+   icon. From 1600 the column is wide enough for both again. */
+@media (min-width: 1280px) and (max-width: 1599px) {
+  .section-tab {
+    padding-inline: 0.25rem;
+    letter-spacing: 0.03em;
+  }
+  .section-tab__icon {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .section-tab {
+    min-width: 7.5rem;
+  }
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.625rem;
+  margin-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--javlin-border, #e2e8f0);
+}
+/* The section pages' state line: what is narrowing the feed, how many listings
+   that leaves, and the one control that puts them back. It is deliberately not
+   a card — the filters themselves live in the chip row above and the rail
+   beside, exactly where each wireframe puts them. */
+.feed-dock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.75rem;
+  margin-top: 0.75rem;
+}
+.chip-toggle {
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease), transform var(--motion-fast) var(--motion-ease);
+}
+.chip-toggle:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-tab,
+  .section-tab::before,
+  .chip-toggle {
+    transition: none !important;
+  }
+}
+
+/* ---- Redesign pass 2: card surfaces, poster motion, hackathon panel ---- */
+.listing-poster-zoom img {
+  transition: transform 420ms var(--motion-ease);
+  will-change: transform;
+}
+.group:hover .listing-poster-zoom img {
+  transform: scale(1.035);
+}
+.listing-cert {
+  border-radius: 1rem;
+}
+.listing-cert .card-title {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.hackathon-card {
+  position: relative;
+  display: flex;
+  gap: 0.875rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(23, 105, 255, 0.35);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(23, 105, 255, 0.35) 0%, rgba(23, 105, 255, 0) 55%),
+    linear-gradient(160deg, #0b2547 0%, #071a33 70%);
+  padding: 0.875rem;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(7, 26, 51, 0.18);
+  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
+}
+.hackathon-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(23, 105, 255, 0.7);
+  box-shadow: 0 12px 28px rgba(7, 26, 51, 0.28);
+}
+.hackathon-card__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ff7a30;
+}
+.hackathon-card li {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e6eeff;
+}
+.hackathon-card li svg {
+  color: #9cc0ff;
+}
+.hackathon-card__cta {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.75rem;
+  background: #ff7a30;
+  padding: 0.4rem 1rem;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #071a33;
+  transition: background-color var(--motion-fast) var(--motion-ease), transform var(--motion-fast) var(--motion-ease);
+}
+.hackathon-card__cta:hover {
+  background: #ff9156;
+}
+.hackathon-card__cta:active {
+  transform: translateY(1px);
+}
+.hackathon-card__cta:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-poster-zoom img,
+  .hackathon-card,
+  .hackathon-card__cta {
+    transition: none !important;
+  }
+  .group:hover .listing-poster-zoom img,
+  .hackathon-card:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   SECTION SHELL — geometry and the navy surface.
+
+   Unlayered and last on purpose: Tailwind utilities beat
+   `@layer components`, and the rules here have to win over
+   `mx-auto`, `max-w-7xl`, `lg:pl-64` and the `bg-white`/`text-ink-*`
+   utilities the section components already carry.
+
+   Nothing in this file's earlier blocks is rewritten, and every rule
+   is gated on `.shell-sections` (the eight section pages) or
+   `.section-navy` (their content subtree), so the homepage, AIM,
+   FIELD, the all-listings page, the admin console and every auth
+   screen keep the light values they have today.
+   ============================================================ */
+
+/* Where the shell's chrome begins: the rail's own width plus the gutter. */
+.shell-sections.rail-open {
+  --shell-inset: calc(var(--rail-w) + var(--shell-gutter));
+}
+.shell-sections.rail-closed {
+  --shell-inset: var(--shell-gutter);
+}
+
+@media (min-width: 1024px) {
+  /* The tab row and the content row are left-anchored to the same inset rather
+     than each centring themselves — that centring is what put tab #1 inside the
+     rail column and left a dead gutter beside it. */
+  .shell-sections .section-tabs,
+  .shell-sections .shell-row {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: var(--shell-gutter);
+    padding-inline-start: var(--shell-inset);
+  }
+  /* Inside `main` only: the footer is a sibling in the same wrapper and keeps
+     its own reading width on every page. */
+  .shell-sections main .container-px {
+    max-width: none;
+    margin-inline: 0;
+  }
+  .shell-sections .feed-layout {
+    grid-template-columns: calc(var(--rail-w) - 1.5rem) minmax(0, 1fr);
+  }
+}
+
+/* ---- the navy page ---- */
+.navy-canvas {
+  background-color: var(--javlin-navy);
+}
+.navy-canvas.page-canvas::before {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+}
+/* The taskbar stays light by decision; opaque-ish so navy content scrolling
+   under it cannot grey it out. */
+.navy-canvas .glass-nav {
+  background: rgba(255, 255, 255, 0.94);
+}
+.navy-canvas .section-tabs-bar {
+  background: var(--javlin-navy);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+.navy-canvas .section-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #dbe6f5;
+}
+.navy-canvas .section-tab:hover {
+  border-color: rgba(138, 182, 255, 0.55);
+  color: #ffffff;
+  background: rgba(23, 105, 255, 0.16);
+}
+.navy-canvas .section-tab.is-active {
+  color: #ffffff;
+  border-color: rgba(138, 182, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(138, 182, 255, 0.18), 0 8px 22px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+/* ---- the navy subtree ---- */
+.section-navy {
+  --ui-ink: #f4f7fb;
+  --ui-ink-2: #dbe6f5;
+  --ui-ink-3: #c3d3e8;
+  --ui-ink-4: #a9bcd6;
+  --ui-ink-5: #8fa3bd;
+  --ui-surface: #0e2a4b;
+  --ui-surface-2: #123256;
+  --ui-line: rgba(255, 255, 255, 0.14);
+  --ui-link: #8ab6ff;
+  --ui-link-ink: #bcd3ff;
+  --ui-accent-soft: rgba(23, 105, 255, 0.26);
+  --ui-accent-soft-hover: rgba(23, 105, 255, 0.4);
+  --ui-band: rgba(255, 255, 255, 0.03);
+  --ui-sk-1: rgba(255, 255, 255, 0.06);
+  --ui-sk-2: rgba(255, 255, 255, 0.13);
+  --ui-ring: #7aa8ff;
+  --ui-ring-offset: #0e2a4b;
+  --ui-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+
+  /* The legacy light-first tokens, so the classes already written against them
+     (.card, .chip-*, .poster-empty, .rail-title …) follow without an edit. */
+  --javlin-card-bg: var(--ui-surface);
+  --javlin-text-primary: var(--ui-ink);
+  --javlin-text-secondary: var(--ui-ink-3);
+  --javlin-text-muted: var(--ui-ink-5);
+  --javlin-border: var(--ui-line);
+  --javlin-hover-surface: var(--ui-surface-2);
+  --javlin-shadow-card: var(--ui-card-shadow);
+  --accent-soft: var(--ui-accent-soft);
+  --band-ink: #ffffff;
+  --band-muted: rgba(226, 232, 240, 0.82);
+  --eyebrow: #ffa366;
+
+  color: var(--ui-ink);
+}
+
+/* Utility remap: this is what keeps ~130 `bg-white` / `text-ink-*` call sites in
+   the section components from being edited one by one, and what stops the
+   identical `bg-brand-blue-pale/60` band string on CollegePage, JoinPage,
+   ExplorePage and OpportunitiesPage from being caught up in it. */
+.section-navy .bg-white,
+.section-navy .bg-white\/80,
+.section-navy .bg-surface {
+  background-color: var(--ui-surface);
+}
+.section-navy .bg-surface-soft,
+.section-navy .bg-surface-pale {
+  background-color: var(--ui-surface-2);
+}
+.section-navy .bg-brand-blue-soft,
+.section-navy .bg-brand-blue-pale\/60,
+.section-navy .hover\:bg-brand-blue-soft\/40:hover,
+.section-navy .hover\:bg-brand-blue-soft\/60:hover,
+.section-navy .hover\:bg-brand-blue-soft\/70:hover {
+  background-color: var(--ui-accent-soft);
+}
+.section-navy .border-surface-border {
+  border-color: var(--ui-line);
+}
+.section-navy .text-ink-900,
+.section-navy .text-brand-navy {
+  color: var(--ui-ink);
+}
+.section-navy .text-ink-800,
+.section-navy .text-ink-700 {
+  color: var(--ui-ink-2);
+}
+.section-navy .text-ink-600 {
+  color: var(--ui-ink-3);
+}
+.section-navy .text-ink-500 {
+  color: var(--ui-ink-4);
+}
+.section-navy .text-ink-400 {
+  color: var(--ui-ink-5);
+}
+.section-navy .text-brand-blue,
+.section-navy .hover\:text-brand-blue:hover {
+  color: var(--ui-link);
+}
+.section-navy .backdrop-blur-\[2px\] {
+  backdrop-filter: none;
+}
+
+/* `@apply bg-white` inside a component class emits a literal declaration, not a
+   utility, so those need naming directly. */
+.section-navy .field-input,
+.section-navy .filter-select,
+.section-navy .rail-input {
+  background-color: var(--ui-surface);
+  border-color: var(--ui-line);
+  color: var(--ui-ink-2);
+}
+.section-navy .field-input::placeholder,
+.section-navy .rail-input::placeholder {
+  color: var(--ui-ink-5);
+}
+.section-navy .btn-secondary {
+  background-color: var(--ui-surface);
+  border-color: var(--ui-line);
+  color: var(--ui-ink);
+}
+.section-navy .btn-ghost {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: var(--ui-line);
+  color: var(--ui-ink-2);
+}
+.section-navy .btn-outline-blue {
+  background-color: transparent;
+  border-color: rgba(138, 182, 255, 0.45);
+  color: var(--ui-link);
+}
+.section-navy .card {
+  border-color: var(--ui-line);
+  box-shadow: var(--ui-card-shadow);
+}
+.section-navy .card-title,
+.section-navy .feed-count,
+.section-navy .rail-title,
+.section-navy .mark-figure {
+  color: var(--ui-ink);
+}
+.section-navy .eyebrow {
+  color: var(--eyebrow);
+}
+.section-navy .chip-quiet {
+  background: var(--ui-surface-2);
+  border-color: var(--ui-line);
+  color: var(--ui-ink-3);
+}
+.section-navy .chip-brand {
+  background: var(--ui-accent-soft);
+  color: var(--ui-link-ink);
+}
+.section-navy .skeleton-shimmer {
+  background: linear-gradient(90deg, var(--ui-sk-1) 25%, var(--ui-sk-2) 50%, var(--ui-sk-1) 75%);
+}
+
+/* The section-only component rules that hard-code white. */
+.section-navy .post-cta__tab {
+  background: var(--ui-surface-2);
+  border-color: var(--ui-line);
+  /* 10px type: the muted ramp is only 5.2:1 on navy, so this one steps up. */
+  color: var(--ui-ink-3);
+}
+.section-navy .post-cta__button {
+  background: var(--ui-accent-soft);
+  border-color: rgba(138, 182, 255, 0.45);
+  color: var(--ui-link-ink);
+}
+.section-navy .post-cta__button:hover {
+  background: var(--ui-accent-soft-hover);
+}
+.section-navy .chip-toggle,
+.section-navy .rail-city,
+.section-navy .rail-switch,
+.section-navy .kw-chip,
+.section-navy .kw-rail__arrow,
+.section-navy .location-rail {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+  color: var(--ui-ink-3);
+}
+.section-navy .chip-toggle:hover,
+.section-navy .rail-city:hover,
+.section-navy .kw-rail__arrow:hover:not(:disabled) {
+  border-color: rgba(138, 182, 255, 0.55);
+  color: var(--ui-link);
+}
+.section-navy .chip-toggle.is-on,
+.section-navy .rail-city.is-on,
+.section-navy .rail-switch.is-on,
+.section-navy .kw-chip.is-on {
+  background: var(--ui-accent-soft);
+  border-color: rgba(138, 182, 255, 0.5);
+  color: var(--ui-link-ink);
+}
+.section-navy .rail-city__count {
+  color: var(--ui-ink-4);
+}
+.section-navy .rail-city.is-on .rail-city__count,
+.section-navy .rail-more,
+.section-navy .kw-rail__arrow {
+  color: var(--ui-link);
+}
+.section-navy .rail-subtitle,
+.section-navy .listing-panel__title,
+.section-navy .kw-rail__label {
+  color: var(--ui-ink-4);
+}
+.section-navy .listing-panel,
+.section-navy .headline-well,
+.section-navy .suggested-card {
+  border-color: var(--ui-line);
+}
+.section-navy .headline-well,
+.section-navy .suggested-card {
+  background: var(--ui-surface-2);
+}
+.section-navy .rail-switch__track {
+  background: var(--ui-surface-2);
+  border-color: var(--ui-line);
+}
+.section-navy .rail-switch.is-on .rail-switch__track {
+  background: var(--ui-link);
+  border-color: var(--ui-link);
+}
+/* At `lg` the rail is a borderless column on the page, not a card. */
+@media (min-width: 1024px) {
+  .section-navy .location-rail {
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--ui-line);
+  }
+}
+
+/* The hackathon panel is already navy; on a navy page it would read as a hole,
+   so inside the scope it is lifted two steps and its edge brightens. */
+.section-navy .hackathon-card {
+  border-color: rgba(138, 182, 255, 0.38);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(23, 105, 255, 0.4) 0%, rgba(23, 105, 255, 0) 55%),
+    linear-gradient(160deg, #143a66 0%, #0b2444 72%);
+  box-shadow: var(--ui-card-shadow);
+}
+.section-navy .hackathon-card:hover {
+  border-color: rgba(138, 182, 255, 0.7);
+}
+
+/* The base focus ring is `ring-offset-white` — a white halo on navy. */
+.section-navy :focus-visible {
+  --tw-ring-color: rgba(122, 168, 255, 0.95);
+  --tw-ring-offset-color: var(--ui-ring-offset);
+}
+.section-navy .rail-input:focus,
+.section-navy .field-input:focus,
+.section-navy .filter-select:focus {
+  border-color: var(--ui-link);
+  box-shadow: 0 0 0 3px rgba(122, 168, 255, 0.28);
+}
+
+/* The account rail is part of the same navy family as the section canvas. */
+.shell-sections .home-rail.section-navy {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}

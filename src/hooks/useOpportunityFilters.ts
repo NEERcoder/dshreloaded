@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   DEFAULT_FILTERS,
+  type FilterOffering,
   type FilterOptions,
   type OpportunityFilters,
 } from "../lib/opportunityFilters";
@@ -38,11 +39,17 @@ export type OpportunityFilterState = {
  * `streamEnabled` completes that picture for the write side: it says which
  * controls this section owns, so a change here can never store away a value the
  * viewer saved from a different section.
+ *
+ * `offering` says the same thing for the sections that render only part of the
+ * toolbar — a page that shows no pay select neither applies a saved pay choice
+ * nor writes over it. Pass a module-level constant: a fresh object each render
+ * would re-run the hydration.
  */
 export function useOpportunityFilters(
   options: FilterOptions,
   optionsReady: boolean,
-  streamEnabled = false
+  streamEnabled = false,
+  offering?: FilterOffering
 ): OpportunityFilterState {
   const { user } = useAuth();
   const userId = user?.id ?? null;
@@ -55,8 +62,8 @@ export function useOpportunityFilters(
   const optionsRef = useRef(options);
   optionsRef.current = options;
   /** The controls this section owns, read at write time rather than capture time. */
-  const sectionRef = useRef<FilterSection>({ options, streamEnabled });
-  sectionRef.current = { options: optionsRef.current, streamEnabled };
+  const sectionRef = useRef<FilterSection>({ options, streamEnabled, offering });
+  sectionRef.current = { options: optionsRef.current, streamEnabled, offering };
   const writeTimer = useRef<number | undefined>(undefined);
   const lastWritten = useRef<string>("");
   /** Bumped by every viewer-initiated change; the stale-read guard reads it. */
@@ -80,7 +87,7 @@ export function useOpportunityFilters(
     let cancelled = false;
     const interactionsAtStart = interactionRef.current;
     setRestored(false);
-    loadPreferences(userId, optionsRef.current).then((loaded) => {
+    loadPreferences(userId, optionsRef.current, offering).then((loaded) => {
       // `null` means the store saw the identity change mid-flight; a moved
       // interaction counter means the viewer already chose. Both make this
       // result stale — applying it would revert a newer decision.
@@ -94,7 +101,7 @@ export function useOpportunityFilters(
     return () => {
       cancelled = true;
     };
-  }, [userId, optionsReady, revision]);
+  }, [userId, optionsReady, revision, offering]);
 
   async function flushWrite(owner: string | null, next: OpportunityFilters) {
     const result = await persistPreferences(owner, next, sectionRef.current);

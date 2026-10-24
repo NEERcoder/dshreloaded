@@ -226,17 +226,11 @@ export default function CirclePage() {
       description="Discover students, interests and people building something alongside you."
       backgroundPreset="directory"
     >
-      <section className="page-hero pillar-circle">
-        <div className="container-px">
-          <p className="eyebrow">CIRCLE</p>
-          <h1 className="page-title font-display mt-2">
-            Find your people.
-          </h1>
-          <p className="page-lede mt-3 max-w-2xl">
-            Discover students, interests and people building something alongside you.
-          </p>
+      <section className="container-px pt-3 sm:pt-4">
+        <h1 className="sr-only">Circle — student directory</h1>
+        <div>
           {user && (
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <Link href="/dashboard" className="btn-outline-blue">
                 Edit My Profile
               </Link>
@@ -252,7 +246,7 @@ export default function CirclePage() {
           directory rather than on a separate page, so CIRCLE reads as one place
           to see where you stand and who is next to you. */}
       {!authLoading && user && myProfile && (
-        <div className="container-px pt-6">
+        <div className="container-px pt-3">
           <CircleYourProfile
             profile={myProfile}
             collegeName={myCollegeName}
@@ -319,13 +313,19 @@ export default function CirclePage() {
 
             <div className="card p-4 sm:p-5 bg-white shadow-card border border-surface-border">
               <div className="relative">
-                <Icon name="search" className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
+                <label className="sr-only" htmlFor="circle-search">
+                  Search students
+                </label>
+                <Icon
+                  name="search"
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400"
+                />
                 <input
+                  id="circle-search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search students by name, course or college…"
                   className="field-input pl-11"
-                  aria-label="Search students"
                 />
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

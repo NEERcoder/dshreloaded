@@ -7,6 +7,7 @@ import LocationRail from "./LocationRail";
 import KeywordRail from "./KeywordRail";
 import {
   CertificationListingCard,
+  HackathonListingCard,
   CompetitionListingCard,
   ResearchListingCard,
   WideListingCard,
@@ -18,8 +19,8 @@ import {
   deriveFilterOptions,
   filtersWithoutChip,
   isDefaultFilters,
-  toggleFacetValue,
   type ActiveFilterChip,
+  type FilterOffering,
   type FilterOptions,
 } from "../../lib/opportunityFilters";
 import { ORGANIZER_FORM_URL } from "../../lib/organizerCta";
@@ -38,7 +39,7 @@ export type CategoryChip = {
  * presentation differs, so the pages read as a family without collapsing into
  * one template.
  */
-export type FeedLayout = "grid" | "wide" | "research" | "competition" | "certification";
+export type FeedLayout = "grid" | "wide" | "research" | "competition" | "hackathon" | "certification";
 
 export type PostingCta = {
   label: string;
@@ -50,6 +51,13 @@ export type PostingCta = {
 type OpportunityBrowserProps = {
   categories: OpportunityRecord["category"][];
   chips?: CategoryChip[];
+  /**
+   * The redesign dropped the general search box from the eight section pages, so
+   * the box renders only for a caller that supplies a placeholder — which today
+   * is `/opportunities`, where it is the page's main control. The `search` state
+   * stays either way: it is an argument to the shared filter function, not a
+   * feature that was removed with the input.
+   */
   searchPlaceholder?: string;
   emptyTitle: string;
   emptyDescription: string;
@@ -64,19 +72,27 @@ type OpportunityBrowserProps = {
    * open internships" both have to read correctly.
    */
   countNoun?: { one: string; many: string };
-  /** One line under the count — what this feed is, in the product's own words. */
-  supportingText?: string;
   posting?: PostingCta;
   /** Label for the featured chip — the reference's "Trending" pill. */
   featuredChipLabel?: string;
   /** Render one chip per stream value the listings actually carry. */
   streamChips?: boolean;
-  /** Render up to N field values as quick chips. */
-  fieldChips?: number;
   /** Auto-scrolling rail bound to the `fields` facet. */
   keywordRailLabel?: string;
   /** A page that shows a subset of a category, e.g. hackathons inside competitions. */
   belongs?: (item: OpportunityRecord) => boolean;
+  /**
+   * `classic` is the shared toolbar (search, facets, pay, sort) that
+   * `/opportunities`, AIM and FIELD still use. `section` is the redesign's
+   * chrome: the wireframe's own chips and rail, with no generic bar.
+   */
+  chrome?: "classic" | "section";
+  /**
+   * Which filters this page offers a control for. Anything else is neither
+   * applied nor written, so a preference saved on another page cannot narrow
+   * this feed invisibly — and cannot be erased from here either.
+   */
+  offering?: FilterOffering;
 };
 
 const GRID_CLASS: Record<FeedLayout, string> = {
@@ -84,7 +100,8 @@ const GRID_CLASS: Record<FeedLayout, string> = {
   wide: "flex flex-col gap-4",
   research: "grid gap-4 lg:grid-cols-2",
   competition: "grid gap-4 xl:grid-cols-2",
-  certification: "grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4",
+  hackathon: "grid gap-4 xl:grid-cols-2",
+  certification: "grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4",
 };
 
 function PostingButton({ posting }: { posting: PostingCta }) {
@@ -126,7 +143,7 @@ function ChipRow({ chip, onRemove }: { chip: ActiveFilterChip; onRemove: () => v
 export default function OpportunityBrowser({
   categories,
   chips,
-  searchPlaceholder = "Search by title, organisation, field or location…",
+  searchPlaceholder,
   emptyTitle,
   emptyDescription,
   noResultsTitle = "No matches for those filters",
@@ -134,13 +151,13 @@ export default function OpportunityBrowser({
   layout = "grid",
   sidebar = "none",
   countNoun,
-  supportingText,
   posting,
   featuredChipLabel,
   streamChips = false,
-  fieldChips = 0,
   keywordRailLabel,
   belongs,
+  chrome = "classic",
+  offering,
 }: OpportunityBrowserProps) {
   const [items, setItems] = useState<OpportunityRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,7 +220,7 @@ export default function OpportunityBrowser({
   // for a value nothing in the feed carries.
   const options: FilterOptions = useMemo(() => deriveFilterOptions(owned), [owned]);
   const { filters, setFilters, resetFilters, restored, droppedNotice, dismissDroppedNotice } =
-    useOpportunityFilters(options, !loading && owned.length > 0, streamEnabled);
+    useOpportunityFilters(options, !loading && owned.length > 0, streamEnabled, offering);
 
   const activeChip = chips?.find((c) => c.id === chip) ?? chips?.[0];
   const scoped = activeChip?.category
@@ -220,7 +237,7 @@ export default function OpportunityBrowser({
   // `null` — the card then shows nothing rather than a misleading zero.
   const countIds = useMemo(
     () =>
-      layout === "competition"
+      layout === "competition" || layout === "hackathon"
         ? visible.filter((item) => item.teamFormationEnabled).map((item) => item.id)
         : [],
     [layout, visible]
@@ -253,8 +270,7 @@ export default function OpportunityBrowser({
   const activeChips = activeFilterChips(filters);
 
   const streamValues = streamChips && streamEnabled ? options.stream.slice(0, 4) : [];
-  const fieldValues = fieldChips > 0 ? options.fields.slice(0, fieldChips) : [];
-  const hasQuickRow = Boolean(featuredChipLabel) || streamValues.length > 0 || fieldValues.length > 0;
+  const hasQuickRow = Boolean(featuredChipLabel) || streamValues.length > 0;
 
   function handleReset() {
     setSearch("");
@@ -285,6 +301,10 @@ export default function OpportunityBrowser({
         return (
           <CompetitionListingCard key={item.id} item={item} registeredTeams={counts[item.id] ?? null} />
         );
+      case "hackathon":
+        return (
+          <HackathonListingCard key={item.id} item={item} registeredTeams={counts[item.id] ?? null} />
+        );
       case "certification":
         return <CertificationListingCard key={item.id} item={item} />;
       default:
@@ -292,8 +312,72 @@ export default function OpportunityBrowser({
     }
   }
 
+  // The three state surfaces, built once and shared by both chrome modes, so a
+  // section page can drop the generic toolbar without losing the ability to see
+  // or clear what is narrowing its feed.
+  const countAndReset = (
+    <div className="flex w-full flex-wrap items-center justify-between gap-2 pt-1">
+      <p
+        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500"
+        aria-live="polite"
+      >
+        {loading ? (
+          <>
+            <Icon name="loader" className="h-3.5 w-3.5 animate-spin" />
+            Loading…
+          </>
+        ) : countNoun ? (
+          showReset && `${visible.length} of ${openTotal} open listings`
+        ) : (
+          countLabel()
+        )}
+      </p>
+      {showReset && (
+        <button
+          onClick={handleReset}
+          className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[44px]"
+        >
+          <Icon name="close" className="h-3.5 w-3.5" />
+          Reset
+        </button>
+      )}
+    </div>
+  );
+
+  const chipStrip =
+    activeChips.length > 0 && sidebar !== "filters" ? (
+      <div className="flex w-full flex-wrap items-center gap-1.5 pt-1" role="group" aria-label="Active filters">
+        {activeChips.map((activeChip) => (
+          <button
+            key={`${activeChip.key}:${activeChip.value ?? ""}`}
+            type="button"
+            onClick={() => setFilters(filtersWithoutChip(filters, activeChip))}
+            aria-label={`Remove filter ${activeChip.label}`}
+            className="inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-xl border border-brand-blue/25 bg-brand-blue-soft px-3 text-xs font-bold text-brand-blue transition-colors hover:border-brand-blue/50 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
+          >
+            <span className="min-w-0 truncate">{activeChip.label}</span>
+            <Icon name="close" className="h-3.5 w-3.5 shrink-0" />
+          </button>
+        ))}
+      </div>
+    ) : null;
+
+  const notice =
+    droppedNotice && restored ? (
+      <p className="flex w-full flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-ink-500">
+        <span>Some saved filters aren’t available in this section, so they aren’t applied here.</span>
+        <button
+          type="button"
+          onClick={dismissDroppedNotice}
+          className="flex min-h-[44px] items-center rounded-lg px-2 text-brand-blue hover:underline"
+        >
+          Dismiss
+        </button>
+      </p>
+    ) : null;
+
   return (
-    <div className="mt-6">
+    <div>
       {(countNoun || posting) && (
         <div className="feed-head">
           {countNoun ? (
@@ -301,11 +385,6 @@ export default function OpportunityBrowser({
               <h1 className="feed-count" aria-live="polite">
                 {headingCount()}
               </h1>
-              {supportingText && (
-                <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-ink-600 sm:text-sm">
-                  {supportingText}
-                </p>
-              )}
             </div>
           ) : (
             <span />
@@ -315,7 +394,7 @@ export default function OpportunityBrowser({
       )}
 
       {(hasQuickRow || keywordRailLabel) && (
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-surface-border pb-3">
+        <div className="chip-row">
           {featuredChipLabel && (
             <button
               type="button"
@@ -335,17 +414,6 @@ export default function OpportunityBrowser({
               aria-pressed={filters.stream === value}
               onClick={() => setFilters({ ...filters, stream: filters.stream === value ? "" : value })}
               className={`chip-toggle ${filters.stream === value ? "is-on" : ""}`}
-            >
-              {value}
-            </button>
-          ))}
-          {fieldValues.map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={filters.fields.includes(value)}
-              onClick={() => setFilters({ ...filters, fields: toggleFacetValue(filters.fields, value) })}
-              className={`chip-toggle ${filters.fields.includes(value) ? "is-on" : ""}`}
             >
               {value}
             </button>
@@ -421,86 +489,49 @@ export default function OpportunityBrowser({
         )}
 
         <div className="min-w-0">
-          <div className="filter-bar card p-3 sm:p-3.5">
-            <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
-              <Icon
-                name="search"
-                className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400"
-              />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={searchPlaceholder}
-                className="field-input filter-search pl-11"
-                aria-label="Search opportunities"
-              />
-            </div>
-
-            <FilterControls
-              value={filters}
-              onChange={setFilters}
-              onReset={resetFilters}
-              options={options}
-              streamEnabled={streamEnabled}
-            />
-
-            <div className="flex w-full flex-wrap items-center justify-between gap-2 pt-1">
-              <p
-                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-500"
-                aria-live="polite"
-              >
-                {loading ? (
-                  <>
-                    <Icon name="loader" className="h-3.5 w-3.5 animate-spin" />
-                    Loading…
-                  </>
-                ) : countNoun ? (
-                  showReset && `${visible.length} of ${openTotal} open listings`
-                ) : (
-                  countLabel()
-                )}
-              </p>
-              {showReset && (
-                <button
-                  onClick={handleReset}
-                  className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[44px]"
-                >
-                  <Icon name="close" className="h-3.5 w-3.5" />
-                  Reset
-                </button>
-              )}
-            </div>
-
-            {activeChips.length > 0 && sidebar !== "filters" && (
-              <div className="flex w-full flex-wrap items-center gap-1.5 pt-1" role="group" aria-label="Active filters">
-                {activeChips.map((activeChip) => (
-                  <button
-                    key={`${activeChip.key}:${activeChip.value ?? ""}`}
-                    type="button"
-                    onClick={() => setFilters(filtersWithoutChip(filters, activeChip))}
-                    aria-label={`Remove filter ${activeChip.label}`}
-                    className="inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-xl border border-brand-blue/25 bg-brand-blue-soft px-3 text-xs font-bold text-brand-blue transition-colors hover:border-brand-blue/50 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
-                  >
-                    <span className="min-w-0 truncate">{activeChip.label}</span>
-                    <Icon name="close" className="h-3.5 w-3.5 shrink-0" />
-                  </button>
-                ))}
+          {chrome === "section" ? (
+            /* The section pages carry no generic toolbar: the filters that
+               survive are the wireframe's own chips and rail, and what is left
+               here is the state readout — what is narrowing the feed, how many
+               listings that leaves, and the one button that puts them back. */
+            (showReset || activeChips.length > 0 || (droppedNotice && restored)) && (
+              <div className="feed-dock">
+                {chipStrip}
+                {countAndReset}
+                {notice}
               </div>
-            )}
+            )
+          ) : (
+            <div className="filter-bar card p-3 sm:p-3.5">
+              {searchPlaceholder && (
+                <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
+                  <Icon
+                    name="search"
+                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="field-input filter-search pl-11"
+                    aria-label="Search opportunities"
+                  />
+                </div>
+              )}
 
-            {droppedNotice && restored && (
-              <p className="flex w-full flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-ink-500">
-                <span>Some saved filters aren’t available in this section, so they aren’t applied here.</span>
-                <button
-                  type="button"
-                  onClick={dismissDroppedNotice}
-                  className="flex min-h-[44px] items-center rounded-lg px-2 text-brand-blue hover:underline"
-                >
-                  Dismiss
-                </button>
-              </p>
-            )}
-          </div>
+              <FilterControls
+                value={filters}
+                onChange={setFilters}
+                onReset={resetFilters}
+                options={options}
+                streamEnabled={streamEnabled}
+              />
+
+              {countAndReset}
+              {chipStrip}
+              {notice}
+            </div>
+          )}
 
           <div className="mt-6">
             {loading ? (

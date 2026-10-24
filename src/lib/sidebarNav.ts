@@ -83,6 +83,17 @@ export function isSectionTabPath(path: string): boolean {
 }
 
 /**
+ * True for the eight section pages themselves, and not for the routes nested
+ * under them. The tab row has to stay active for `/circle/<id>` so a profile
+ * still shows where the reader is; the dark section canvas deliberately does
+ * not, because a profile, a team or an event detail is its own page and keeps
+ * the light surface every other page uses.
+ */
+export function isSectionTabRoot(path: string): boolean {
+  return SECTION_TABS.some((tab) => tab.href === path);
+}
+
+/**
  * The routes the desktop rail can render inside its own shell. Derived from the
  * nav list above plus the section tabs, so a destination added once appears in
  * both places; the tabs are included because the row under the taskbar has to

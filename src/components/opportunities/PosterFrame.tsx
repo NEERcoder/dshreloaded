@@ -12,12 +12,15 @@ import { CategoryGlyph } from "../FeatureIcon";
 export default function PosterFrame({
   item,
   className = "",
+  ratio = "676 / 451",
 }: {
   item: Pick<OpportunityRecord, "title" | "category" | "imageUrl" | "posterCrop">;
   className?: string;
+  /** CSS aspect-ratio of the frame; the default is the 676:451 card poster. */
+  ratio?: string;
 }) {
   return (
-    <div className={`relative w-full overflow-hidden bg-surface-soft ${className}`} style={{ aspectRatio: "676 / 451" }}>
+    <div className={`relative w-full overflow-hidden bg-surface-soft ${className}`} style={{ aspectRatio: ratio }}>
       {item.imageUrl ? (
         <img
           src={item.imageUrl}

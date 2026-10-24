@@ -10,22 +10,15 @@ import { SECTION_TABS, activeSectionTab } from "../lib/sidebarNav";
  * desktop, `PageShell` on a standalone section page — and each asks the same
  * predicate, so a page can never grow two of them.
  *
- * The tab surface is the app's own chip pattern (same 44px box, radius,
- * uppercase label and solid-blue active fill as the category chips on the
- * listing pages), which is why no new visual language is introduced here.
- *
- * Below laptop width the row scrolls sideways rather than shrinking the labels.
+ * From `lg` the eight tabs share the row equally (CSS grid, eight equal
+ * columns); below that the row scrolls sideways rather than shrinking labels.
+ * The selected tab carries a blue gradient surface, a soft glow ring and an
+ * inset highlight; the gradient fades in through an opacity transition, and
+ * `prefers-reduced-motion` turns the transitions off (see index.css).
  * The strip carries vertical padding so the focus ring is never clipped by that
  * scroller, and the active tab is brought into view — but only when the strip
  * genuinely overflows, and never in a way that moves the page itself.
  */
-const TAB_BASE =
-  "inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-[11px] font-extrabold uppercase tracking-wider transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2";
-const TAB_INACTIVE =
-  "border-surface-border bg-white text-ink-600 hover:border-brand-blue/40 hover:text-brand-blue active:bg-brand-blue-pale";
-const TAB_ACTIVE =
-  "border-brand-blue-dark bg-brand-blue text-white shadow-soft hover:text-white active:bg-brand-blue-dark";
-
 export default function SectionTabs() {
   const { path } = useLocation();
   const active = activeSectionTab(path);
@@ -48,20 +41,20 @@ export default function SectionTabs() {
             height is a constant so the rail below can be offset by exactly it. */}
         <ul
           data-section-tabs-strip
-          className="h-scroll no-scrollbar flex h-14 items-center gap-1.5 overflow-x-auto py-1.5"
+          className="section-tabs-strip h-scroll no-scrollbar"
         >
           {SECTION_TABS.map((tab) => {
             const isActive = active?.id === tab.id;
             return (
-              <li key={tab.id} className="shrink-0">
+              <li key={tab.id}>
                 <Link
                   href={tab.href}
                   ref={isActive ? activeRef : undefined}
                   aria-current={isActive ? "page" : undefined}
-                  className={`${TAB_BASE} ${isActive ? TAB_ACTIVE : TAB_INACTIVE}`}
+                  className={`section-tab ${isActive ? "is-active" : ""}`}
                 >
-                  <Icon name={tab.icon} className="h-3.5 w-3.5 shrink-0" />
-                  {tab.label}
+                  <Icon name={tab.icon} className="section-tab__icon h-3.5 w-3.5 shrink-0" />
+                  <span className="section-tab__label">{tab.label}</span>
                 </Link>
               </li>
             );

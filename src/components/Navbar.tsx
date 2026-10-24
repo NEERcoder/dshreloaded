@@ -92,7 +92,7 @@ export default function Navbar({ sidebarOpen = true, onToggleSidebar }: NavbarPr
               ≥640px keeps the markup, grouping and spacing it had before. */}
           <div
             className={`flex shrink-0 items-center gap-0.5 sm:gap-1 max-sm:contents ${
-              onToggleSidebar ? "lg:w-56 lg:justify-between lg:pl-3" : ""
+              onToggleSidebar ? "lg:w-[var(--rail-w)] lg:justify-between lg:pl-3" : ""
             }`}
           >
             {/* Phones drop the lockup entirely (Home is the drawer's first item

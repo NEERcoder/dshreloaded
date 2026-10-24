@@ -110,39 +110,29 @@ export default function PulsePage() {
       description="Campus news from colleges across India: announcements, stories, results, interviews and guides."
       backgroundPreset="explore"
     >
-      <section className="page-hero pillar-pulse">
-        <div className="container-px">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="min-w-0">
-              <p className="eyebrow">PULSE</p>
-              <h1 className="page-title font-display mt-2">Campus news, live from colleges.</h1>
-              <p className="page-lede mt-3 max-w-2xl">
-                Announcements, results, fests and the stories students actually talk about — written up by
-                the JAVLIN desk.
-              </p>
-            </div>
-            <a href={NEWS_DESK_MAILTO} className="btn-accent min-h-[44px]">
-              <Icon name="mail" className="h-4 w-4" />
-              Got campus news? Mail us
-            </a>
+      <section className="container-px pb-8 pt-3 sm:pt-4">
+        <h1 className="sr-only">Pulse — campus news</h1>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-surface-border pb-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2" role="group" aria-label="News topics">
+            {topicOptions.length > 1 && (
+              <>
+                <FilterChip label="All news" active={topic === "all"} onClick={() => setTopic("all")} />
+                {topicOptions.map((category) => (
+                  <FilterChip
+                    key={category}
+                    label={categoryLabel(category)}
+                    active={topic === category}
+                    onClick={() => setTopic(category)}
+                  />
+                ))}
+              </>
+            )}
           </div>
+          <a href={NEWS_DESK_MAILTO} className="btn-accent min-h-[44px] shrink-0">
+            <Icon name="mail" className="h-4 w-4" />
+            Got campus news? Mail us
+          </a>
         </div>
-      </section>
-
-      <section className="container-px py-6 sm:py-8">
-        {topicOptions.length > 1 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2" role="group" aria-label="News topics">
-            <FilterChip label="All news" active={topic === "all"} onClick={() => setTopic("all")} />
-            {topicOptions.map((category) => (
-              <FilterChip
-                key={category}
-                label={categoryLabel(category)}
-                active={topic === category}
-                onClick={() => setTopic(category)}
-              />
-            ))}
-          </div>
-        )}
 
         {loading ? (
           <SkeletonOpportunityGrid count={6} />
@@ -164,7 +154,7 @@ export default function PulsePage() {
           />
         ) : (
           <>
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
               <LeadStory post={lead} onSelect={setSelectedPostId} />
               {topStories.length > 0 && <TopStories posts={topStories} onSelect={setSelectedPostId} />}
             </div>
@@ -172,14 +162,14 @@ export default function PulsePage() {
             {rest.length > 0 && (
               <div className="mt-10">
                 <div className="flex items-end justify-between gap-3">
-                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
+                  <h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900 sm:text-xl">
                     Latest news
                   </h2>
                   <p className="text-xs font-bold text-ink-500">
                     {rest.length} more {rest.length === 1 ? "story" : "stories"}
                   </p>
                 </div>
-                <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {rest.map((post) => (
                     <PulsePostCard key={post.id} post={post} onSelect={setSelectedPostId} />
                   ))}

@@ -47,12 +47,12 @@ function EventCard({ event }: { event: EventRecord }) {
   const place = [event.city, event.venue].filter(Boolean).join(" · ");
 
   return (
-    <article className="card flex h-full flex-col overflow-hidden bg-white p-0">
+    <article className="card card-interactive group flex h-full flex-col overflow-hidden bg-white p-0">
       <p className="m-0 flex items-center gap-1.5 border-b border-surface-border bg-surface-soft px-3 py-2 text-[11px] font-extrabold uppercase tracking-wider text-ink-600">
         <Icon name="building" className="h-3.5 w-3.5 shrink-0" />
         <span className="min-w-0 break-words">{event.organizer}</span>
       </p>
-      <div className="relative w-full overflow-hidden bg-surface-soft" style={{ aspectRatio: "16 / 9" }}>
+      <div className="listing-poster-zoom relative w-full overflow-hidden bg-surface-soft" style={{ aspectRatio: "5 / 4" }}>
         {event.imageUrl ? (
           <img
             src={event.imageUrl}
@@ -149,20 +149,15 @@ export default function EventsPage() {
       description="Fests, summits, workshops and cultural nights from colleges across India, with dates, venue and tickets."
       backgroundPreset="opportunities"
     >
-      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-6 pb-6 sm:pt-10 sm:pb-8">
+      <section className="bg-brand-blue-pale/60 backdrop-blur-[2px] border-b border-surface-border pt-3 pb-5 sm:pt-4 sm:pb-6">
         <div className="container-px max-w-7xl mx-auto">
-          <p className="eyebrow">Events</p>
-          <div className="feed-head mt-2">
+          <div className="feed-head">
             <div className="min-w-0">
               <h1 className="feed-count" aria-live="polite">
                 {loading
                   ? "Loading college events…"
                   : `${visible.length} of ${events.length} college events`}
               </h1>
-              <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-ink-600 sm:text-sm">
-                Fests, summits and workshops from colleges across India — dates, venue and tickets as the
-                host published them.
-              </p>
             </div>
             <div className="post-cta">
               <a href={ORGANIZER_FORM_URL} target="_blank" rel="noreferrer" className="post-cta__button">
@@ -172,7 +167,7 @@ export default function EventsPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-surface-border pb-3">
+          <div className="chip-row">
             <button
               type="button"
               aria-pressed={trendingOnly}
@@ -303,7 +298,7 @@ export default function EventsPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {visible.map((event) => (
                     <EventCard key={event.id} event={event} />
                   ))}

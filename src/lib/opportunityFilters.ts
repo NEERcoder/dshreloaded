@@ -131,11 +131,62 @@ export type SanitizeResult = {
 };
 
 /**
+ * Which filters the page on screen actually offers a control for.
+ *
+ * The five section pages each carry only their wireframe's filters, and two
+ * things follow from that which this descriptor makes safe:
+ *
+ *   * A value saved from another page must not quietly narrow a feed the viewer
+ *     cannot widen again — so anything not offered is zeroed on the way in.
+ *   * A value that belongs to another page must survive a write here — so
+ *     anything not offered is also not *managed*, and `mergeManagedPayload`
+ *     carries it through untouched instead of overwriting it with the empty
+ *     default.
+ *
+ * It describes the controls, not the data: `deriveFilterOptions` still decides
+ * whether a facet has anything to offer at all.
+ */
+export type FilterFacetKey = "modes" | "fields" | "courses" | "locations";
+export type FilterControlKey = "stream" | "compensation" | "sort" | "remoteOnly" | "featuredOnly";
+
+export type FilterOffering = {
+  facets: readonly FilterFacetKey[];
+  controls: readonly FilterControlKey[];
+};
+
+/** Every control the toolbar offers — what `/opportunities`, AIM and FIELD use. */
+export const ALL_FILTERS_OFFERED: FilterOffering = {
+  facets: ["modes", "fields", "courses", "locations"],
+  controls: ["stream", "compensation", "sort", "remoteOnly", "featuredOnly"],
+};
+
+function withoutUnoffered(filters: OpportunityFilters, offered: FilterOffering): OpportunityFilters {
+  const facets = new Set<FilterFacetKey>(offered.facets);
+  const controls = new Set<FilterControlKey>(offered.controls);
+  const next: OpportunityFilters = { ...filters };
+  for (const facet of ["modes", "fields", "courses", "locations"] as const) {
+    if (!facets.has(facet)) next[facet] = [];
+  }
+  if (!controls.has("stream")) next.stream = "";
+  if (!controls.has("compensation")) next.compensation = "";
+  if (!controls.has("remoteOnly")) next.remoteOnly = false;
+  if (!controls.has("featuredOnly")) next.featuredOnly = false;
+  // Sort is a preference like any other: un-offered means back to the default
+  // order for this feed, not an unexplained ordering the viewer cannot change.
+  if (!controls.has("sort")) next.sort = DEFAULT_FILTERS.sort;
+  return next;
+}
+
+/**
  * Validate a stored (or untrusted) object against the options this section can
  * actually honour. Anything unknown is dropped rather than applied, so a stale
  * or hand-edited blob can never produce a silently empty feed.
  */
-export function sanitizeFilters(raw: unknown, options: FilterOptions): SanitizeResult {
+export function sanitizeFilters(
+  raw: unknown,
+  options: FilterOptions,
+  offered: FilterOffering = ALL_FILTERS_OFFERED
+): SanitizeResult {
   if (typeof raw !== "object" || raw === null) {
     return { filters: { ...DEFAULT_FILTERS }, dropped: false };
   }
@@ -144,7 +195,7 @@ export function sanitizeFilters(raw: unknown, options: FilterOptions): SanitizeR
     source.sort,
     Object.keys(OPPORTUNITY_SORT_LABELS) as OpportunitySortKey[]
   );
-  const filters: OpportunityFilters = {
+  const honoured: OpportunityFilters = {
     stream: oneOf(source.stream, options.stream) || "",
     modes: stringList(source.modes, options.modes),
     fields: stringList(source.fields, options.fields),
@@ -164,24 +215,36 @@ export function sanitizeFilters(raw: unknown, options: FilterOptions): SanitizeR
 
   // A value was dropped when the blob carried it but this section cannot honour
   // it — a facet saved from another section, or a stream chosen before
-  // migration 016 is applied. The caller tells the user rather than leaving an
-  // unexplained empty feed.
-  const dropped = (["stream", "modes", "fields", "courses", "locations", "compensation"] as const).some(
-    (key) => rawPresent(source[key]) && isEmptyValue(filters[key])
+  // migration 016 is applied. Only keys this section offers are counted: a
+  // course filter saved from AIM is somebody else's preference, not something
+  // the viewer lost, and counting it would make the notice impossible to shake.
+  const facets = new Set<FilterFacetKey>(offered.facets);
+  const controls = new Set<FilterControlKey>(offered.controls);
+  const checks: { offered: boolean; raw: unknown; honoured: string | string[] | boolean }[] = [
+    { offered: facets.has("modes"), raw: source.modes, honoured: honoured.modes },
+    { offered: facets.has("fields"), raw: source.fields, honoured: honoured.fields },
+    { offered: facets.has("courses"), raw: source.courses, honoured: honoured.courses },
+    { offered: facets.has("locations"), raw: source.locations, honoured: honoured.locations },
+    { offered: controls.has("stream"), raw: source.stream, honoured: honoured.stream },
+    { offered: controls.has("compensation"), raw: source.compensation, honoured: honoured.compensation },
+    { offered: controls.has("remoteOnly"), raw: source.remoteOnly, honoured: honoured.remoteOnly },
+    { offered: controls.has("featuredOnly"), raw: source.featuredOnly, honoured: honoured.featuredOnly },
+  ];
+  const dropped = checks.some(
+    (check) => check.offered && rawPresent(check.raw) && isEmptyValue(check.honoured)
   );
-  const droppedToggle =
-    (source.remoteOnly === true && !filters.remoteOnly) ||
-    (source.featuredOnly === true && !filters.featuredOnly);
 
-  return { filters, dropped: dropped || droppedToggle };
+  return { filters: withoutUnoffered(honoured, offered), dropped };
 }
 
 function rawPresent(value: unknown): boolean {
+  if (typeof value === "boolean") return value;
   if (Array.isArray(value)) return value.some((entry) => typeof entry === "string" && entry.trim() !== "");
   return typeof value === "string" && value.trim() !== "";
 }
 
-function isEmptyValue(value: string | string[]): boolean {
+function isEmptyValue(value: string | string[] | boolean): boolean {
+  if (typeof value === "boolean") return !value;
   return Array.isArray(value) ? value.length === 0 : value === "";
 }
 
@@ -242,18 +305,31 @@ export function validateStoredPayload(raw: unknown): Record<string, unknown> {
  * Which persisted keys the section on screen is allowed to write.
  *
  * A facet is managed only when the loaded rows actually populate its option
- * list, and `stream` only when the column exists. Every other key is somebody
- * else's preference and must be carried through a write untouched; `compensation`
- * and `sort` are offered in every section, so they are always managed.
+ * list, `stream` only when the column exists, and both only when this section
+ * offers a control for it. Everything else is somebody else's preference and
+ * must be carried through a write untouched; `compensation` and `sort` are
+ * offered in every toolbar section, so they are managed there.
+ *
+ * The offering test is the one that keeps a page from destroying another page's
+ * saved filters: an un-offered key is always empty here, and the merge drops an
+ * empty managed key rather than carrying it.
  */
-export function manageableKeys(options: FilterOptions, streamEnabled: boolean): PersistedFilterKey[] {
-  const managed: PersistedFilterKey[] = ["compensation", "sort"];
-  if (streamEnabled) managed.push("stream");
+export function manageableKeys(
+  options: FilterOptions,
+  streamEnabled: boolean,
+  offered: FilterOffering = ALL_FILTERS_OFFERED
+): PersistedFilterKey[] {
+  const controls = new Set<FilterControlKey>(offered.controls);
+  const facets = new Set<FilterFacetKey>(offered.facets);
+  const managed: PersistedFilterKey[] = [];
+  if (controls.has("compensation")) managed.push("compensation");
+  if (controls.has("sort")) managed.push("sort");
+  if (streamEnabled && controls.has("stream")) managed.push("stream");
   for (const facet of ["modes", "fields", "courses", "locations"] as const) {
-    if (options[facet].length > 0) managed.push(facet);
+    if (facets.has(facet) && options[facet].length > 0) managed.push(facet);
   }
-  if (options.remote) managed.push("remoteOnly");
-  if (options.featured) managed.push("featuredOnly");
+  if (options.remote && controls.has("remoteOnly")) managed.push("remoteOnly");
+  if (options.featured && controls.has("featuredOnly")) managed.push("featuredOnly");
   return managed;
 }
 

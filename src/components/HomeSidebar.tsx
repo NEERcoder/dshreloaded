@@ -6,19 +6,29 @@ import { SIDEBAR_NAV, SIDEBAR_DASHBOARD, type SidebarNavItem } from "../lib/side
 import { getPulsePosts, type PulsePostRecord } from "../lib/dataAccess";
 
 /**
- * The account rail beside the homepage on large screens. Its width (w-56) and
- * fixed position are unchanged by design; the contents live in SidebarContent,
- * which the mobile drawer renders too, so desktop and mobile can never drift.
+ * The account rail beside the homepage on large screens. Its width and fixed
+ * position are unchanged by design; the contents live in SidebarContent, which
+ * the mobile drawer renders too, so desktop and mobile can never drift.
+ *
+ * `--rail-w` is the one width the navbar's left segment, the tab row and the
+ * content row also read, so the rail cannot fall out of step with the chrome
+ * beside it.
  *
  * `--rail-top` is the navbar's own height by default and is raised by the shell
  * on a page that carries the section-tab row, so the rail always starts below
  * whatever chrome is above it instead of sliding underneath it.
+ *
+ * `navy` puts the rail on the section pages' dark canvas: the same
+ * `.section-navy` token scope the content uses, so rail and page flip together
+ * rather than one of them being re-tuned by hand.
  */
-export default function HomeSidebar() {
+export default function HomeSidebar({ navy = false }: { navy?: boolean }) {
   return (
     <aside
       aria-label="JAVLIN sections"
-      className="home-rail hidden w-56 shrink-0 lg:fixed lg:bottom-0 lg:left-0 lg:top-[var(--rail-top,5rem)] lg:z-30 lg:flex lg:flex-col lg:gap-2 lg:overflow-hidden lg:rounded-r-2xl lg:p-3"
+      className={`home-rail hidden w-[var(--rail-w)] shrink-0 lg:fixed lg:bottom-0 lg:left-0 lg:top-[var(--rail-top,5rem)] lg:z-30 lg:flex lg:flex-col lg:gap-2 lg:overflow-hidden lg:rounded-r-2xl lg:p-3${
+        navy ? " section-navy" : ""
+      }`}
     >
       <SidebarContent />
     </aside>
