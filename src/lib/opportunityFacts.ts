@@ -1,5 +1,5 @@
 import { deadlineInstant, formatDeadlineInIst } from "./deadline";
-import { formatPrizeAmount, teamSizeLabel } from "./prize";
+import { formatPrizeAmount, stipendTone, teamSizeLabel, type RewardTone } from "./prize";
 import type { OpportunityRecord } from "./localProvider";
 
 /**
@@ -33,6 +33,12 @@ export type ListingFact = {
   label: string;
   /** The organiser's text, or a direct reading of a typed value. */
   value: string;
+  /**
+   * Set on the three money facts and only on those. A prize, a reward and a
+   * stipend are different promises, so the card colours them apart; every other
+   * fact is logistics and stays neutral.
+   */
+  tone?: RewardTone;
 };
 
 /**
@@ -96,18 +102,24 @@ function stipendLabelFor(category: OpportunityRecord["category"]): string {
 
 export function listingFacts(item: OpportunityRecord): ListingFact[] {
   const found = new Map<ListingFactKey, ListingFact>();
-  const add = (key: ListingFactKey, icon: string, label: string, value: string | null | undefined) => {
+  const add = (
+    key: ListingFactKey,
+    icon: string,
+    label: string,
+    value: string | null | undefined,
+    tone?: RewardTone
+  ) => {
     const text = typeof value === "string" ? value.trim() : "";
-    if (text) found.set(key, { key, icon, label, value: text });
+    if (text) found.set(key, { key, icon, label, value: text, tone });
   };
 
   if (item.teamFormationEnabled) add("team", "users", "Team size", teamSizeLabel(item));
   const rounds = item.rounds?.length ?? 0;
   add("rounds", "flag", "Rounds", rounds > 0 ? `${rounds} round${rounds === 1 ? "" : "s"}` : null);
   if (item.prizeAmount !== null && item.prizeAmount !== undefined) {
-    add("prize", "trophy", "Prize", formatPrizeAmount(item.prizeAmount));
+    add("prize", "trophy", "Prize", formatPrizeAmount(item.prizeAmount), "cash");
   }
-  add("rewards", "award", "Rewards", item.rewards);
+  add("rewards", "award", "Rewards", item.rewards, "goods");
   add("mode", "monitor", "Mode", item.mode);
   add("location", "map-pin", "Where", item.location);
   add("duration", "clock", "Duration", item.duration);
@@ -115,7 +127,7 @@ export function listingFacts(item: OpportunityRecord): ListingFact[] {
     const instant = deadlineInstant(item.startAt, null);
     add("starts", "calendar", "Starts", instant === null ? null : formatDeadlineInIst(instant));
   }
-  add("stipend", "wallet", stipendLabelFor(item.category), item.stipend);
+  add("stipend", "wallet", stipendLabelFor(item.category), item.stipend, stipendTone(item.stipend));
   add("courses", "book", "For", item.eligibleCourses.join(", "));
   add("field", "target", "Field", item.field);
 

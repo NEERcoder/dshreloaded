@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import ConnectControl from "../components/circle/ConnectControl";
+import CollapsibleList from "../components/circle/CollapsibleList";
 import {
   LevelBadge,
   PublicProfileMark,
@@ -13,13 +14,17 @@ import { Link } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
   getConnectionStatus,
+  getStudentExperience,
   getStudentLevel,
   getStudentProfile,
   getStudentRecords,
+  getStudentSkills,
   instagramProfileUrl,
   type ConnectionRef,
+  type StudentExperience,
   type StudentProfileRecord,
   type StudentRecord,
+  type StudentSkill,
 } from "../lib/dataAccess";
 
 type StudentProfilePageProps = {
@@ -54,6 +59,8 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
   const { user, loading: authLoading } = useAuth();
   const [student, setStudent] = useState<StudentProfileRecord | null>(null);
   const [records, setRecords] = useState<StudentRecord[]>([]);
+  const [skills, setSkills] = useState<StudentSkill[]>([]);
+  const [experience, setExperience] = useState<StudentExperience[]>([]);
   const [competitions, setCompetitions] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +81,8 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
     setRecordsError(null);
     setStudent(null);
     setRecords([]);
+    setSkills([]);
+    setExperience([]);
     setCompetitions(0);
 
     if (!profileId) {
@@ -102,14 +111,20 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
       setLoading(false);
       if (!found) return;
 
-      // Records and level fill in once the profile itself is on screen.
-      const [recordsResult, levelResult] = await Promise.all([
+      // Records, skills, experience and level fill in once the profile itself is
+      // on screen. RLS gives a visitor only the rows the owner marked public on
+      // a public profile — nothing is filtered down here.
+      const [recordsResult, levelResult, skillsResult, experienceResult] = await Promise.all([
         getStudentRecords(profileId),
         getStudentLevel(profileId),
+        getStudentSkills(profileId),
+        getStudentExperience(profileId),
       ]);
       if (cancelled) return;
       setRecords(recordsResult.data ?? []);
       if (recordsResult.error) setRecordsError(recordsResult.error);
+      setSkills(skillsResult.data ?? []);
+      setExperience(experienceResult.data ?? []);
       setCompetitions(levelResult.data ?? 0);
     }
 
@@ -297,6 +312,37 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
             </div>
           )}
         </div>
+
+        {/* Skills and work history, folded exactly as they are on the owner's own
+            CIRCLE card. A visitor gets no × control — `onRemove` is what makes a
+            row editable, and it is deliberately not passed here. The section
+            only appears when there is something to show, so a profile with
+            neither grows no empty card. */}
+        {(skills.length > 0 || experience.length > 0) && (
+          <section className="mt-6 card p-6 bg-white shadow-card border border-surface-border">
+            <h2 className="text-base font-extrabold text-ink-900">Skills &amp; experience</h2>
+            {skills.length > 0 && (
+              <CollapsibleList
+                label="Skills"
+                icon="star"
+                variant="view"
+                items={skills.map((skill) => ({ id: skill.id, primary: skill.name }))}
+              />
+            )}
+            {experience.length > 0 && (
+              <CollapsibleList
+                label="Experience"
+                icon="briefcase"
+                variant="view"
+                items={experience.map((entry) => ({
+                  id: entry.id,
+                  primary: entry.role,
+                  secondary: entry.organization || entry.period || undefined,
+                }))}
+              />
+            )}
+          </section>
+        )}
 
         {/* MARK — RLS already limits this to public records of a public profile. */}
         <section className="mt-6 card p-6 bg-white shadow-card border border-surface-border">

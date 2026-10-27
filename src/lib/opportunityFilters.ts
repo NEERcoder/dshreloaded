@@ -1,4 +1,5 @@
 import { isListingOpen, type OpportunityRecord } from "./dataAccess";
+import { compensationState } from "./prize";
 
 /**
  * The one filtering implementation behind Internships, Competitions and
@@ -428,33 +429,9 @@ export function isDefaultFilters(filters: OpportunityFilters): boolean {
 }
 
 /**
- * Read the free-text `stipend` honestly.
- *
- * There is no `is_paid` column, so this is a reading of what an admin typed, not
- * a stored fact. The rules are deliberately narrow and negative-first:
- *
- *   * explicit unpaid wording → `unpaid`
- *   * a currency symbol, an amount, or paid/stipend/salary wording → `paid`
- *   * anything else, including a blank, → `unstated`
- *
- * A blank therefore never counts as unpaid, and a stray "no" in a phrase like
- * "₹40,000 / month (no travel cover)" or "No registration fee" cannot flip a
- * listing into the unpaid bucket — the earlier broad `\bno\b` test did exactly
- * that, which is how this function came to be.
+ * The paid/unpaid reading lives in `prize.ts` next to the rest of the money
+ * rules, so a card's tone and a filter's predicate can never drift apart.
  */
-export type CompensationState = "paid" | "unpaid" | "unstated";
-
-const UNPAID_PATTERN =
-  /unpaid|voluntary|no\s+(?:paid\s+)?(?:stipend|salary|pay|wage|remuneration|compensation)|stipend\s*[:\-]?\s*(?:no|none|nil|zero)\b|\bnil\b|\bzero\s+(?:stipend|pay|salary)\b/i;
-const PAID_PATTERN = /[₹$€]|(?:^|[^a-z])(?:rs|inr|usd)\.?[\s:]*\d|\d+\s*(?:per|\/|a)\s*(?:month|week|day|hour)|\bpaid\b|\bstipend\b|\bsalary\b|\bhonorari|\bremunerat/i;
-
-export function compensationState(stipend: string | null | undefined): CompensationState {
-  const text = (stipend ?? "").trim();
-  if (!text) return "unstated";
-  if (UNPAID_PATTERN.test(text)) return "unpaid";
-  if (PAID_PATTERN.test(text)) return "paid";
-  return "unstated";
-}
 
 /**
  * Read `mode` and `location` honestly as "remote" or not.

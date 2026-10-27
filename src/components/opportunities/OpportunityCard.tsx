@@ -7,6 +7,7 @@ import { sanitizeExternalUrl } from "../../lib/urlSafety";
 import { opportunityHref } from "../../lib/opportunityRoute";
 import { CategoryGlyph } from "../FeatureIcon";
 import { listingFacts } from "../../lib/opportunityFacts";
+import RewardPill from "./RewardPill";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
 export const CATEGORY_BADGE: Record<string, string> = {
@@ -30,7 +31,20 @@ export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
   const safeUrl = sanitizeExternalUrl(item.applicationUrl);
   const isTeamCompetition = item.category === "competition" && item.teamFormationEnabled;
   const href = opportunityHref(item.id);
-  const facts = listingFacts(item).slice(0, 5);
+  /* A feed row carries five facts. Money is the thing a student is actually
+     comparing across cards, so it never gets pushed off the end: when a money
+     fact sits past the cut, it takes the last quiet chip's place. */
+  const facts = (() => {
+    const all = listingFacts(item);
+    const shown = all.slice(0, 5);
+    if (shown.length < 5) return shown;
+    const dropped = all.slice(5).find((fact) => fact.tone);
+    if (!dropped) return shown;
+    const quiet = [...shown].reverse().findIndex((fact) => !fact.tone);
+    if (quiet < 0) return shown;
+    shown[shown.length - 1 - quiet] = dropped;
+    return shown;
+  })();
 
   return (
     <TiltCard className="h-full">
@@ -84,15 +98,16 @@ export default function OpportunityCard({ item }: { item: OpportunityRecord }) {
                 icon set the detail page already uses for these fields). */}
             {facts.length > 0 && (
               <ul className="mt-2.5 flex flex-wrap gap-1.5">
-                {facts.map((fact) => (
-                  <li
-                    key={fact.key}
-                    className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-surface-soft px-2 py-1 text-[11px] font-bold text-ink-700"
-                  >
-                    <Icon name={fact.icon} className="h-3.5 w-3.5 shrink-0 text-ink-500" />
-                    <span className="min-w-0 truncate">{fact.value}</span>
-                  </li>
-                ))}
+                {facts.map((fact) =>
+                  fact.tone ? (
+                    <RewardPill key={fact.key} as="li" tone={fact.tone} value={fact.value} />
+                  ) : (
+                    <li key={fact.key} className="fact-token">
+                      <Icon name={fact.icon} className="h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0 truncate">{fact.value}</span>
+                    </li>
+                  )
+                )}
               </ul>
             )}
           </div>

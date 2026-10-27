@@ -3,8 +3,9 @@ import { Link } from "../../lib/router";
 import { CATEGORY_BADGE } from "../opportunities/OpportunityCard";
 import PosterFrame from "../opportunities/PosterFrame";
 import DeadlinePill from "../opportunities/DeadlinePill";
+import RewardPill from "../opportunities/RewardPill";
 import { opportunityHref } from "../../lib/opportunityRoute";
-import { prizeLabel } from "../../lib/prize";
+import { listingFacts } from "../../lib/opportunityFacts";
 import type { OpportunityRecord } from "../../lib/dataAccess";
 
 type CompactOpportunityCardProps = {
@@ -22,7 +23,14 @@ type CompactOpportunityCardProps = {
  * full.
  */
 export default function CompactOpportunityCard({ item, isNew, imageForward = false }: CompactOpportunityCardProps) {
-  const prize = prizeLabel(item);
+  /* Read from the same fact list the feed cards use, so the homepage cannot
+     disagree with the section page about what the same listing offers. The old
+     `prizeLabel` joined prize and rewards into one string, which then clipped
+     mid-value inside this narrow card — "₹25,000 + Certifi…". Two separate
+     pills say more in less room. */
+  const money = listingFacts(item)
+    .filter((fact) => fact.tone)
+    .slice(0, 2);
 
   return (
     <Link
@@ -59,19 +67,16 @@ export default function CompactOpportunityCard({ item, isNew, imageForward = fal
           {item.title}
         </h3>
         <p className="mt-1 line-clamp-1 text-xs font-semibold text-ink-600">{item.organization}</p>
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-4">
+        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-4">
           {item.mode && (
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-500">
               <Icon name="monitor" className="h-3.5 w-3.5" />
               {item.mode}
             </span>
           )}
-          {prize && (
-            <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-[11px] font-extrabold text-emerald-700">
-              <Icon name="trophy" className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{prize}</span>
-            </span>
-          )}
+          {money.map((fact) => (
+            <RewardPill key={fact.key} tone={fact.tone!} value={fact.value} />
+          ))}
           <DeadlinePill opportunity={item} />
         </div>
       </div>

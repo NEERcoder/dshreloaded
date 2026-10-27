@@ -6,7 +6,8 @@ import { Link } from "../../lib/router";
 import { sanitizeExternalUrl } from "../../lib/urlSafety";
 import { opportunityHref } from "../../lib/opportunityRoute";
 import { listingFacts } from "../../lib/opportunityFacts";
-import { formatPrizeAmount, teamSizeLabel } from "../../lib/prize";
+import { formatPrizeAmount, teamSizeLabel, type RewardTone } from "../../lib/prize";
+import RewardPill from "./RewardPill";
 import { competitionRegistrationOptions, type OpportunityRecord } from "../../lib/dataAccess";
 
 /**
@@ -41,10 +42,25 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function FactToken({ icon, children }: { icon: string; children: ReactNode }) {
+/**
+ * One fact in a feed card's chip row. Money carries a tone and becomes a
+ * `RewardPill`; everything else is logistics and stays a quiet chip, so the
+ * value a student is actually comparing is the one that stands out.
+ */
+function FactToken({
+  icon,
+  tone,
+  children,
+}: {
+  icon: string;
+  tone?: RewardTone;
+  children: ReactNode;
+}) {
+  const text = typeof children === "string" ? children : "";
+  if (tone) return <RewardPill as="li" tone={tone} value={text} />;
   return (
-    <li className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-surface-soft px-2 py-1 text-[11px] font-bold text-ink-700">
-      <Icon name={icon} className="h-3.5 w-3.5 shrink-0 text-ink-500" />
+    <li className="fact-token">
+      <Icon name={icon} className="h-3.5 w-3.5 shrink-0" />
       <span className="min-w-0 truncate">{children}</span>
     </li>
   );
@@ -84,7 +100,7 @@ export function WideListingCard({ item }: { item: OpportunityRecord }) {
   const facts = listingFacts(item);
   const chips = facts.filter((fact) => fact.key === "mode" || fact.key === "location");
   const role = facts.filter((fact) => ["field", "courses", "duration"].includes(fact.key));
-  const perks = facts.filter((fact) => ["stipend", "rewards"].includes(fact.key));
+  const perks = facts.filter((fact) => ["prize", "stipend", "rewards"].includes(fact.key));
 
   return (
     <article className="card listing-wide bg-white">
@@ -132,7 +148,7 @@ export function WideListingCard({ item }: { item: OpportunityRecord }) {
         {chips.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {chips.map((fact) => (
-              <FactToken key={fact.key} icon={fact.icon}>
+              <FactToken key={fact.key} icon={fact.icon} tone={fact.tone}>
                 {fact.value}
               </FactToken>
             ))}
@@ -148,7 +164,7 @@ export function WideListingCard({ item }: { item: OpportunityRecord }) {
         <Panel title="This role">
           <ul className="flex flex-wrap gap-1.5">
             {role.map((fact) => (
-              <FactToken key={fact.key} icon={fact.icon}>
+              <FactToken key={fact.key} icon={fact.icon} tone={fact.tone}>
                 {fact.value}
               </FactToken>
             ))}
@@ -160,7 +176,7 @@ export function WideListingCard({ item }: { item: OpportunityRecord }) {
         <Panel title="Perks">
           <ul className="flex flex-wrap gap-1.5">
             {perks.map((fact) => (
-              <FactToken key={fact.key} icon={fact.icon}>
+              <FactToken key={fact.key} icon={fact.icon} tone={fact.tone}>
                 {fact.value}
               </FactToken>
             ))}
@@ -183,7 +199,9 @@ export function WideListingCard({ item }: { item: OpportunityRecord }) {
  */
 export function ResearchListingCard({ item }: { item: OpportunityRecord }) {
   const href = opportunityHref(item.id);
-  const perks = listingFacts(item).filter((fact) => ["rewards", "stipend", "duration"].includes(fact.key));
+  const perks = listingFacts(item).filter((fact) =>
+    ["prize", "rewards", "stipend", "duration"].includes(fact.key)
+  );
 
   return (
     <article className="card card-interactive flex items-center gap-3 bg-white p-4">
@@ -213,7 +231,7 @@ export function ResearchListingCard({ item }: { item: OpportunityRecord }) {
         {perks.length > 0 && (
           <ul className="mt-1.5 flex flex-wrap gap-1.5">
             {perks.map((fact) => (
-              <FactToken key={fact.key} icon={fact.icon}>
+              <FactToken key={fact.key} icon={fact.icon} tone={fact.tone}>
                 {fact.value}
               </FactToken>
             ))}
@@ -275,8 +293,8 @@ export function CompetitionListingCard({
         </h3>
         <ul className="mt-2 flex flex-wrap gap-1.5">
           {shape && <FactToken icon="users">{shape}</FactToken>}
-          {prize && <FactToken icon="trophy">{prize}</FactToken>}
-          {item.rewards && <FactToken icon="award">{item.rewards}</FactToken>}
+          {prize && <RewardPill as="li" tone="cash" value={prize} />}
+          {item.rewards && <RewardPill as="li" tone="goods" value={item.rewards} />}
           {(item.rounds?.length ?? 0) > 0 && (
             <FactToken icon="flag">{`${item.rounds?.length} round${item.rounds?.length === 1 ? "" : "s"}`}</FactToken>
           )}
@@ -310,9 +328,13 @@ export function CompetitionListingCard({
 export function CertificationListingCard({ item }: { item: OpportunityRecord }) {
   const href = opportunityHref(item.id);
   const safeUrl = sanitizeExternalUrl(item.applicationUrl);
-  const facts = listingFacts(item)
-    .filter((fact) => ["duration", "mode"].includes(fact.key))
-    .slice(0, 2);
+  const all = listingFacts(item);
+  /* This tile used to keep only duration and mode, so a certificate's fee or a
+     research award was dropped even when the organiser had typed one. Money
+     comes first now and logistics gets whatever room is left. */
+  const money = all.find((fact) => fact.tone);
+  const logistics = all.find((fact) => fact.key === "duration") ?? all.find((fact) => fact.key === "mode");
+  const facts = logistics ? [logistics] : [];
 
   return (
     <article className="card card-interactive listing-cert group flex h-full flex-col overflow-hidden bg-white p-0">
@@ -340,8 +362,9 @@ export function CertificationListingCard({ item }: { item: OpportunityRecord }) 
             {item.title}
           </Link>
         </h3>
-        {(facts.length > 0 || safeUrl) && (
+        {(money || facts.length > 0 || safeUrl) && (
           <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-0.5">
+            {money && <RewardPill tone={money.tone!} value={money.value} />}
             {facts.map((fact) => (
               <span key={fact.key} className="text-[11px] font-semibold text-ink-500">
                 {fact.value}
@@ -416,8 +439,8 @@ export function HackathonListingCard({
         </p>
         <ul className="mt-2 flex flex-wrap gap-1.5">
           {shape && <FactToken icon="users">{shape}</FactToken>}
-          {prize && <FactToken icon="trophy">{prize}</FactToken>}
-          {item.rewards && <FactToken icon="award">{item.rewards}</FactToken>}
+          {prize && <RewardPill as="li" tone="cash" value={prize} />}
+          {item.rewards && <RewardPill as="li" tone="goods" value={item.rewards} />}
           {rounds > 0 && <FactToken icon="flag">{`${rounds} round${rounds === 1 ? "" : "s"}`}</FactToken>}
         </ul>
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">

@@ -10,6 +10,7 @@ import { sanitizeExternalUrl, sanitizeMailto, sanitizeWhatsAppUrl } from "../../
 import { opportunityCategoryParam } from "../../lib/opportunityRoute";
 import { CATEGORY_BADGE } from "./OpportunityCard";
 import DeadlinePill from "./DeadlinePill";
+import RewardPill from "./RewardPill";
 import ShareOpportunity from "./ShareOpportunity";
 import CompetitionRegistration from "./CompetitionRegistration";
 import { CategoryGlyph } from "../FeatureIcon";
@@ -144,18 +145,8 @@ export default function OpportunityDetail({ opportunityId }: { opportunityId: st
             each stated separately so a cash prize never reads as merchandise. */}
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <DeadlinePill opportunity={opp} />
-          {prizeAmount && (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700">
-              <Icon name="trophy" className="h-3.5 w-3.5" />
-              {prizeAmount}
-            </span>
-          )}
-          {rewards && (
-            <span className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-surface-border bg-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-700">
-              <Icon name="award" className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0">{rewards}</span>
-            </span>
-          )}
+          {prizeAmount && <RewardPill tone="cash" value={prizeAmount} />}
+          {rewards && <RewardPill tone="goods" value={rewards} />}
           {opp.mode && (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-600">
               <Icon name="monitor" className="h-3.5 w-3.5" />

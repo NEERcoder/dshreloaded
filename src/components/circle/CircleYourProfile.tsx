@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Icon from "../Icon";
 import { Link } from "../../lib/router";
 import { StudentAvatar, RECORD_CATEGORY_LABELS } from "./StudentCard";
@@ -9,17 +9,19 @@ import type { ProfileRecord, StudentRecordCategory } from "../../lib/dataAccess"
 /**
  * The signed-in reader's own presence at the top of CIRCLE.
  *
- * Three things live here, all of them real: the profile card (photo, name,
- * headline, college, MARK tier and the completion rule from
- * `lib/profileCompletion`), the visibility switch that writes
- * `public.profiles.is_public`, and the MARK column, which counts the records and
- * competitions the student actually has.
+ * Two cards, stacked in one column: the profile card (photo, name, college,
+ * headline, the completion rule from `lib/profileCompletion` and the three
+ * numbers that say where the student stands) and the MARK column beneath it,
+ * counting the records and competitions the student actually has.
  *
- * The reference sheet's Mark column also offers "Add skills" and "Add
- * experience", and both now exist: `adders` carries the three disclosure rows —
- * skills, experience and achievements — that write through the page's handlers
- * to `student_skills`, `student_experience` and `student_records`. Everything
- * the student can record is also one click away on /mark.
+ * The three numbers are deliberately not equal. Competitions entered is what
+ * MARK's tier is derived from and what a reader is comparing, so it carries the
+ * figure; the tier is a filled plate beside it; the connection count is the
+ * smallest, because it is context rather than standing.
+ *
+ * Whether the profile is public is no longer decided here — the switch used to
+ * sit in this card's header and take more room than the name did. It lives on
+ * the dashboard and in settings, both of which write the same column.
  */
 
 export type MarkSummary = {
@@ -34,7 +36,6 @@ export default function CircleYourProfile({
   connections,
   mark,
   adders,
-  onVisibilityChange,
 }: {
   profile: ProfileRecord;
   collegeName: string | null;
@@ -43,78 +44,59 @@ export default function CircleYourProfile({
   /** The Mark column's add rows, built by the page so this card does not have
       to thread six write handlers through itself. */
   adders?: ReactNode;
-  onVisibilityChange: (next: boolean) => Promise<void>;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [failure, setFailure] = useState<string | null>(null);
   const completion = profileCompletion(profile, Boolean(collegeName));
   const tier = resolveTier(mark.competitions);
   const headline = profile.headline?.trim() ?? "";
 
-  async function toggle() {
-    setBusy(true);
-    setFailure(null);
-    try {
-      await onVisibilityChange(!profile.isPublic);
-    } catch (error) {
-      setFailure(error instanceof Error ? error.message : "The switch could not be saved.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
-    <section className="circle-you" aria-label="Your CIRCLE presence">
+    <div className="circle-col">
       <div className="card bg-white p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <p className="eyebrow">Your profile</p>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={profile.isPublic}
-            disabled={busy}
-            onClick={() => void toggle()}
-            className={`rail-switch rail-switch--sm ${profile.isPublic ? "is-on" : ""}`}
+          <Link
+            href="/dashboard"
+            className="btn-outline-blue inline-flex min-h-[32px] items-center gap-1.5 px-2.5 py-1 text-[11px]"
           >
-            <span>{profile.isPublic ? "Public" : "Private"}</span>
-            <span className="rail-switch__track" aria-hidden="true">
-              <span className="rail-switch__knob" />
-            </span>
-          </button>
+            <Icon name="pen" className="h-3.5 w-3.5" />
+            Edit profile
+          </Link>
         </div>
-        {/* Kept outside the completion block below: it reports a failed
-            visibility save, and a student with a finished profile has no
-            completion bar to hide it behind. */}
-        {failure && (
-          <p className="mt-1.5 text-right text-xs font-semibold text-brand-red-ink" role="status">
-            {failure}
-          </p>
-        )}
 
         <div className="mt-3 flex flex-wrap items-start gap-4">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <StudentAvatar src={profile.avatarUrl} name={profile.fullName} className="h-16 w-16 text-lg" />
             <div className="min-w-0">
               <h2 className="card-title truncate text-lg text-ink-900">{profile.fullName || "Add your name"}</h2>
-              <p className="mt-0.5 truncate text-xs font-semibold text-ink-500">
-                {collegeName ?? "College not listed"}
-                {profile.course ? ` · ${profile.course}` : ""}
+              <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs font-semibold text-ink-500">
+                {/* The schoolhouse at the size of the word beside it, so the line
+                    reads as one fact rather than an icon plus a fact. */}
+                <Icon name="building" className="h-3 w-3 flex-none" aria-hidden="true" />
+                <span className="min-w-0 truncate">
+                  {collegeName ?? "College not listed"}
+                  {profile.course ? ` · ${profile.course}` : ""}
+                </span>
               </p>
             </div>
           </div>
-          <div className="flex flex-none items-start gap-5">
-            <div className="mark-tier text-center">
-              <p className="rail-subtitle">Tier</p>
-              <Icon name="trophy" className="mx-auto mt-1 h-6 w-6 text-brand-blue" />
-              <p className="mt-0.5 text-xs font-extrabold uppercase tracking-wider text-ink-700">
-                {tier.tierLabel ?? "Not ranked yet"}
+
+          {/* Loud to quiet, left to right: what the student has entered, what
+              that has earned them, who they reach. */}
+          <div className="flex flex-none items-start gap-4">
+            <div className="text-center">
+              <p className="mark-figure">{mark.competitions}</p>
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-500">
+                {mark.competitions === 1 ? "competition" : "competitions"} entered
               </p>
             </div>
-            {/* The count is the thing worth reading, so it takes the same figure
-                treatment the Mark column gives its numbers and the word goes
-                underneath in the small voice everything else uses. */}
+            <div className="mark-tier text-center">
+              <Icon name="trophy" className="mx-auto h-5 w-5 text-brand-blue" />
+              <p className="mt-0.5 text-xs font-extrabold uppercase tracking-wider text-ink-700">
+                {tier.tierLabel ?? "Not ranked"}
+              </p>
+            </div>
             <div className="text-center">
-              <p className="mark-figure">{connections}</p>
+              <p className="mark-figure mark-figure--quiet">{connections}</p>
               <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-500">
                 {connections === 1 ? "connection" : "connections"}
               </p>
@@ -173,12 +155,6 @@ export default function CircleYourProfile({
             Open MARK
           </Link>
         </div>
-        <div className="mt-3 flex items-center gap-3">
-          <p className="mark-figure flex-none">{mark.competitions}</p>
-          <p className="text-xs font-bold uppercase tracking-wider text-ink-500">
-            {mark.competitions === 1 ? "competition" : "competitions"} entered
-          </p>
-        </div>
 
         {mark.records.length === 0 ? (
           <p className="mt-3 text-xs leading-relaxed text-ink-500">
@@ -205,6 +181,6 @@ export default function CircleYourProfile({
 
         {adders}
       </div>
-    </section>
+    </div>
   );
 }

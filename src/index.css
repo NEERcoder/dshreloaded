@@ -1460,6 +1460,76 @@
   }
 
   /* ------------------------------------------------------------
+     MONEY — what a listing gives you. Same 11px/800 scale as .chip,
+     but every colour is a token the navy subtree re-points, so a
+     prize pill flips with the page instead of staying a light-green
+     patch inside a dark section. `RewardPill` is the only writer.
+     ------------------------------------------------------------ */
+  .reward-pill {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+  .reward-pill > svg {
+    flex: none;
+  }
+  /* "Free" and a cash prize are both good news in the same green; they differ
+     by icon, which is the part a student actually reads. */
+  .reward-pill--cash,
+  .reward-pill--free {
+    background: var(--ui-cash-bg);
+    color: var(--ui-cash-ink);
+    border-color: var(--ui-cash-line);
+  }
+  .reward-pill--goods {
+    background: var(--ui-accent-soft);
+    color: var(--ui-link-ink);
+    border-color: var(--ui-line);
+  }
+  .reward-pill--pay {
+    background: var(--ui-pay-bg);
+    color: var(--ui-pay-ink);
+    border-color: var(--ui-pay-line);
+  }
+  .reward-pill--neutral {
+    background: var(--ui-surface-2);
+    color: var(--ui-ink-4);
+    border-color: var(--ui-line);
+  }
+
+  /* A non-money fact — mode, duration, where. Same shape as the money pill so a
+     row of them lines up, but it keeps the sentence-case weight and colour the
+     feed has always used, because "2–3 Months" is not an announcement. The
+     hackathon card used to override every `li` inside itself to get this look;
+     that flattened the money tones too, so this class is token-driven instead
+     and the card's override is gone. */
+  .fact-token {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 0.5rem;
+    background: var(--ui-surface-2);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--ui-ink-2);
+  }
+  .fact-token > svg {
+    flex: none;
+    color: var(--ui-ink-4);
+  }
+
+  /* ------------------------------------------------------------
      SMALL SURFACES — the pill link that replaced the plain-text
      "View All" rows, and the white well the 3D pillar icons sit in.
      ------------------------------------------------------------ */
@@ -1827,28 +1897,6 @@
   .rail-switch.is-on .rail-switch__knob {
     transform: translateX(16px);
   }
-  /* The visibility switch on the CIRCLE profile card. It is one boolean, and at
-     full width with a 44px row it read as the loudest thing on the card — so
-     the compact form keeps the same switch semantics at the size of a label. */
-  .rail-switch--sm {
-    width: auto;
-    min-height: 32px;
-    gap: 0.4rem;
-    border-radius: 999px;
-    padding: 0.25rem 0.55rem;
-    font-size: 11px;
-  }
-  .rail-switch--sm .rail-switch__track {
-    height: 16px;
-    width: 28px;
-  }
-  .rail-switch--sm .rail-switch__knob {
-    height: 12px;
-    width: 12px;
-  }
-  .rail-switch--sm.is-on .rail-switch__knob {
-    transform: translateX(12px);
-  }
   .rail-city {
     display: flex;
     min-height: 40px;
@@ -2008,26 +2056,36 @@
   }
 
   /* ------------------------------------------------------------
-     CIRCLE — the signed-in presence band: your profile on the left,
-     your MARK column on the right, exactly the three zones the
-     reference sheet draws (profile, suggestions below it, mark beside).
+     CIRCLE — the numbers on the signed-in profile card. The two-column
+     band these sit inside is `.circle-band`, at the unlayered rules
+     near the navy scope, because the page owns it and not this card.
      ------------------------------------------------------------ */
-  .circle-you {
-    display: grid;
-    gap: 1rem;
-    align-items: start;
-  }
-  @media (min-width: 1024px) {
-    .circle-you {
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    }
-  }
   .mark-figure {
     font-family: "Playfair Display", ui-serif, Georgia, serif;
-    font-size: 2rem;
+    font-size: 1.75rem;
     line-height: 1;
     font-weight: 700;
     color: var(--javlin-navy);
+  }
+  /* The connection count rides the same face two steps down: worth reading,
+     not worth competing with the competitions figure beside it. */
+  .mark-figure--quiet {
+    font-size: 1rem;
+  }
+  /* The tier is the one stat with no number to size, so it earns its second
+     place by weight of surface — a filled plate — rather than by type. */
+  .mark-tier {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    min-width: 3.5rem;
+    min-height: 3.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--ui-line);
+    background: var(--ui-accent-soft);
+    padding: 0.3rem 0.5rem;
   }
   .headline-well {
     border-radius: 0.85rem;
@@ -2469,8 +2527,10 @@
   --rail-w: 14rem; /* == w-56 */
   --shell-gutter: 0.5rem;
   --shell-inset: 0.5rem;
-  /* The tab band's painted height, so `--rail-top` follows it at every
-     breakpoint instead of being re-typed per rule. */
+  /* The tab band's painted height. It feeds `--chrome-bottom`, which is what
+     sticky content inside a page must clear — deliberately *not* `--rail-top`,
+     so the account rail stays at the same offset on every page while the band
+     changes height underneath it. */
   --tabs-h: 3.5rem;
 
   /* ------------------------------------------------------------
@@ -2502,6 +2562,17 @@
   --ui-ring: #1769ff;
   --ui-ring-offset: #ffffff;
   --ui-card-shadow: 0 4px 16px rgba(7, 26, 51, 0.06);
+
+  /* Money tones. A cash prize and a monthly stipend are different promises, so
+     they never share a colour. Merchandise rides `--ui-accent-soft` and an
+     unstated stipend rides `--ui-surface-2`/`--ui-ink-4`, both of which the navy
+     subtree already re-points — so only these two pairs need their own values. */
+  --ui-cash-bg: #e9f6f0;
+  --ui-cash-ink: #0b5f43;
+  --ui-cash-line: #bfe3d3;
+  --ui-pay-bg: #fff1e8;
+  --ui-pay-ink: #c24a08;
+  --ui-pay-line: #ffd9c0;
 }
 @media (min-width: 1280px) {
   :root {
@@ -2527,11 +2598,12 @@
 .section-tabs-strip > li {
   flex: 0 0 auto;
 }
-/* 1024–1249: eight equal columns do not fit legibly to the right of the rail
+/* 1024–1295: eight equal columns do not fit legibly to the right of the rail
    (~93px each, and "CERTIFICATIONS" needs ~101px at 11px), so the row wraps to
    two rows of four. Equal widths are kept; nothing scrolls sideways. The band
-   grows, and `--tabs-h` carries that into `--rail-top` in one place. */
-@media (min-width: 1024px) and (max-width: 1249px) {
+   grows, and `--tabs-h` carries that into `--chrome-bottom` — never into
+   `--rail-top`, which stays put so the account rail cannot move between pages. */
+@media (min-width: 1024px) and (max-width: 1295px) {
   .shell-sections .section-tabs-strip {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2544,7 +2616,7 @@
     --tabs-h: 6.5rem; /* 2×44 + 2×6 padding + 4 gap, rounded up to the half rem */
   }
 }
-@media (min-width: 1280px) {
+@media (min-width: 1296px) {
   .section-tabs-strip {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -2611,13 +2683,18 @@
   opacity: 1;
   transform: none;
 }
-/* 1280–1599: eight columns fit, but only just — tighten the label and drop the
-   icon. From 1600 the column is wide enough for both again. */
-@media (min-width: 1280px) and (max-width: 1599px) {
+/* From 1296 the eight columns are tight, so the label stops being padded out.
+   Measured: at 1366 with the base 0.875rem padding and the icon shown,
+   "CERTIFICATIONS" and "COMPETITIONS" both overflow their column; the reduced
+   padding is what buys the ~20px the icon costs. The icon itself stays hidden
+   until 1360, the first width where icon + longest label fit together. */
+@media (min-width: 1296px) and (max-width: 1599px) {
   .section-tab {
     padding-inline: 0.25rem;
     letter-spacing: 0.03em;
   }
+}
+@media (min-width: 1296px) and (max-width: 1359px) {
   .section-tab__icon {
     display: none;
   }
@@ -2711,13 +2788,10 @@
   text-transform: uppercase;
   color: #ff7a30;
 }
-.hackathon-card li {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e6eeff;
-}
-.hackathon-card li svg {
-  color: #9cc0ff;
-}
+/* The fact chips on this card used to be recoloured here by a bare `li`
+   selector, which flattened every money tone into one grey. They are token
+   driven now, and this card only ever renders on the navy hackathons page, so
+   the subtree's own ramp is what they need. */
 .hackathon-card__cta {
   display: inline-flex;
   min-height: 40px;
@@ -2876,13 +2950,91 @@
 /* CIRCLE keeps the whole-page scroll, so its tabs pin rather than riding inside
    a locked shell. `top: 0` is enough on its own: the bar carries the fixed
    taskbar's clearance as its own padding, so the padding travels with it and
-   the row lands exactly under the taskbar whether or not it is stuck. The
-   z-index has to clear `.shell-row`, which is `z-10` and comes later in the
-   document order, or the feed paints over the tabs as it scrolls up. */
+   the row lands exactly under the taskbar whether or not it is stuck. */
 .circle-root .section-tabs-bar {
   position: sticky;
   top: 0;
   z-index: 20;
+}
+/* The bar is a sibling of `.shell-row`, and the row carries `relative z-10` —
+   which makes it a stacking context, so the rail's own `z-30` resolves at 10
+   *inside* it and the sticky bar paints over the rail's top 57px, burying the
+   Home row. Dropping the row to `z-index: auto` keeps its `position: relative`
+   but stops it grouping its descendants, so the rail's 30 competes at the root
+   and wins, `main` (no z-index) still scrolls under the bar's 20, and the taskbar's
+   50 still clears everything. Same reason the filter popover's `z-40` was being
+   clipped to 10. Anything positioned inside `main` on this page now competes
+   globally — that is the trade for un-burying the rail. */
+.circle-root .shell-row {
+  z-index: auto;
+}
+
+/* ---- the CIRCLE band ----
+   The profile column and the discovery rail are two tracks of one grid, and
+   the grid belongs to the page rather than to the profile card: the right
+   column has to render for a signed-out visitor too, or moving the search and
+   the filters into it would take them away from anyone who is not signed in.
+   Unlayered so it outranks the Tailwind grid utilities on the same element. */
+.circle-band {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+.circle-band__main,
+.circle-band__aside {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  align-content: start;
+}
+@media (min-width: 1024px) {
+  .circle-band {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+}
+/* With no profile to show, the aside takes the first track instead of sitting
+   behind an empty 1.4fr void. */
+@media (min-width: 1024px) {
+  .circle-band--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Below the two-column breakpoint the search comes first, because it did before
+   and a phone reader reaches for it before anything else on the page. The rail
+   goes: the directory grid below already lists the same people. */
+@media (max-width: 1023px) {
+  .circle-band__aside {
+    order: -1;
+  }
+  .circle-rail {
+    display: none;
+  }
+}
+
+.circle-rail__strip {
+  scroll-snap-type: x proximity;
+}
+.circle-suggest {
+  position: relative;
+  flex: 0 0 auto;
+  width: 13.5rem;
+  scroll-snap-align: start;
+  border: 1px solid var(--ui-line);
+  border-radius: 0.85rem;
+  background: var(--ui-surface);
+  padding: 0.7rem;
+}
+/* The anchor covers the card so the whole thing is the target, and only the
+   Connect button is lifted above it — a `<Link>` cannot wrap a `<button>`. */
+.circle-suggest__link {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+.circle-suggest__link:focus-visible {
+  outline: 2px solid var(--ui-ring);
+  outline-offset: 2px;
 }
 
 /* ---- the navy page ---- */
@@ -2938,6 +3090,16 @@
   --ui-ring: #7aa8ff;
   --ui-ring-offset: #0e2a4b;
   --ui-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+
+  /* The two money pairs the light ramp mints. Everything else the pill reads —
+     `--ui-accent-soft`, `--ui-surface-2`, `--ui-ink-4`, `--ui-line` — is already
+     re-pointed above, which is why the pill needs no utility overrides here. */
+  --ui-cash-bg: rgba(38, 194, 129, 0.18);
+  --ui-cash-ink: #7ee2b3;
+  --ui-cash-line: rgba(126, 226, 179, 0.34);
+  --ui-pay-bg: rgba(255, 122, 48, 0.18);
+  --ui-pay-ink: #ffb385;
+  --ui-pay-line: rgba(255, 179, 133, 0.34);
 
   /* The legacy light-first tokens, so the classes already written against them
      (.card, .chip-*, .poster-empty, .rail-title …) follow without an edit. */

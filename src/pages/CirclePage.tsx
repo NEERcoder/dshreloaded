@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
 import StudentCard, { StudentCardSkeleton, yearLabel } from "../components/circle/StudentCard";
 import CircleYourProfile from "../components/circle/CircleYourProfile";
 import CircleMarkAdders from "../components/circle/CircleMarkAdders";
+import CircleDirectorySearch from "../components/circle/CircleDirectorySearch";
+import CircleSuggestedProfiles from "../components/circle/CircleSuggestedProfiles";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -23,7 +25,6 @@ import {
   deleteStudentExperience,
   deleteStudentRecord,
   deleteStudentSkill,
-  setProfileVisibility,
   type ConnectionRef,
   type ProfileRecord,
   type StudentExperience,
@@ -64,27 +65,16 @@ export default function CirclePage() {
   const [course, setCourse] = useState("");
   const [year, setYear] = useState("");
   const [graduation, setGraduation] = useState("");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const filterWrapRef = useRef<HTMLDivElement>(null);
 
-  // Same disclosure rules the account menu follows: click away or press Escape
-  // and the panel closes, because a panel that only closes on its own button
-  // traps a keyboard user behind it.
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (filterWrapRef.current && !filterWrapRef.current.contains(event.target as Node)) setFiltersOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setFiltersOpen(false);
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [filtersOpen]);
+  /** The four dropdowns live inside `CircleDirectorySearch`, which owns only
+      their open/closed state; the values stay here because the college banner
+      and the empty state clear them too. */
+  function setFilterValue(key: "college" | "course" | "year" | "graduation", next: string) {
+    if (key === "college") setCollege(next);
+    else if (key === "course") setCourse(next);
+    else if (key === "year") setYear(next);
+    else setGraduation(next);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -189,11 +179,24 @@ export default function CirclePage() {
     };
   }, [myRecords, myCompetitions]);
 
-  async function changeVisibility(next: boolean) {
-    const result = await setProfileVisibility(next);
-    if (result.error) throw new Error(result.error);
-    setMyProfile((current) => (current ? { ...current, isPublic: next } : current));
+  // A connect action from the rail changes the per-student state map the cards
+  // read, so it is re-read from RLS rather than guessed at locally.
+  async function reloadConnections() {
+    const states = await getConnectionStates();
+    setConnectionStates(states.data);
   }
+
+  /**
+   * The rail's people. "Suggested" is only ever *who is in the directory* —
+   * nothing in the schema ranks students, so the rail keeps the directory's own
+   * order rather than inventing one.
+   */
+  const suggestions = useMemo(
+    () => students.filter((student) => student.userId !== user?.id),
+    [students, user?.id]
+  );
+
+  const showProfileBand = !authLoading && Boolean(user && myProfile);
 
   /**
    * The Mark column writes the same way: the row is re-read rather than
@@ -331,63 +334,61 @@ export default function CirclePage() {
       description="Discover students, interests and people building something alongside you."
       backgroundPreset="directory"
     >
-      <section className="container-px pt-3 sm:pt-4">
+      {/* One band, two columns. The left holds the reader's own presence and
+          their Mark column; the right holds the way into the directory. The
+          right column renders whether or not anyone is signed in, because the
+          search and the filters moved into it and a signed-out visitor still
+          has to be able to use them. */}
+      <div className="container-px pt-3 sm:pt-4">
         <h1 className="sr-only">Circle — student directory</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          {user && (
-            <Link href="/dashboard" className="btn-outline-blue flex-none">
-              Edit My Profile
-            </Link>
-          )}
-          {/* The search moved up here, to the first thing a returning student
-              reaches for. "My Connections" left with it — that page is still
-              linked from the dashboard and from notifications. */}
-          <div className="relative min-w-[220px] flex-1">
-            <label className="sr-only" htmlFor="circle-search">
-              Search students
-            </label>
-            <Icon
-              name="search"
-              className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400"
-            />
-            <input
-              id="circle-search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search students by name, course or college…"
-              className="field-input pl-11"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* The reader's own two zones — presence and the Mark column — sit above
-          the directory rather than on a separate page, so CIRCLE reads as one
-          place to see where you stand. */}
-      {!authLoading && user && myProfile && (
-        <div className="container-px pt-3">
-          <CircleYourProfile
-            profile={myProfile}
-            collegeName={myCollegeName}
-            connections={myConnections}
-            mark={markSummary}
-            adders={
-              <CircleMarkAdders
-                skills={mySkills}
-                experience={myExperience}
-                achievements={achievements}
-                onAddSkill={addSkill}
-                onRemoveSkill={removeSkill}
-                onAddExperience={addExperience}
-                onRemoveExperience={removeExperience}
-                onAddAchievement={addAchievement}
-                onRemoveAchievement={removeAchievement}
+        <div className={`circle-band${showProfileBand ? "" : " circle-band--single"}`}>
+          {showProfileBand && myProfile && (
+            <div className="circle-band__main">
+              <CircleYourProfile
+                profile={myProfile}
+                collegeName={myCollegeName}
+                connections={myConnections}
+                mark={markSummary}
+                adders={
+                  <CircleMarkAdders
+                    skills={mySkills}
+                    experience={myExperience}
+                    achievements={achievements}
+                    onAddSkill={addSkill}
+                    onRemoveSkill={removeSkill}
+                    onAddExperience={addExperience}
+                    onRemoveExperience={removeExperience}
+                    onAddAchievement={addAchievement}
+                    onRemoveAchievement={removeAchievement}
+                  />
+                }
               />
-            }
-            onVisibilityChange={changeVisibility}
-          />
+            </div>
+          )}
+
+          <aside className="circle-band__aside" aria-label="Find students">
+            <CircleDirectorySearch
+              search={search}
+              onSearch={setSearch}
+              values={{ college, course, year, graduation }}
+              onValue={setFilterValue}
+              optionSets={{
+                college: collegeOptions,
+                course: courseOptions,
+                year: yearOptions,
+                graduation: graduationOptions,
+              }}
+              selectCount={selectCount}
+            />
+            <CircleSuggestedProfiles
+              people={suggestions}
+              connections={connectionStates}
+              onChanged={() => void reloadConnections()}
+              canConnect={Boolean(user)}
+            />
+          </aside>
         </div>
-      )}
+      </div>
 
       <section className="container-px py-6 sm:py-8">
         {authLoading || loading ? (
@@ -434,85 +435,20 @@ export default function CirclePage() {
               </div>
             )}
 
-            {/* Four dropdowns in a row dominated this page for what they are:
-                four optional refinements. They now live behind one small button
-                that carries how many of them are actually set, so a filtered
-                directory never looks unfiltered. */}
-            <div ref={filterWrapRef} className="relative flex flex-wrap items-center justify-between gap-2">
+            {/* The search and the four refinements moved up into the band's
+                right column, beside the rail. What is left here is only the
+                readout of what they have narrowed the list to. */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-bold uppercase tracking-wider text-ink-500" aria-live="polite">
                 {`${filtered.length} student${filtered.length === 1 ? "" : "s"}`}
               </p>
-              <div className="flex items-center gap-2">
+              {filtersActive && (
                 <button
-                  type="button"
-                  onClick={() => setFiltersOpen((value) => !value)}
-                  aria-haspopup="true"
-                  aria-expanded={filtersOpen}
-                  className="chip-toggle min-h-[36px] px-3 py-1.5 text-[11px]"
+                  onClick={clearFilters}
+                  className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[36px]"
                 >
-                  <Icon name="filter" className="h-3.5 w-3.5" />
-                  Filters
-                  {selectCount > 0 && (
-                    <span className="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-blue px-1 text-[10px] font-black text-white">
-                      {selectCount}
-                    </span>
-                  )}
+                  Clear filters
                 </button>
-                {filtersActive && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-xs font-extrabold uppercase tracking-wider text-brand-blue hover:underline min-h-[36px]"
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-
-              {filtersOpen && (
-                <div
-                  role="group"
-                  aria-label="Filter students"
-                  className="card absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 bg-white p-3 shadow-lift sm:left-auto sm:right-0 sm:w-[min(28rem,90vw)] sm:p-4"
-                >
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <label className="block">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">College</span>
-                      <select value={college} onChange={(event) => setCollege(event.target.value)} className="filter-select mt-1 w-full text-xs">
-                        <option value="">All Colleges</option>
-                        {collegeOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="block">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Course</span>
-                      <select value={course} onChange={(event) => setCourse(event.target.value)} className="filter-select mt-1 w-full text-xs">
-                        <option value="">All Courses</option>
-                        {courseOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="block">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Year of study</span>
-                      <select value={year} onChange={(event) => setYear(event.target.value)} className="filter-select mt-1 w-full text-xs">
-                        <option value="">All Years</option>
-                        {yearOptions.map((option) => (
-                          <option key={option} value={option}>{yearLabel(Number(option))}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="block">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-ink-500">Graduation year</span>
-                      <select value={graduation} onChange={(event) => setGraduation(event.target.value)} className="filter-select mt-1 w-full text-xs">
-                        <option value="">Any Graduation Year</option>
-                        {graduationOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                </div>
               )}
             </div>
 
