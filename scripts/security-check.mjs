@@ -181,9 +181,11 @@ const headers = new Map(read("public/_headers").split(/\r?\n/).filter((line) => 
 for (const name of ["x-frame-options", "x-content-type-options", "referrer-policy", "permissions-policy", "content-security-policy", "strict-transport-security"]) {
   check(`Candidate header ${name}`, () => assert.ok(headers.get(name)));
 }
-check("Candidate CSP denies script inline/eval and framing", () => {
+check("Candidate CSP allows only self + the approved Google tag, denies script inline/eval and framing", () => {
   const csp = headers.get("content-security-policy");
-  assert.match(csp, /(?:^|;)\s*script-src 'self';/);
+  assert.match(csp, /(?:^|;)\s*script-src 'self' https:\/\/www\.googletagmanager\.com 'sha256-SADd6CkTx5zK\+SH3J\+XEB5MHv9cpDyKQRn0\/OMLvuMw=';/);
+  const scriptSrc = csp.match(/(?:^|;)\s*script-src ([^;]*);/)[1];
+  assert.doesNotMatch(scriptSrc, /unsafe-inline|unsafe-eval/);
   assert.doesNotMatch(csp, /unsafe-eval/);
   assert.match(csp, /frame-ancestors 'none'/);
   assert.match(csp, /frame-src https:\/\/www\.youtube\.com/);
