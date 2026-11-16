@@ -8,6 +8,7 @@ import RoundsEditor from "../components/admin/RoundsEditor";
 import CompetitionRegistrationsPanel from "../components/admin/CompetitionRegistrationsPanel";
 import { CircleAdminSection, EventManager } from "../components/admin/SectionAdminPanels";
 import { isHackathonListing } from "../lib/opportunityKind";
+import { friendlyAuthError } from "../lib/authErrors";
 import {
   deleteOpportunity,
   deleteReview,
@@ -190,7 +191,10 @@ function AdminLogin() {
       const cleanEmail = email.trim().toLowerCase();
       const result = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
       if (result.error) {
-        setMessage(result.error.message);
+        // Through the shared translator, like every other sign-in form. This
+        // one printed `result.error.message` verbatim — the raw GoTrue string,
+        // on the form that gates the privileged workspace.
+        setMessage(friendlyAuthError(result.error.message));
         setSubmitting(false);
         return;
       }
@@ -198,7 +202,7 @@ function AdminLogin() {
         await refreshAdminStatus();
       }
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "An unexpected error occurred during sign in.");
+      setMessage(friendlyAuthError(err instanceof Error ? err.message : null));
     } finally {
       setSubmitting(false);
     }

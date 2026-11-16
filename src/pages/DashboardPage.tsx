@@ -58,7 +58,7 @@ type FormState = {
   headline: string;
   /** Bare handle, no @ and no URL. Public on the profile. */
   instagramHandle: string;
-  /** Optional and unverified. Visible only to the owner and shared teammates. */
+  /** Optional and unverified. Visible only to the owner and a shared team's captain. */
   phone: string;
 };
 
@@ -623,7 +623,7 @@ export default function DashboardPage() {
                       placeholder="+91 98765 43210"
                     />
                     <p className="mt-1 text-[11px] font-semibold text-ink-500">
-                      Never verified and never public — only teammates on a shared team can see it.
+                      Never verified and never public — only the captain of a team you belong to can see it.
                     </p>
                   </div>
                 </div>

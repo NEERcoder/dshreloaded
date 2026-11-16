@@ -90,16 +90,21 @@ export function extractYouTubeVideoId(rawUrl: string | null | undefined): string
 
   try {
     const parsed = new URL(safe);
-    if (parsed.hostname.includes("youtu.be")) {
-      return parsed.pathname.replace(/^\//, "").split("/")[0] || null;
-    }
-    if (parsed.pathname.includes("/shorts/")) {
-      return parsed.pathname.split("/shorts/")[1]?.split("/")[0] || null;
-    }
-    return parsed.searchParams.get("v");
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    const id = parsed.hostname === "youtu.be" || parsed.hostname === "www.youtu.be"
+      ? segments[0]
+      : ["shorts", "embed", "live"].includes(segments[0])
+        ? segments[1]
+        : parsed.searchParams.get("v");
+    return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
   } catch {
     return null;
   }
+}
+
+export function getYouTubeEmbedUrl(youtubeUrl: string | null | undefined): string | undefined {
+  const videoId = extractYouTubeVideoId(youtubeUrl);
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : undefined;
 }
 
 export function getYouTubeThumbnailUrl(youtubeUrl: string | null | undefined, customThumbnail?: string | null): string | null {

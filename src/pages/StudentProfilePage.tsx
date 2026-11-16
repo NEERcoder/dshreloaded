@@ -13,6 +13,7 @@ import {
 import { Link } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
+  getConnectedPeerNames,
   getConnectionStatus,
   getStudentExperience,
   getStudentLevel,
@@ -66,6 +67,8 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
   const [error, setError] = useState<string | null>(null);
   const [recordsError, setRecordsError] = useState<string | null>(null);
   const [connection, setConnection] = useState<ConnectionRef | null>(null);
+  /** Name of an accepted peer whose profile is private (approved rule 2). */
+  const [peerName, setPeerName] = useState<string | null>(null);
 
   const profileId = userId.trim().replace(/\/$/, "");
   const isSelf = Boolean(user && user.id === profileId);
@@ -80,6 +83,7 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
     setError(null);
     setRecordsError(null);
     setStudent(null);
+    setPeerName(null);
     setRecords([]);
     setSkills([]);
     setExperience([]);
@@ -108,6 +112,13 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
         return;
       }
       setStudent(found);
+      if (!found && user && !isSelf) {
+        // Rule 2: an accepted connection is told the peer's name even when the
+        // row itself stays invisible. Fetched only in that case, so a public
+        // profile or a stranger costs nothing extra.
+        const names = await getConnectedPeerNames();
+        if (!cancelled) setPeerName(names[profileId] ?? null);
+      }
       setLoading(false);
       if (!found) return;
 
@@ -208,8 +219,14 @@ export default function StudentProfilePage({ userId }: StudentProfilePageProps) 
           ) : (
             <ProfileNotice
               icon="user"
-              title="This profile is private"
-              description="This student hasn't opened their profile to visitors. Only signed-in JAVLIN students can see it — and it stays invisible until they turn on Public profile in their dashboard."
+              title={peerName ? `${peerName}'s profile is private` : "This profile is private"}
+              description={
+                peerName
+                  ? // Rule 2 grants exactly one field, so the copy names it
+                    // rather than implying a fuller relationship exists.
+                    `You share an accepted connection, so ${peerName}'s name is visible to you. Nothing else is — not their college, course, record or contact details. They can turn on Public profile in their dashboard to open the rest.`
+                  : "This student hasn't opened their profile to visitors. It stays invisible to other students until they turn on Public profile in their dashboard; an accepted connection can see their name only."
+              }
             >
               {!user && (
                 <Link href="/login" className="btn-primary">

@@ -22,12 +22,13 @@ create or replace function public.new_team_invite_code()
 returns text
 language sql
 volatile
+set search_path = pg_catalog
 as $$
   select 'DSH-' || array_to_string(
     array(
       select substr(
         'ABCDEFGHJKLMNPQRSTUVWXYZ23456789',
-        (get_byte(gen_random_uuid()::bytea, 0) % 32) + 1,
+        (get_byte(uuid_send(gen_random_uuid()), 0) % 32) + 1,
         1
       )
       from generate_series(1, 5) as g(n)

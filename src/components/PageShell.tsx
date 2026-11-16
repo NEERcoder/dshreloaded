@@ -64,7 +64,8 @@ export default function PageShell({ children, title, description }: PageShellPro
       updateMeta("twitter:description", description, "name");
     }
     updateMeta("og:title", title, "property");
-    updateMeta("og:url", window.location.href, "property");
+    // Recovery links can contain credentials in their query or fragment.
+    updateMeta("og:url", window.location.origin + window.location.pathname, "property");
     updateMeta("og:type", "website", "property");
     updateMeta("twitter:card", "summary", "name");
     updateMeta("twitter:title", title, "name");

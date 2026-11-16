@@ -1,20 +1,16 @@
-// Translates raw Supabase Auth error messages into short, friendly copy
-// shown to students on the login / signup / reset-password pages.
-// Falls back to the original message if nothing matches, so unexpected
-// errors are still visible rather than silently swallowed.
 export function friendlyAuthError(rawMessage: string | null | undefined): string {
   const message = (rawMessage || "").trim();
   if (!message) return "Something went wrong. Please try again.";
   const lower = message.toLowerCase();
 
   if (lower.includes("already registered") || lower.includes("already exists") || lower.includes("user already")) {
-    return "An account with this email already exists. Try logging in instead.";
+    return "Unable to create an account with these details. Try signing in or resetting your password.";
   }
-  if (lower.includes("invalid login credentials") || lower.includes("invalid email or password")) {
+  if (lower.includes("invalid login credentials") || lower.includes("invalid email or password") || lower.includes("user not found")) {
     return "Incorrect email or password. Please try again.";
   }
   if (lower.includes("email not confirmed")) {
-    return "This account needs email confirmation before you can sign in. Please contact support.";
+    return "Unable to sign in. Check your email for a confirmation link or contact support.";
   }
   if (lower.includes("password") && (lower.includes("at least") || lower.includes("should be") || lower.includes("weak") || lower.includes("short"))) {
     return "That password is too weak. Use at least 8 characters.";
@@ -28,9 +24,6 @@ export function friendlyAuthError(rawMessage: string | null | undefined): string
   if (lower.includes("network") || lower.includes("failed to fetch")) {
     return "We couldn't reach the server. Check your connection and try again.";
   }
-  if (lower.includes("user not found")) {
-    return "We couldn't find an account with that email.";
-  }
   if (lower.includes("same password") || lower.includes("different from the old")) {
     return "Your new password must be different from your current password.";
   }
@@ -38,5 +31,5 @@ export function friendlyAuthError(rawMessage: string | null | undefined): string
     return "This link has expired or was already used. Please request a new one.";
   }
 
-  return message;
+  return "Something went wrong. Please try again.";
 }

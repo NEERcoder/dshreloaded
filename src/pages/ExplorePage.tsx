@@ -18,7 +18,7 @@ import {
   type ReviewRecord,
 } from "../lib/dataAccess";
 import { isSupabaseConfigured } from "../lib/supabase";
-import { sanitizeYouTubeUrl, getYouTubeThumbnailUrl } from "../lib/urlSafety";
+import { getYouTubeEmbedUrl, sanitizeExternalUrl, getYouTubeThumbnailUrl } from "../lib/urlSafety";
 import { buildCollegeSearchIndex, searchColleges as rankColleges } from "../lib/collegeSearch";
 
 const campusOptions = ["North Campus", "South Campus", "Off Campus", "Other / Specialized"];
@@ -228,7 +228,7 @@ function VideoDiscovery({
           <div className="card overflow-hidden bg-white border border-surface-border shadow-lift p-2">
             <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-ink-900">
               <iframe
-                src={sanitizeYouTubeUrl(featuredVideo.youtubeUrl || "")}
+                src={getYouTubeEmbedUrl(featuredVideo.youtubeUrl)}
                 title={featuredVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -264,11 +264,12 @@ function VideoDiscovery({
             <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
               {supportingVideos.map((video) => {
                 const thumb = getYouTubeThumbnailUrl(video.youtubeUrl || "");
+                const safeHref = sanitizeExternalUrl(video.youtubeUrl);
                 return (
                   <a
                     key={video.id}
-                    href={video.youtubeUrl || "#"}
-                    target="_blank"
+                    href={safeHref}
+                    target={safeHref ? "_blank" : undefined}
                     rel="noopener noreferrer"
                     className="card card-hover flex gap-3.5 p-3.5 bg-white border border-surface-border group"
                   >

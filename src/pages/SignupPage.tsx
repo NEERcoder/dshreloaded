@@ -36,7 +36,7 @@ export default function SignupPage() {
   const [yearOfStudy, setYearOfStudy] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
   const [gender, setGender] = useState("");
-  /** Optional and never verified — collected so teammates can reach each other. */
+  /** Optional and never verified — collected so a team captain can reach you. */
   const [phone, setPhone] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -410,8 +410,8 @@ export default function SignupPage() {
                   placeholder="+91 98765 43210"
                 />
                 <p className="mt-1 meta">
-                  Required, but not verified — no code is sent. It stays private: only students who
-                  share a team with you can see it.
+                  Required, but not verified — no code is sent. It stays private: only the captain of a
+                  team you belong to can see it.
                 </p>
               </div>
             </div>

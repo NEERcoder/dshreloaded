@@ -43,9 +43,11 @@ create table if not exists public.student_skills (
   is_public boolean not null default true,
   position int not null default 0,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint student_skills_one_per_name unique (user_id, lower(name))
+  updated_at timestamptz not null default now()
 );
+
+create unique index if not exists student_skills_one_per_name
+  on public.student_skills (user_id, lower(name));
 
 comment on table public.student_skills is
   'Skills a student lists on their own profile. Owner-written; public only when the profile is public.';
@@ -96,8 +98,12 @@ create policy "Admins can read all skills"
   on public.student_skills for select to authenticated
   using (public.is_admin());
 
+-- 'verified' is attestation by someone else, so it is deliberately outside the
+-- owner-writable column set: a student cannot self-endorse.
 grant select on public.student_skills to anon, authenticated;
-grant insert, update, delete on public.student_skills to authenticated;
+grant insert (user_id, name, is_public, position) on public.student_skills to authenticated;
+grant update (name, is_public, position) on public.student_skills to authenticated;
+grant delete on public.student_skills to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Experience

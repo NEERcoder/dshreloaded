@@ -3,6 +3,7 @@ import Icon from "../Icon";
 import { Link } from "../../lib/router";
 import { ConnectionBadge } from "./ConnectControl";
 import { resolveTier } from "../../lib/markTier";
+import { sanitizeExternalUrl } from "../../lib/urlSafety";
 import {
   STUDENT_RECORD_CATEGORIES,
   type ConnectionRef,
@@ -242,7 +243,9 @@ export function StudentRecordList({ records, showPrivacyFlag = false, renderActi
             </p>
           </div>
           <ul className="mt-2.5 space-y-3">
-            {group.items.map((record) => (
+            {group.items.map((record) => {
+              const safeProof = sanitizeExternalUrl(record.proofUrl);
+              return (
               <li key={record.id} className="card bg-surface-soft/60 p-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h4 className="card-title min-w-0 break-words text-ink-900">{record.title}</h4>
@@ -254,7 +257,7 @@ export function StudentRecordList({ records, showPrivacyFlag = false, renderActi
                 {record.description && (
                   <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-ink-500">{record.description}</p>
                 )}
-                {(showPrivacyFlag || record.proofUrl) && (
+                {(showPrivacyFlag || safeProof) && (
                   <div className="mt-2.5 flex flex-wrap items-center gap-3">
                     {showPrivacyFlag && (
                       <span
@@ -267,9 +270,9 @@ export function StudentRecordList({ records, showPrivacyFlag = false, renderActi
                         {record.isPublic ? "Public" : "Private"}
                       </span>
                     )}
-                    {record.proofUrl && (
+                    {safeProof && (
                       <a
-                        href={record.proofUrl}
+                        href={safeProof}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-blue hover:text-brand-blue-dark"
@@ -282,7 +285,8 @@ export function StudentRecordList({ records, showPrivacyFlag = false, renderActi
                 )}
                 {renderActions && <div className="mt-3 flex flex-wrap items-center gap-2">{renderActions(record)}</div>}
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       ))}

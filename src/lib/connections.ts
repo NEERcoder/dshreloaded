@@ -28,6 +28,13 @@ export type ConnectionItem = {
   peerUserId: string;
   /** Null when the student has no CIRCLE profile row (deleted or incomplete). */
   peer: StudentProfileRecord | null;
+  /**
+   * Approved rule 2: an accepted connection may see the peer's **name**, even
+   * when that student kept their profile private and the row itself is
+   * invisible. Populated from migration 023's `get_connected_peer_names()`;
+   * `peer` stays null in that case, because nothing else about them is granted.
+   */
+  peerName: string | null;
 };
 
 type RawConnectionRow = Record<string, unknown>;
@@ -92,7 +99,10 @@ export function buildConnectionMap(rows: ConnectionRow[], myUserId: string): Rec
 export function assembleConnections(
   rows: ConnectionRow[],
   profiles: StudentProfileRecord[],
-  myUserId: string
+  myUserId: string,
+  /** userId -> name, from `get_connected_peer_names()`. Optional so callers
+   *  that have not fetched it (or whose project has no 023a yet) keep working. */
+  peerNames: Record<string, string> = {}
 ): ConnectionItem[] {
   const profileByUserId = new Map(profiles.map((profile) => [profile.userId, profile]));
   const items: ConnectionItem[] = [];
@@ -100,12 +110,16 @@ export function assembleConnections(
   for (const [peerUserId, ref] of Object.entries(buildConnectionMap(rows, myUserId))) {
     // A missing profile is still a real relationship — keep the row so the
     // student can see and remove it instead of it vanishing silently.
+    const peer = profileByUserId.get(peerUserId) ?? null;
     items.push({
       connectionId: ref.connectionId,
       state: ref.state,
       createdAt: ref.createdAt,
       peerUserId,
-      peer: profileByUserId.get(peerUserId) ?? null,
+      peer,
+      // A readable row wins over the name path; the name path covers exactly
+      // the private-profile case rule 2 was written for.
+      peerName: peer?.fullName ?? peerNames[peerUserId] ?? null,
     });
   }
 

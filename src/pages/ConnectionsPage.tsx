@@ -26,7 +26,10 @@ type Lists = {
 const EMPTY_LISTS: Lists = { connections: [], incoming: [], outgoing: [] };
 
 function displayName(item: ConnectionItem): string {
-  return item.peer?.fullName ?? "Student";
+  // A public peer resolves through `peer`; an accepted peer who went private
+  // still has a name under rule 2, in `peerName`. Only a genuinely absent
+  // profile falls back to the placeholder.
+  return item.peer?.fullName ?? item.peerName ?? "Student";
 }
 
 export default function ConnectionsPage() {
@@ -223,12 +226,12 @@ function ConnectionGroup({ title, items, busyId, onAccept, onReject, onCancel, o
                   {initialsOf(displayName(item))}
                 </span>
                 <div className="min-w-0">
-                  {item.peer ? (
+                  {item.peer || item.peerName ? (
                     <Link
                       href={`/circle/${item.peerUserId}`}
                       className="truncate text-sm font-extrabold text-ink-900 hover:text-brand-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue"
                     >
-                      {item.peer.fullName}
+                      {displayName(item)}
                     </Link>
                   ) : (
                     <p className="text-sm font-extrabold text-ink-500">No longer on CIRCLE</p>
@@ -236,7 +239,11 @@ function ConnectionGroup({ title, items, busyId, onAccept, onReject, onCancel, o
                   <p className="mt-0.5 truncate text-xs font-semibold text-ink-500">
                     {item.peer
                       ? [item.peer.course, yearLabel(item.peer.yearOfStudy)].filter(Boolean).join(" · ")
-                      : "This student's profile isn't listed anymore."}
+                      : item.peerName
+                        // Rule 2 grants the name and nothing else, so say that
+                        // rather than implying the student left the platform.
+                        ? "Private profile — you share a name, nothing more."
+                        : "This student's profile isn't listed anymore."}
                   </p>
                   {item.peer?.collegeName && (
                     <p className="mt-0.5 truncate text-[11px] font-semibold text-ink-500">{item.peer.collegeName}</p>

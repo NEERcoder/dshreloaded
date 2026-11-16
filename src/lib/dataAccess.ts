@@ -366,8 +366,11 @@ const mapOpportunity = (row: Record<string, unknown>): OpportunityRecord => ({
 });
 
 const mapProfile = (row: Record<string, unknown>): ProfileRecord => ({
-  id: String(row.id),
-  userId: String(row.user_id),
+  // A column the reader has no privilege on is *omitted from the JSON object*,
+  // not returned as null, so String(row.id) would produce the literal
+  // "undefined". Every field here tolerates an absent key for that reason.
+  id: row.id ? String(row.id) : "",
+  userId: row.user_id ? String(row.user_id) : "",
   fullName: String(row.full_name ?? ""),
   collegeId: row.college_id ? String(row.college_id) : "",
   course: String(row.course ?? ""),
@@ -378,8 +381,9 @@ const mapProfile = (row: Record<string, unknown>): ProfileRecord => ({
   isPublic: Boolean(row.is_public),
   avatarUrl: row.avatar_url ? String(row.avatar_url) : null,
   instagramHandle: row.instagram_handle ? String(row.instagram_handle) : null,
-  // Only ever present when the caller is the owner (or a teammate via RPC):
-  // profile_contacts is not reachable from a public profile query.
+  // Only ever present for the owner, or for a team captain reading a member
+  // through the roster RPC. profile_contacts is not reachable from a public
+  // profile query, and ordinary teammates no longer receive it (migration 030).
   phone: row.phone_number ? String(row.phone_number) : null,
   createdAt: String(row.created_at ?? ""),
   updatedAt: String(row.updated_at ?? row.created_at ?? ""),
@@ -723,7 +727,7 @@ export async function saveVideo(input: Omit<VideoRecord, "id">, id?: string): Pr
   try {
     const payload = {
       title: input.title.trim(),
-      youtube_url: input.youtubeUrl,
+      youtube_url: optionalUrl(input.youtubeUrl),
       thumbnail_url: input.thumbnail,
       category: input.category,
       college_id: input.collegeId || null,
@@ -1147,9 +1151,9 @@ export type CompetitionTeamMemberRecord = {
   /** Bare handle. Public elsewhere too, so no extra gating needed here. */
   instagramHandle: string | null;
   /**
-   * Only ever populated by the team-scoped RPC, i.e. the caller has already
-   * been checked as a member or captain of this team. Never populated for
-   * non-members, so the UI cannot invent it.
+   * Only ever populated by the team-scoped RPC, and only when the caller is the
+   * team captain (migration 030). For ordinary members and non-members the
+   * database returns null, so the UI cannot invent or reveal it.
    */
   phone: string | null;
   role: "captain" | "member";
@@ -1182,8 +1186,9 @@ async function fetchInviteCodeForMember(teamId: string): Promise<string> {
 
 /**
  * Roster details for one team. The RPC behind this is security definer and
- * returns nothing unless the caller is on that team, which is what makes it
- * safe to carry phone_number here and nowhere else in the directory.
+ * returns nothing unless the caller is on that team. Names, college, course and
+ * Instagram go to any teammate; phone_number is returned only to the team
+ * captain (migration 030), which is what makes it safe to carry here.
  */
 type TeamProfile = {
   full_name?: string;
@@ -1205,7 +1210,7 @@ async function fetchTeamProfiles(teamId: string, userIds: string[]): Promise<Map
   });
 
   if (error) {
-    console.error("Team profile lookup error:", error);
+    console.error("Team profile lookup failed.");
     return profiles;
   }
 
@@ -1375,7 +1380,7 @@ export async function getCompetitionTeam(
       .order("joined_at", { ascending: true });
 
     if (membErr) {
-      console.error("Members fetch error:", membErr);
+      console.error("Team member lookup failed.");
       return failure(null, membErr);
     }
 
@@ -1814,7 +1819,7 @@ export async function getPendingTeamJoinRequests(
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error("Join requests fetch error:", error);
+      console.error("Join request lookup failed.");
       return failure([], error);
     }
 
@@ -1958,6 +1963,32 @@ export async function submitGeneralApplication(email: string, file: File): Promi
 // user is always resolved from the live Supabase Auth session, matching
 // the production RLS policy (user_id = auth.uid()) already configured
 // on public.profiles.
+
+/**
+ * Migration 023's two definer paths, and why the client degrades rather than
+ * failing when they are absent.
+ *
+ *   get_own_profile()          the only way to read `gender`, `id`, `created_at`
+ *                              and `updated_at` once 023's column grants apply —
+ *                              those four stop being grantable to `authenticated`.
+ *   get_connected_peer_names() the only way an accepted connection learns a
+ *                              private peer's name (approved rule 2).
+ *
+ * The rollout installs both functions first (023a) and removes privileges last
+ * (023c), so a "function does not exist" answer always comes from a database
+ * where the broad read still works. Falling back in exactly that case is what
+ * lets the client ship before, after or between the two migration halves
+ * without a broken window in either direction.
+ */
+const MISSING_FUNCTION_CODES = ["PGRST202", "42883"];
+
+function isMissingFunctionError(error: unknown): boolean {
+  if (!error) return false;
+  const code = String((error as { code?: unknown }).code ?? "");
+  const message = String((error as { message?: unknown }).message ?? "");
+  return MISSING_FUNCTION_CODES.includes(code) || /could not find the function/i.test(message);
+}
+
 export async function getCurrentUserProfile(): Promise<DataResult<ProfileRecord | null>> {
   if (!supabase || !isSupabaseConfigured) {
     return failure(null, new Error("Supabase authentication is not configured."));
@@ -1969,16 +2000,41 @@ export async function getCurrentUserProfile(): Promise<DataResult<ProfileRecord 
       return failure(null, new Error("You must be signed in to view your profile."));
     }
 
-    const result = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    // `returns setof public.profiles`, so PostgREST hands back an array.
+    const rpc = await supabase.rpc("get_own_profile");
+    let row: Record<string, unknown> | null = null;
+    if (!rpc.error) {
+      const rows = Array.isArray(rpc.data) ? rpc.data : rpc.data ? [rpc.data] : [];
+      row = (rows[0] as Record<string, unknown>) ?? null;
+    } else if (isMissingFunctionError(rpc.error)) {
+      const fallback = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (fallback.error) return failure(null, fallback.error);
+      row = (fallback.data as Record<string, unknown> | null) ?? null;
+    } else {
+      return failure(null, rpc.error);
+    }
 
-    if (result.error) return failure(null, result.error);
-    if (!result.data) return remoteSuccess(null);
+    if (!row) return remoteSuccess(null);
 
-    const profile = mapProfile(result.data);
+    // A column the reader has no privilege on is omitted from the object rather
+    // than returned as null, so an absent `gender` here means the read was
+    // filtered — not that the student never answered it. Reporting it as an
+    // error keeps the dashboard from rendering a blank field and then asking for
+    // a gender the owner already chose.
+    if (row.gender === undefined || row.id === undefined) {
+      return failure(
+        null,
+        new Error(
+          "Your profile could not be read in full. Sign out and back in; if it persists, profile access is only partly migrated on this project."
+        )
+      );
+    }
+
+    const profile = mapProfile(row);
     // The owner is the one person allowed to see their own number, and it lives
     // in profile_contacts rather than on the profile row.
     const { data: contact } = await supabase
@@ -2038,11 +2094,12 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
     // was already written on a previous attempt but the client lost the
     // response (network hiccup, crash, etc.), the retry merges cleanly
     // instead of hitting the UNIQUE constraint on user_id.
-    const result = await supabase
-      .from("profiles")
-      .upsert(payload, { onConflict: "user_id" })
-      .select()
-      .single();
+    //
+    // No returning projection. Asking the table to hand the row back asks for
+    // `gender`, `id` and the timestamps, and after 023c those four are not
+    // grantable to `authenticated` at all. The authoritative copy is read once
+    // at the end through get_own_profile().
+    const result = await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
     if (result.error) return failure(null, result.error);
 
     // Instagram and phone sit behind migration 011, so they are written after
@@ -2054,33 +2111,29 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
         .from("profiles")
         .update({ instagram_handle: handle })
         .eq("user_id", user.id);
-      if (extra.error) console.error("Instagram handle could not be saved:", extra.error);
+      if (extra.error) console.error("Instagram handle could not be saved.");
     }
 
-    // Headline sits behind migration 014. It is a value the owner chose, so a
-    // failed write must never be presented as saved: on error we leave the
-    // returned profile's headline at its last confirmed value (null for a
-    // brand-new account) rather than echoing back an unpersisted string.
+    // Headline sits behind migration 014. It is written separately so a project
+    // that has not applied 014 yet still gets a working account: the failure is
+    // logged, and the re-read below reports what the database actually holds
+    // rather than echoing back a string that never persisted.
     const headline = normalizeHeadline(input.headline);
-    let headlineSaved = true;
     if (input.headline !== undefined) {
       const hl = await supabase.from("profiles").update({ headline }).eq("user_id", user.id);
-      if (hl.error) {
-        headlineSaved = false;
-        console.error("Headline could not be saved:", hl.error);
-      }
+      if (hl.error) console.error("Headline could not be saved.");
     }
 
     // A phone number is optional and unverified, so a failure here must not
     // strand a student who already has a working account.
     const contact = await savePhoneNumber(String(user.id), input.phone);
-    if (contact.error) console.error("Phone number could not be saved:", contact.error);
+    if (contact.error) console.error("Phone number could not be saved.");
 
-    const profile = mapProfile(result.data);
-    profile.instagramHandle = handle;
-    profile.headline = headlineSaved ? headline : null;
-    profile.phone = normalizePhoneNumber(input.phone);
-    return remoteSuccess(profile);
+    // Authoritative, owner-scoped re-read (all columns, via the definer path).
+    // One request, replacing the row the mutation used to return.
+    const refreshed = await getCurrentUserProfile();
+    if (refreshed.error) return failure(null, refreshed.error);
+    return remoteSuccess(refreshed.data);
   } catch (err) {
     return failure(null, err);
   }
@@ -2094,8 +2147,7 @@ export async function createProfile(input: ProfileInput): Promise<DataResult<Pro
 //   * gender — stored for college reporting, never intended for discovery;
 //   * email / auth metadata — profiles is keyed by user_id, and auth.users
 //     is never queried from the client.
-// Row visibility stays with RLS ("Authenticated users can read profiles"),
-// so this list is a projection, not a security boundary.
+// Query projections do not enforce privacy; row policies and column grants do.
 const DIRECTORY_COLUMNS =
   "user_id, full_name, college_id, course, year_of_study, graduation_year, is_public, avatar_url, instagram_handle, headline, colleges(name)";
 
@@ -2118,11 +2170,11 @@ const mapStudent = (row: Record<string, unknown>): StudentProfileRecord => ({
 export async function getStudentDirectory(limit = 240): Promise<DataResult<StudentProfileRecord[]>> {
   if (!supabase || !isSupabaseConfigured) return remoteSuccess([]);
   try {
-    // One query, college names resolved through the existing FK embed — a
-    // per-student college lookup would turn the grid into an N+1.
+    // Discovery must stay opt-in even when the caller can read additional profiles.
     const { data, error } = await supabase
       .from("profiles")
       .select(DIRECTORY_COLUMNS)
+      .eq("is_public", true)
       .order("full_name", { ascending: true })
       .limit(limit);
     if (error) return failure([], error);
@@ -2183,16 +2235,10 @@ export async function updateProfile(input: ProfileInput): Promise<DataResult<Pro
       gender: input.gender,
     };
 
-    const result = await supabase
-      .from("profiles")
-      .update(payload)
-      .eq("user_id", user.id)
-      .select()
-      .single();
-
+    // No returning projection: see createProfile. `gender`, `id` and the
+    // timestamps are read back once, at the end, through get_own_profile().
+    const result = await supabase.from("profiles").update(payload).eq("user_id", user.id);
     if (result.error) return failure(null, result.error);
-
-    const profile = mapProfile(result.data);
 
     // Both fields sit behind migration 011 and are written separately so a
     // project that has not applied it yet keeps a working profile editor.
@@ -2203,37 +2249,37 @@ export async function updateProfile(input: ProfileInput): Promise<DataResult<Pro
         .from("profiles")
         .update({ instagram_handle: handle })
         .eq("user_id", user.id);
-      if (extra.error) console.error("Instagram handle could not be saved:", extra.error);
-      profile.instagramHandle = handle;
+      if (extra.error) console.error("Instagram handle could not be saved.");
     }
 
+    let headlineFailed = false;
     if (input.headline !== undefined) {
       const headline = normalizeHeadline(input.headline);
       const hl = await supabase.from("profiles").update({ headline }).eq("user_id", user.id);
-      if (hl.error) {
-        // The headline is the value the owner just chose, so a failed write
-        // must surface rather than being echoed back as saved. Core fields
-        // persisted above; `profile.headline` still holds the last confirmed
-        // value from the row we just re-read, so return that with a clear
-        // error instead of the unpersisted string. This also covers an
-        // unapplied migration 014 (missing column) without claiming success.
-        console.error("Headline could not be saved:", hl.error);
-        return failure(
-          profile,
-          new Error("Couldn't save your headline. Your other changes were saved — please try the headline again."),
-        );
-      }
-      profile.headline = headline;
+      if (hl.error) headlineFailed = true;
     }
 
     if (input.phone !== undefined) {
       const phone = normalizePhoneNumber(input.phone);
       const contact = await savePhoneNumber(String(user.id), phone);
-      if (contact.error) console.error("Phone number could not be saved:", contact.error);
-      profile.phone = phone;
+      if (contact.error) console.error("Phone number could not be saved.");
     }
 
-    return remoteSuccess(profile);
+    // One authoritative, owner-scoped read for the whole write batch. Its
+    // headline is the value the database holds, so a failed headline write is
+    // reported without ever echoing back an unpersisted string — and this also
+    // covers an unapplied migration 014 (missing column) without claiming
+    // success. Core fields persisted above.
+    const refreshed = await getCurrentUserProfile();
+    if (headlineFailed) {
+      console.error("Headline could not be saved.");
+      return failure(
+        refreshed.data ?? null,
+        new Error("Couldn't save your headline. Your other changes were saved — please try the headline again."),
+      );
+    }
+    if (refreshed.error) return failure(null, refreshed.error);
+    return remoteSuccess(refreshed.data);
   } catch (err) {
     return failure(null, err);
   }
@@ -2336,18 +2382,46 @@ async function findPairRow(userId: string, targetUserId: string): Promise<Connec
   return mapConnectionRow(data as Record<string, unknown>);
 }
 
+/**
+ * Approved rule 2, in one request: the names of students I hold an **accepted**
+ * connection with, including those who kept their profile private. The RPC takes
+ * no arguments, so it can only ever describe the caller's own relationships, and
+ * it returns `(user_id, full_name)` — no college, course, headline or avatar.
+ *
+ * Degrades to an empty map when migration 023a is absent or the function is not
+ * executable: a missing name path must not break the connections list, which is
+ * still correct without it, just less informative for private peers.
+ */
+export async function getConnectedPeerNames(): Promise<Record<string, string>> {
+  if (!supabase) return {};
+  const { data, error } = await supabase.rpc("get_connected_peer_names");
+  if (error) return {};
+  const names: Record<string, string> = {};
+  for (const row of (Array.isArray(data) ? data : []) as Record<string, unknown>[]) {
+    if (row.user_id && row.full_name) names[String(row.user_id)] = String(row.full_name);
+  }
+  return names;
+}
+
 async function getPeerProfiles(
   userIds: string[]
-): Promise<{ profiles: StudentProfileRecord[]; error: string | null }> {
-  if (!supabase || userIds.length === 0) return { profiles: [], error: null };
+): Promise<{ profiles: StudentProfileRecord[]; names: Record<string, string>; error: string | null }> {
+  if (!supabase || userIds.length === 0) return { profiles: [], names: {}, error: null };
   // One profiles query for the whole list — the directory projection already
   // carries college names through the existing FK embed.
   const { data, error } = await supabase
     .from("profiles")
     .select(DIRECTORY_COLUMNS)
     .in("user_id", userIds);
-  if (error) return { profiles: [], error: error.message };
-  return { profiles: (data || []).map((row) => mapStudent(row as Record<string, unknown>)), error: null };
+  if (error) return { profiles: [], names: {}, error: error.message };
+  const profiles = (data || []).map((row) => mapStudent(row as Record<string, unknown>));
+
+  // The name path is fetched only when a peer did not resolve, i.e. only for the
+  // private profiles rule 2 exists for. When everyone on the list is public this
+  // costs nothing extra.
+  const resolved = new Set(profiles.map((profile) => profile.userId));
+  const names = userIds.some((id) => !resolved.has(id)) ? await getConnectedPeerNames() : {};
+  return { profiles, names, error: null };
 }
 
 async function listConnectionsByState(
@@ -2367,7 +2441,7 @@ async function listConnectionsByState(
   const peers = await getPeerProfiles(peerIds);
   if (peers.error) return failure([], new Error(peers.error));
 
-  return remoteSuccess(assembleConnections(rows, peers.profiles, userId));
+  return remoteSuccess(assembleConnections(rows, peers.profiles, userId, peers.names));
 }
 
 export async function getMyConnections(): Promise<DataResult<ConnectionItem[]>> {

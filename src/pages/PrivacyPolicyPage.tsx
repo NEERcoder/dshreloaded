@@ -189,8 +189,9 @@ export default function PrivacyPolicyPage() {
                   public-profile toggle controls anonymous visibility, not visibility to signed-in students.
                 </li>
                 <li>
-                  <strong>Phone number:</strong> shown to students who share a team with you, through an
-                  access-controlled lookup. It is never included in a public or anonymous profile view.
+                  <strong>Phone number:</strong> shown only to the captain of a team you belong to,
+                  through an access-controlled lookup. Ordinary teammates cannot see it. It is never
+                  included in a public or anonymous profile view.
                 </li>
                 <li>
                   <strong>With platform administrators:</strong> a phone number and other participant

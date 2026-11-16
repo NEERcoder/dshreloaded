@@ -552,10 +552,11 @@ function MemberRow({
           </div>
           {member.course && <p className="text-xs text-ink-500 truncate">{member.course}</p>}
 
-          {/* Both of these arrive only from get_team_member_profiles, which the
-              database returns solely to students on this team — so rendering
-              them unconditionally cannot leak a number to a stranger. */}
-          {(member.instagramHandle || member.phone) && (
+          {/* Instagram arrives from get_team_member_profiles for any teammate.
+              The phone is captain-only: the database returns it solely to the
+              team captain, so it is null for everyone else. The isCaptain gate
+              mirrors that rule in the UI; the database is the enforcement. */}
+          {(member.instagramHandle || (isCaptain && member.phone)) && (
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-ink-500">
               {member.instagramHandle && (
                 <a
@@ -567,7 +568,7 @@ function MemberRow({
                   <Icon name="instagram" className="h-3.5 w-3.5" />@{member.instagramHandle}
                 </a>
               )}
-              {member.phone && (
+              {isCaptain && member.phone && (
                 <a
                   href={`tel:${member.phone.replace(/[^0-9+]/g, "")}`}
                   className="inline-flex items-center gap-1 text-ink-700 hover:text-brand-blue"
