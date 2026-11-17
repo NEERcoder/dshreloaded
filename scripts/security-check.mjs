@@ -181,9 +181,9 @@ const headers = new Map(read("public/_headers").split(/\r?\n/).filter((line) => 
 for (const name of ["x-frame-options", "x-content-type-options", "referrer-policy", "permissions-policy", "content-security-policy", "strict-transport-security"]) {
   check(`Candidate header ${name}`, () => assert.ok(headers.get(name)));
 }
-check("Candidate CSP allows only self + the approved Google tag, denies script inline/eval and framing", () => {
+check("Candidate CSP allows only self + approved Google/Firebase hosts, denies script inline/eval and framing", () => {
   const csp = headers.get("content-security-policy");
-  assert.match(csp, /(?:^|;)\s*script-src 'self' https:\/\/www\.googletagmanager\.com 'sha256-SADd6CkTx5zK\+SH3J\+XEB5MHv9cpDyKQRn0\/OMLvuMw=';/);
+  assert.match(csp, /(?:^|;)\s*script-src 'self' https:\/\/www\.googletagmanager\.com https:\/\/www\.gstatic\.com 'sha256-SADd6CkTx5zK\+SH3J\+XEB5MHv9cpDyKQRn0\/OMLvuMw=';/);
   const scriptSrc = csp.match(/(?:^|;)\s*script-src ([^;]*);/)[1];
   assert.doesNotMatch(scriptSrc, /unsafe-inline|unsafe-eval/);
   assert.doesNotMatch(csp, /unsafe-eval/);
