@@ -41,6 +41,8 @@ import {
   type NotificationType,
 } from "./notifications";
 
+import { requestPushDelivery } from "./pushNotifications";
+
 export type {
   CollegeRecord,
   ReviewRecord,
@@ -1756,12 +1758,19 @@ export async function requestToJoinCompetitionTeam(
       return failure(null, new Error("This team is already full."));
     }
 
-    const { error: insertErr } = await supabase.from("competition_team_join_requests").insert({
-      team_id: teamId,
-      user_id: userId,
-      status: "pending",
-    });
+    const { data: insertedRequest, error: insertErr } = await supabase
+      .from("competition_team_join_requests")
+      .insert({
+        team_id: teamId,
+        user_id: userId,
+        status: "pending",
+      })
+      .select("id")
+      .single();
     if (insertErr) return failure(null, insertErr);
+    if (insertedRequest?.id) {
+      void requestPushDelivery({ kind: "team", requestId: String(insertedRequest.id), event: "join_requested" });
+    }
     return remoteSuccess({ status: "sent" });
   } catch (err) {
     return failure(null, err);
@@ -1864,6 +1873,9 @@ export async function approveCompetitionTeamJoinRequest(
     });
 
     if (error) return failure(false, error);
+    if (data === true) {
+      void requestPushDelivery({ kind: "team", requestId, event: "join_decided" });
+    }
     return remoteSuccess(data === true);
   } catch (err) {
     return failure(false, err);
@@ -1895,7 +1907,12 @@ export async function rejectCompetitionTeamJoinRequest(
       return failure(false, new Error("Only the team captain can reject requests."));
     }
 
-    await supabase.from("competition_team_join_requests").update({ status: "rejected" }).eq("id", requestId);
+    const { error: rejectErr } = await supabase
+      .from("competition_team_join_requests")
+      .update({ status: "rejected" })
+      .eq("id", requestId);
+    if (rejectErr) return failure(false, rejectErr);
+    void requestPushDelivery({ kind: "team", requestId, event: "join_decided" });
     return remoteSuccess(true);
   } catch (err) {
     return failure(false, err);
@@ -2513,17 +2530,24 @@ export async function sendConnectionRequest(
       if (state === "incoming_pending") return remoteSuccess({ status: "incoming_request" });
     }
 
-    const { error } = await supabase.from("student_connections").insert({
-      requester_user_id: userId,
-      recipient_user_id: targetUserId,
-      status: "pending",
-    });
+    const { data: inserted, error } = await supabase
+      .from("student_connections")
+      .insert({
+        requester_user_id: userId,
+        recipient_user_id: targetUserId,
+        status: "pending",
+      })
+      .select("id")
+      .single();
 
     if (error) {
       // 23505: the canonical pair index already holds this pair — someone
       // acted on the same relationship a moment before us.
       if (error.code === "23505") return remoteSuccess({ status: "already_pending" });
       return failure(null, error);
+    }
+    if (inserted?.id) {
+      void requestPushDelivery({ kind: "connection", connectionId: String(inserted.id), event: "connection_request" });
     }
     return remoteSuccess({ status: "sent" });
   } catch (err) {
@@ -2578,6 +2602,7 @@ export async function acceptConnectionRequest(connectionId: string): Promise<Dat
     .select("id");
   if (error) return failure(false, error);
   if (!data || data.length === 0) return failure(false, new Error("This request has already been handled."));
+  void requestPushDelivery({ kind: "connection", connectionId, event: "connection_accepted" });
   return remoteSuccess(true);
 }
 

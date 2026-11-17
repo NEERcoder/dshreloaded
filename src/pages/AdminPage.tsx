@@ -6,6 +6,7 @@ import PulseAdmin from "../components/admin/PulseAdmin";
 import PosterCropStudio from "../components/admin/PosterCropStudio";
 import RoundsEditor from "../components/admin/RoundsEditor";
 import CompetitionRegistrationsPanel from "../components/admin/CompetitionRegistrationsPanel";
+import PushBroadcastPanel from "../components/admin/PushBroadcastPanel";
 import { CircleAdminSection, EventManager } from "../components/admin/SectionAdminPanels";
 import { isHackathonListing } from "../lib/opportunityKind";
 import { friendlyAuthError } from "../lib/authErrors";
@@ -318,7 +319,8 @@ type TabType =
   | "team_roles"
   | "team_members"
   | "colleges"
-  | "animations";
+  | "animations"
+  | "push";
 
 /** One labelled group of section buttons in the admin rail. */
 function AdminNavGroup({
@@ -466,6 +468,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
                 { key: "team_members", label: "Team Members", count: teamMembers.length },
                 { key: "colleges", label: "College Images", count: colleges.length },
                 { key: "animations", label: "Homepage Animation", count: animations.filter((a) => a.enabled).length },
+                { key: "push", label: "Push Announcements", count: null },
               ]}
             />
           </aside>
@@ -587,6 +590,7 @@ function AdminDashboard({ email, onSignOut }: { email: string; onSignOut: () => 
                 onSaved={(msg) => { setMessage(msg); refresh(); }}
               />
             )}
+            {tab === "push" && <PushBroadcastPanel />}
           </div>
         </div>
       </div>

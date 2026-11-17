@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PageShell from "../components/PageShell";
 import Icon from "../components/Icon";
+import PushNotificationSettings from "../components/PushNotificationSettings";
 import { Link } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -10,10 +11,9 @@ import {
 } from "../lib/dataAccess";
 
 /**
- * The settings surface, scoped to the one setting that exists today: whether
- * the student's profile appears in CIRCLE. It reads and writes the real
- * `is_public` column through the existing data-access path — no new field, no
- * policy change. The switch never shows "saved" before the write succeeds, and
+ * The settings surface: CIRCLE profile visibility (the real `is_public` column
+ * through the existing data-access path) plus the push-notification section.
+ * The visibility switch never shows "saved" before the write succeeds, and
  * rapid toggles are blocked while a save is in flight.
  */
 export default function SettingsPage() {
@@ -86,6 +86,7 @@ export default function SettingsPage() {
               </Link>
             </div>
           ) : (
+            <>
             <div className="card mt-8 p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -138,6 +139,8 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
+            <PushNotificationSettings />
+            </>
           )}
         </div>
       </section>

@@ -14,6 +14,7 @@ import {
   resetPreferenceSession,
   setActivePreferenceUser,
 } from "../lib/filterPreferences";
+import { removePushSubscription, syncPushRegistrationForUser } from "../lib/pushNotifications";
 
 interface AuthContextType {
   user: User | null;
@@ -66,6 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     if (supabase) {
+      // Clean up THIS device's push subscription while the session is still
+      // valid, so the next account on this browser never inherits it. Other
+      // devices keep their own rows. Best-effort: sign-out proceeds regardless.
+      try {
+        await removePushSubscription();
+      } catch {
+        // Push cleanup must never block signing out.
+      }
       try {
         await supabase.auth.signOut();
       } catch {
@@ -117,6 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // the merge is attempted here too. It is guarded per user id, so the
         // duplicate attempt is a no-op rather than a second write.
         void mergeGuestPreferencesIntoAccount(currentUser.id);
+        // If this browser already allows notifications, make sure its token
+        // belongs to the restored account (silent; never prompts).
+        void syncPushRegistrationForUser();
 
         if (isMounted) {
           setUser(currentUser);
@@ -157,6 +169,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // id, so a refresh can never overwrite the account row again.
       if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
         void mergeGuestPreferencesIntoAccount(nextSession.user.id);
+        // Sign-in and account switch both land here: claiming this browser's
+        // push token for the new account stops the previous account's pushes
+        // on this device. Silent — permission is never requested here.
+        void syncPushRegistrationForUser();
       }
       const adminStatus = await checkAdmin(nextSession.user);
       if (isMounted) {

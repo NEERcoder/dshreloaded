@@ -3,6 +3,7 @@ import { RouterProvider, useLocation } from "./lib/router";
 import { CursorProvider } from "./context/CursorContext";
 import { AuthProvider } from "./context/AuthContext";
 import PageTransition from "./components/PageTransition";
+import PushForeground from "./components/PushForeground";
 import { SectionShellContext } from "./components/PageShell";
 import { isFeedScrollRoot, isSectionPath, isSectionTabPath } from "./lib/sidebarNav";
 import { useIsDesktop } from "./hooks/useIsDesktop";
@@ -213,6 +214,7 @@ export default function App() {
     <RouterProvider>
       <AuthProvider>
         <CursorProvider>
+          <PushForeground />
           <AppRouter />
         </CursorProvider>
       </AuthProvider>

@@ -1,4 +1,4 @@
-# Live response headers (Cloudflare Pages). CSP amended 2026-11-17 for the approved Google tag GTM-PKWJL67T and Firebase Analytics (javlin-1682b).
+# Live response headers (Cloudflare Pages). CSP amended 2026-11-17 for the approved Google tag GTM-PKWJL67T, Firebase Analytics (javlin-1682b) and FCM web push.
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
@@ -6,4 +6,4 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
   Strict-Transport-Security: max-age=86400
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.gstatic.com 'sha256-SADd6CkTx5zK+SH3J+XEB5MHv9cpDyKQRn0/OMLvuMw='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://firebaseinstallations.googleapis.com https://firebaselogging-pa.googleapis.com https://firebaselogging.googleapis.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.gstatic.com 'sha256-SADd6CkTx5zK+SH3J+XEB5MHv9cpDyKQRn0/OMLvuMw='; worker-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://firebaseinstallations.googleapis.com https://firebaselogging-pa.googleapis.com https://firebaselogging.googleapis.com https://fcmregistrations.googleapis.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
