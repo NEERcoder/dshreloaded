@@ -6,7 +6,17 @@ import CollegeSearch from "../components/CollegeSearch";
 import { Link, useLocation } from "../lib/router";
 import { useAuth } from "../context/AuthContext";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
-import { friendlyAuthError } from "../lib/authErrors";
+import {
+  buildE164Phone,
+  friendlyAuthError,
+  resendPhoneOtp,
+  signUpWithPhone,
+  verifyPhoneOtp,
+  type AuthMethod,
+} from "../lib/auth";
+import MethodTabs from "../components/auth/MethodTabs";
+import PhoneField from "../components/auth/PhoneField";
+import OtpCodeInput from "../components/auth/OtpCodeInput";
 import { getColleges, createProfile, normalizePhoneNumber, type CollegeRecord, type ProfileInput } from "../lib/dataAccess";
 
 const GENDER_OPTIONS = ["Female", "Male", "Non-binary", "Prefer not to say"];
@@ -25,9 +35,19 @@ export default function SignupPage() {
   const [collegesLoading, setCollegesLoading] = useState(true);
 
   // Account fields
+  const [method, setMethod] = useState<AuthMethod>("email");
   const [email, setEmail] = useState("");
+  const [dialCode, setDialCode] = useState("+91");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Phone sign-up: Supabase sends an SMS code and only opens a session once
+  // the code is verified, so the form swaps to a verification step in place.
+  const [awaitingPhoneOtp, setAwaitingPhoneOtp] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneOtpError, setPhoneOtpError] = useState<string | null>(null);
+  const [verifyingPhone, setVerifyingPhone] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Profile fields
   const [fullName, setFullName] = useState("");
@@ -63,10 +83,24 @@ export default function SignupPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setTimeout(
+      () => setResendCooldown((current) => Math.max(0, current - 1)),
+      1000
+    );
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
+
   function validate(): string | null {
-    const cleanEmail = email.trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) return "Please enter a valid email address.";
+    if (method === "email") {
+      const cleanEmail = email.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) return "Please enter a valid email address.";
+    } else {
+      const phoneResult = buildE164Phone(dialCode, phone);
+      if (!phoneResult.ok) return phoneResult.error;
+    }
     if (password.length < 8) return "Password must be at least 8 characters long.";
     if (password !== confirmPassword) return "Passwords do not match.";
     if (fullName.trim().length < 2) return "Full name must be at least 2 characters.";
@@ -84,11 +118,16 @@ export default function SignupPage() {
     }
 
     if (!gender) return "Please select a gender.";
-    if (!phone.trim()) {
-      return "Please enter your mobile phone number.";
-    }
-    if (!normalizePhoneNumber(phone)) {
-      return "Enter a valid phone number (at least 6 digits; include your country code for international numbers).";
+
+    // In phone mode the account number above is the profile number, so the
+    // dedicated profile field is not shown and needs no separate check.
+    if (method === "email") {
+      if (!phone.trim()) {
+        return "Please enter your mobile phone number.";
+      }
+      if (!normalizePhoneNumber(phone)) {
+        return "Enter a valid phone number (at least 6 digits; include your country code for international numbers).";
+      }
     }
 
     return null;
@@ -98,6 +137,14 @@ export default function SignupPage() {
     setSubmitting(true);
     setProfileError(null);
 
+    // In phone mode the account number is collected as dial code + national
+    // number, so persist the combined E.164 value on the profile.
+    let profilePhone = phone;
+    if (method === "phone") {
+      const phoneResult = buildE164Phone(dialCode, phone);
+      if (phoneResult.ok) profilePhone = phoneResult.value;
+    }
+
     const input: ProfileInput = {
       fullName: fullName.trim(),
       collegeId,
@@ -105,7 +152,7 @@ export default function SignupPage() {
       yearOfStudy: Number(yearOfStudy),
       graduationYear: Number(graduationYear),
       gender,
-      phone,
+      phone: profilePhone,
     };
 
     const result = await createProfile(input);
@@ -135,9 +182,49 @@ export default function SignupPage() {
     }
 
     setSubmitting(true);
-    const cleanEmail = email.trim().toLowerCase();
 
     try {
+      if (method === "phone") {
+        const phoneResult = buildE164Phone(dialCode, phone);
+        if (!phoneResult.ok) {
+          setError(phoneResult.error);
+          setSubmitting(false);
+          return;
+        }
+
+        // 1. Create the Supabase Auth account with the phone number.
+        const { data, error: signUpError } = await signUpWithPhone(phoneResult.value, password);
+
+        if (signUpError) {
+          setError(friendlyAuthError(signUpError, "phone"));
+          setSubmitting(false);
+          return;
+        }
+
+        if (!data.user) {
+          setError("We couldn't create your account. Please try again.");
+          setSubmitting(false);
+          return;
+        }
+
+        // 2. Phone sign-ups only open a session after the SMS code is
+        // verified, so swap to the verification step in place.
+        if (!data.session) {
+          setSubmitting(false);
+          setPhoneOtpError(null);
+          setResendCooldown(30);
+          setAwaitingPhoneOtp(true);
+          return;
+        }
+
+        // 3. Session already present (e.g. phone confirmation disabled):
+        // create the profile and redirect.
+        await attemptCreateProfile();
+        return;
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+
       // 1. Create the Supabase Auth account.
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -172,6 +259,133 @@ export default function SignupPage() {
       setError(friendlyAuthError(err instanceof Error ? err.message : null));
       setSubmitting(false);
     }
+  }
+
+  async function handleVerifyPhoneOtp(event: FormEvent) {
+    event.preventDefault();
+    setPhoneOtpError(null);
+
+    const phoneResult = buildE164Phone(dialCode, phone);
+    if (!phoneResult.ok) {
+      setPhoneOtpError(phoneResult.error);
+      return;
+    }
+    if (phoneOtp.length !== 6) {
+      setPhoneOtpError("Enter the 6-digit code from the SMS.");
+      return;
+    }
+
+    setVerifyingPhone(true);
+    try {
+      const verified = await verifyPhoneOtp(phoneResult.value, phoneOtp);
+      if (verified.error) {
+        setPhoneOtpError(friendlyAuthError(verified.error, "phone"));
+        return;
+      }
+      // The session now exists (AuthContext picks it up), so the profile
+      // record can be created against the authenticated user.
+      await attemptCreateProfile();
+    } catch (err) {
+      setPhoneOtpError(friendlyAuthError(err instanceof Error ? err.message : null));
+    } finally {
+      setVerifyingPhone(false);
+    }
+  }
+
+  async function handleResendPhoneOtp() {
+    if (resendCooldown > 0 || verifyingPhone || submitting) return;
+
+    const phoneResult = buildE164Phone(dialCode, phone);
+    if (!phoneResult.ok) {
+      setPhoneOtpError(phoneResult.error);
+      return;
+    }
+
+    setVerifyingPhone(true);
+    try {
+      const result = await resendPhoneOtp(phoneResult.value);
+      if (result.error) {
+        setPhoneOtpError(friendlyAuthError(result.error, "phone"));
+      } else {
+        setResendCooldown(30);
+      }
+    } catch (err) {
+      setPhoneOtpError(friendlyAuthError(err instanceof Error ? err.message : null));
+    } finally {
+      setVerifyingPhone(false);
+    }
+  }
+
+  if (awaitingPhoneOtp) {
+    return (
+      <PageShell
+        title="Verify your phone | JAVLIN"
+        description="Enter the SMS code to finish creating your JAVLIN account."
+        backgroundPreset="explore"
+      >
+        <section className="container-px py-10 sm:py-14">
+          <div className="mx-auto max-w-md animate-fade-up">
+            <BrandMark className="h-10 w-auto" />
+            <p className="eyebrow mt-4">VERIFY PHONE</p>
+            <h1 className="page-title mt-3">
+              Check your messages.
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-ink-500">
+              We sent a 6-digit code to <span className="font-bold text-ink-700">{phone.trim()}</span>.
+              Enter it below to finish creating your account.
+            </p>
+
+            <form onSubmit={handleVerifyPhoneOtp} className="card mt-8 p-6" noValidate>
+              {phoneOtpError && (
+                <div role="alert" className="mb-4 rounded-xl border border-brand-red/20 bg-brand-red-soft p-3 text-sm font-semibold text-brand-red-ink">
+                  {phoneOtpError}
+                </div>
+              )}
+              <OtpCodeInput
+                id="signup-phone-otp"
+                value={phoneOtp}
+                onChange={setPhoneOtp}
+                disabled={verifyingPhone || submitting}
+                autoFocus
+                helperText="The code expires after a short time."
+              />
+              <button
+                type="submit"
+                disabled={verifyingPhone || submitting}
+                className="btn-primary mt-6 w-full justify-center disabled:opacity-60"
+              >
+                {verifyingPhone || submitting ? "Verifying…" : "Verify and create account"}
+              </button>
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={handleResendPhoneOtp}
+                  disabled={verifyingPhone || submitting || resendCooldown > 0}
+                  className="text-xs font-bold text-brand-blue hover:text-brand-blue-dark hover:underline disabled:cursor-not-allowed disabled:text-ink-400 disabled:no-underline"
+                >
+                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+                </button>
+              </div>
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAwaitingPhoneOtp(false);
+                    setPhoneOtp("");
+                    setPhoneOtpError(null);
+                    setResendCooldown(0);
+                  }}
+                  disabled={verifyingPhone || submitting}
+                  className="text-xs font-bold text-ink-500 hover:text-brand-blue disabled:opacity-60"
+                >
+                  Use a different number
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </PageShell>
+    );
   }
 
   if (needsManualLogin) {
@@ -251,22 +465,45 @@ export default function SignupPage() {
           </p>
 
           <form onSubmit={submit} className="card mt-8 p-6 sm:p-8">
+            <MethodTabs
+              value={method}
+              onChange={(next) => {
+                setMethod(next);
+                setError(null);
+                setProfileError(null);
+                setAwaitingPhoneOtp(false);
+              }}
+              disabled={submitting}
+            />
+
             <h2 className="text-xs font-bold uppercase tracking-wider text-ink-500">Account</h2>
             <div className="mt-3 grid gap-4">
-              <div>
-                <label className="field-label" htmlFor="signup-email">Email</label>
-                <input
-                  id="signup-email"
-                  type="email"
-                  autoComplete="email"
-                  required
+              {method === "email" ? (
+                <div>
+                  <label className="field-label" htmlFor="signup-email">Email</label>
+                  <input
+                    id="signup-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    disabled={submitting}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              ) : (
+                <PhoneField
+                  id="signup-account-phone"
+                  dialCode={dialCode}
+                  onDialCodeChange={setDialCode}
+                  value={phone}
+                  onChange={setPhone}
                   disabled={submitting}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
-                  placeholder="you@example.com"
+                  helperText="We’ll text a 6-digit code to verify this number."
                 />
-              </div>
+              )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="field-label" htmlFor="signup-password">Password</label>
@@ -394,26 +631,28 @@ export default function SignupPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="field-label" htmlFor="signup-phone">Phone Number</label>
-                <input
-                  id="signup-phone"
-                  type="tel"
-                  required
-                  autoComplete="tel"
-                  inputMode="tel"
-                  maxLength={20}
-                  disabled={submitting}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
-                  placeholder="+91 98765 43210"
-                />
-                <p className="mt-1 meta">
-                  Required, but not verified — no code is sent. It stays private: only the captain of a
-                  team you belong to can see it.
-                </p>
-              </div>
+              {method === "email" && (
+                <div>
+                  <label className="field-label" htmlFor="signup-phone">Phone Number</label>
+                  <input
+                    id="signup-phone"
+                    type="tel"
+                    required
+                    autoComplete="tel"
+                    inputMode="tel"
+                    maxLength={20}
+                    disabled={submitting}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="field-input disabled:opacity-60 disabled:cursor-not-allowed"
+                    placeholder="+91 98765 43210"
+                  />
+                  <p className="mt-1 meta">
+                    Required, but not verified — no code is sent. It stays private: only the captain of a
+                    team you belong to can see it.
+                  </p>
+                </div>
+              )}
             </div>
 
             <button
